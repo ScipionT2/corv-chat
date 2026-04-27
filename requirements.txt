@@ -1,0 +1,8 @@
+openwakeword
+faster-whisper
+sounddevice
+numpy
+requests
+python-dotenv
+piper-tts; platform_machine == "x86_64"
+pytest
