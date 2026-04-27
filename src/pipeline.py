@@ -33,6 +33,8 @@ class JarvisPipeline:
         Whisper model size / name.
     tts_backend:
         TTS backend preference (``'auto'``, ``'piper'``, ``'say'``).
+    voice:
+        macOS ``say`` voice name override.  ``None`` uses the default.
     """
 
     def __init__(
@@ -41,10 +43,11 @@ class JarvisPipeline:
         ollama_model: str = config.OLLAMA_MODEL,
         whisper_model: str = config.WHISPER_MODEL,
         tts_backend: str = config.TTS_BACKEND,
+        voice: Optional[str] = None,
     ) -> None:
         self.stt = SpeechToText(model_name=whisper_model)
         self.llm = OllamaClient(model=ollama_model)
-        self.tts = TextToSpeech(backend=tts_backend)
+        self.tts = TextToSpeech(backend=tts_backend, say_voice=voice)
         self.detector: Optional[WakeWordDetector] = None
 
         self._wake_word = wake_word

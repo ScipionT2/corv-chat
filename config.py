@@ -98,7 +98,9 @@ LLM_MAX_HISTORY: int = _get_env_int("JARVIS_MAX_HISTORY", 10)
 # Text-to-Speech
 # ---------------------------------------------------------------------------
 PIPER_VOICE: str = _get_env("JARVIS_PIPER_VOICE", "en_US-lessac-medium")
-MACOS_SAY_VOICE: str = _get_env("JARVIS_SAY_VOICE", "Samantha")
+MACOS_SAY_VOICE: str = _get_env("JARVIS_SAY_VOICE", "Daniel")
+"""Default macOS say voice.  Daniel is a high-quality male voice."""
+
 TTS_BACKEND: str = _get_env("JARVIS_TTS_BACKEND", "auto")
 """TTS backend: 'piper', 'say', or 'auto' (try piper, fall back to say)."""
 

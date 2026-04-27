@@ -51,6 +51,17 @@ def _parse_args() -> argparse.Namespace:
         help=f"TTS backend (default: {config.TTS_BACKEND})",
     )
     parser.add_argument(
+        "--voice",
+        default=None,
+        help=f"macOS say voice name (default: {config.MACOS_SAY_VOICE}). "
+             "Use --list-voices to see available options.",
+    )
+    parser.add_argument(
+        "--list-voices",
+        action="store_true",
+        help="List available macOS TTS voices and exit.",
+    )
+    parser.add_argument(
         "--log-level",
         default=config.LOG_LEVEL,
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
@@ -73,11 +84,28 @@ def main() -> None:
     args = _parse_args()
     _setup_logging(args.log_level)
 
+    # --list-voices: print and exit
+    if args.list_voices:
+        from src.tts import get_available_voices
+
+        voices = get_available_voices()
+        if not voices:
+            print("No macOS voices available (are you on macOS?)")
+            sys.exit(1)
+        print(f"{'Name':<20} {'Language':<12} Description")
+        print("-" * 60)
+        for v in voices:
+            print(f"{v['name']:<20} {v['language']:<12} {v.get('description', '')}")
+        sys.exit(0)
+
+    voice = args.voice or config.MACOS_SAY_VOICE
+
     print(BANNER)
     print(f"  Wake word   : {args.wake_word}")
     print(f"  LLM model   : {args.model}")
     print(f"  Whisper      : {args.whisper_model}")
     print(f"  TTS backend  : {args.tts}")
+    print(f"  Voice        : {voice}")
     print(f"  Ollama URL   : {config.OLLAMA_BASE_URL}")
     print()
 
@@ -86,6 +114,7 @@ def main() -> None:
         ollama_model=args.model,
         whisper_model=args.whisper_model,
         tts_backend=args.tts,
+        voice=args.voice,
     )
 
     # Graceful shutdown on Ctrl+C / SIGTERM

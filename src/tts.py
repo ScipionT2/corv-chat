@@ -3,12 +3,16 @@ Text-to-Speech module with Piper TTS primary and macOS ``say`` fallback.
 
 On ARM64 macOS where piper-tts wheels are unavailable, the module
 gracefully falls back to the built-in ``say`` command.
+
+Supports multiple macOS voices — configurable via ``--voice`` CLI flag,
+``JARVIS_VOICE`` environment variable, or ``JARVIS_SAY_VOICE``.
 """
 
 from __future__ import annotations
 
 import logging
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -81,6 +85,48 @@ def _select_backend(preference: str = config.TTS_BACKEND) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Voice listing
+# ---------------------------------------------------------------------------
+
+
+def get_available_voices() -> list[dict[str, str]]:
+    """Return a list of available macOS ``say`` voices.
+
+    Each entry is a dict with keys ``name``, ``language``, and optionally
+    ``description``.  Returns an empty list on non-macOS systems or if
+    the ``say`` command is unavailable.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Available voices.
+    """
+    if not _say_available():
+        return []
+
+    try:
+        result = subprocess.run(
+            ["say", "-v", "?"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )  # noqa: S603
+        voices: list[dict[str, str]] = []
+        for line in result.stdout.strip().splitlines():
+            # Format: "Name      lang_REGION  # Sample text"
+            match = re.match(r"^(\S+(?:\s+\S+)*)\s+(\w{2}_\w+)\s*#?\s*(.*)?$", line.strip())
+            if match:
+                name = match.group(1).strip()
+                lang = match.group(2).strip()
+                desc = match.group(3).strip() if match.group(3) else ""
+                voices.append({"name": name, "language": lang, "description": desc})
+        return voices
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.warning("Failed to list voices: %s", exc)
+        return []
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -102,11 +148,13 @@ class TextToSpeech:
         self,
         backend: str = config.TTS_BACKEND,
         piper_voice: str = config.PIPER_VOICE,
-        say_voice: str = config.MACOS_SAY_VOICE,
+        say_voice: Optional[str] = None,
     ) -> None:
         self._backend_pref = backend
         self.piper_voice = piper_voice
-        self.say_voice = say_voice
+        # Priority: explicit say_voice param > JARVIS_VOICE env > JARVIS_SAY_VOICE config
+        import os
+        self.say_voice = say_voice or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
         self._backend: Optional[str] = None
 
     @property
