@@ -11,6 +11,7 @@ import threading
 from typing import Optional
 
 import config
+from src.commands import CommandResult, parse_command
 from src.llm import OllamaClient
 from src.recorder import record_until_silence
 from src.stt import SpeechToText
@@ -116,13 +117,34 @@ class JarvisPipeline:
 
         logger.info("User said: %s", text)
 
-        # 3. Query LLM
+        # 3. Check for built-in commands
+        cmd = parse_command(text)
+        if cmd.result == CommandResult.CLEAR_HISTORY:
+            self.llm.clear_history()
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            return
+        if cmd.result == CommandResult.PAUSE:
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            # Detector stays active so wake word can resume
+            return
+        if cmd.result == CommandResult.RESUME:
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            return
+        if cmd.result == CommandResult.HANDLED:
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            return
+
+        # 4. Query LLM
         reply = self.llm.chat(text)
         if not reply:
             self._speak_error("Sorry, I'm having trouble thinking right now.")
             return
 
-        # 4. Speak response
+        # 5. Speak response
         logger.info("Jarvis says: %s", reply[:120])
         self.tts.speak(reply)
 
