@@ -12,3 +12,19 @@
 
 
 ⏹  Shutting down …
+||PaMacCore (AUHAL)|| Error on line 2747: err=''what'', msg=Unspecified Audio Hardware Error
+
+╔══════════════════════════════════════════════════╗
+║  🤖 Jarvis Voice Bridge — Local AI Assistant     ║
+║  100%% local · zero cost · full privacy           ║
+╚══════════════════════════════════════════════════╝
+
+  Wake word   : jarvis
+  LLM model   : qwen2.5-coder:7b
+  Whisper      : base.en
+  TTS backend  : auto
+  Ollama URL   : http://localhost:11434
+
+
+⏹  Shutting down …
+||PaMacCore (AUHAL)|| Error on line 2796: err='-50', msg=Unknown Error

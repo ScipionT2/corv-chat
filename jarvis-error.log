@@ -8,3 +8,27 @@
 16:30:09 [INFO] src.wake_word: Resolving wake word 'jarvis' -> model 'hey_jarvis_v0.1'
 16:30:10 [INFO] src.wake_word: Wake-word detector started (word=jarvis, threshold=0.50)
 16:30:10 [INFO] src.pipeline: Jarvis pipeline is running — say 'jarvis' to begin
+16:30:47 [INFO] src.wake_word: Wake word detected (confidence=0.952)
+16:30:47 [INFO] src.pipeline: Wake word activated — recording …
+16:30:49 [INFO] src.recorder: Recorded 1.5s of audio (24320 samples)
+16:30:49 [INFO] faster_whisper: Processing audio with duration 00:01.520
+16:30:49 [INFO] faster_whisper: VAD filter removed 00:00.000 of audio
+16:30:49 [INFO] src.stt: Transcribed: one plus one.
+16:30:49 [INFO] src.pipeline: User said: one plus one.
+16:31:28 [INFO] src.llm: LLM reply: 2
+16:31:28 [INFO] src.pipeline: Jarvis says: 2
+16:31:28 [INFO] src.tts: TTS backend: say
+16:31:54 [INFO] src.wake_word: Wake word detected (confidence=0.984)
+16:31:55 [WARNING] src.audio: Audio playback failed: Error starting stream: Internal PortAudio error [PaErrorCode -9986]
+16:31:55 [INFO] src.pipeline: Wake word activated — recording …
+16:31:56 [INFO] src.recorder: Recorded 1.1s of audio (17920 samples)
+16:31:56 [INFO] faster_whisper: Processing audio with duration 00:01.120
+16:31:56 [INFO] faster_whisper: VAD filter removed 00:00.000 of audio
+16:31:58 [INFO] src.stt: Transcribed: like today.
+16:31:58 [INFO] src.pipeline: User said: like today.
+16:32:01 [INFO] src.llm: LLM reply: I'm sorry, but I need more context to understand what you're asking about "today." Could you provide more details?
+16:32:01 [INFO] src.pipeline: Jarvis says: I'm sorry, but I need more context to understand what you're asking about "today." Could you provide more details?
+16:32:32 [INFO] src.wake_word: Wake word detected (confidence=0.988)
+16:33:27 [INFO] src.pipeline: Stopping Jarvis pipeline …
+16:33:28 [INFO] src.wake_word: Wake-word detector stopped
+16:33:28 [INFO] src.pipeline: Jarvis pipeline stopped

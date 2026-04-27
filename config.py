@@ -109,6 +109,15 @@ BLIP_FREQUENCY_HZ: int = _get_env_int("JARVIS_BLIP_FREQ", 880)
 BLIP_DURATION_MS: int = _get_env_int("JARVIS_BLIP_DURATION_MS", 150)
 
 # ---------------------------------------------------------------------------
+# Conversation Memory
+# ---------------------------------------------------------------------------
+HISTORY_FILE: str = _get_env("JARVIS_HISTORY_FILE", "~/.jarvis/history.json")
+"""Path to the persistent conversation history JSON file."""
+
+HISTORY_MAX_ENTRIES: int = _get_env_int("JARVIS_HISTORY_MAX_ENTRIES", 200)
+"""Maximum number of message entries to keep in the history file."""
+
+# ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 LOG_LEVEL: str = _get_env("JARVIS_LOG_LEVEL", "INFO")
