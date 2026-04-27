@@ -37,3 +37,9 @@ env/
 htmlcov/
 .coverage
 coverage.xml
+
+# Docker
+*.log
+
+# Jarvis data
+.jarvis/

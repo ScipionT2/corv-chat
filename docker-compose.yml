@@ -1,0 +1,45 @@
+# Jarvis Voice Bridge — Docker Compose
+#
+# NOTE: Audio I/O does NOT work in Docker containers.
+# This compose file is useful for:
+#   - Running tests in a clean environment
+#   - Accessing the health/status HTTP endpoint
+#   - API-mode development
+#
+# Usage:
+#   docker compose up          # Start Jarvis + Ollama
+#   docker compose run tests   # Run test suite only
+
+services:
+  jarvis:
+    build: .
+    ports:
+      - "${JARVIS_HEALTH_PORT:-8765}:8765"
+    environment:
+      - JARVIS_OLLAMA_URL=http://ollama:11434
+      - JARVIS_OLLAMA_MODEL=${JARVIS_OLLAMA_MODEL:-qwen2.5-coder:7b}
+      - JARVIS_HEALTH_PORT=8765
+      - JARVIS_LOG_LEVEL=${JARVIS_LOG_LEVEL:-INFO}
+    env_file:
+      - .env
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  tests:
+    build: .
+    entrypoint: ["python", "-m", "pytest"]
+    command: ["tests/", "-v", "--tb=short"]
+    profiles:
+      - test
+
+volumes:
+  ollama_data:
