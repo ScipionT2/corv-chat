@@ -120,6 +120,12 @@ HISTORY_MAX_ENTRIES: int = _get_env_int("JARVIS_HISTORY_MAX_ENTRIES", 200)
 """Maximum number of message entries to keep in the history file."""
 
 # ---------------------------------------------------------------------------
+# Health / Status Server
+# ---------------------------------------------------------------------------
+HEALTH_PORT: int = _get_env_int("JARVIS_HEALTH_PORT", 8765)
+"""TCP port for the /health and /status HTTP endpoints."""
+
+# ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 LOG_LEVEL: str = _get_env("JARVIS_LOG_LEVEL", "INFO")
