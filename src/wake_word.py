@@ -19,6 +19,22 @@ from src.audio import generate_blip, open_input_stream, play_audio
 
 logger = logging.getLogger(__name__)
 
+# Map friendly wake-word names to actual OpenWakeWord model names
+_WAKE_WORD_ALIASES: dict[str, str] = {
+    "jarvis": "hey_jarvis_v0.1",
+    "hey jarvis": "hey_jarvis_v0.1",
+    "hey_jarvis": "hey_jarvis_v0.1",
+    "rhasspy": "hey_rhasspy_v0.1",
+    "hey rhasspy": "hey_rhasspy_v0.1",
+    "timer": "timer_v0.1",
+    "weather": "weather_v0.1",
+}
+
+
+def resolve_wake_word(name: str) -> str:
+    """Resolve a friendly wake-word name to the actual OpenWakeWord model name."""
+    return _WAKE_WORD_ALIASES.get(name.lower().strip(), name)
+
 
 class WakeWordDetector:
     """Listens for a wake word on the default microphone.
@@ -56,13 +72,20 @@ class WakeWordDetector:
 
     def start(self) -> None:
         """Load the model and begin listening."""
+        resolved = resolve_wake_word(self.wake_word)
+        logger.info(
+            "Resolving wake word '%s' -> model '%s'",
+            self.wake_word, resolved,
+        )
         try:
             from openwakeword.model import Model  # noqa: WPS433
 
             self._model = Model(
-                wakeword_models=[self.wake_word],
+                wakeword_models=[resolved],
                 inference_framework="onnx",
             )
+            # Store the resolved name for prediction lookups
+            self._resolved_wake_word = resolved
         except Exception as exc:  # noqa: BLE001
             logger.error("Failed to load OpenWakeWord model: %s", exc)
             raise RuntimeError(
@@ -114,7 +137,8 @@ class WakeWordDetector:
         audio_int16 = (indata[:, 0] * 32767).astype(np.int16)
         prediction = self._model.predict(audio_int16)
 
-        score = prediction.get(self.wake_word, 0.0)
+        resolved = getattr(self, '_resolved_wake_word', self.wake_word)
+        score = prediction.get(resolved, 0.0)
         if score >= self.confidence_threshold:
             logger.info("Wake word detected (confidence=%.3f)", score)
             # Reset so we don't re-trigger immediately

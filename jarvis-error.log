@@ -1,0 +1,10 @@
+16:30:08 [INFO] src.pipeline: Stopping Jarvis pipeline …
+16:30:08 [INFO] src.wake_word: Wake-word detector stopped
+16:30:08 [INFO] src.pipeline: Jarvis pipeline stopped
+16:30:09 [INFO] src.pipeline: Starting Jarvis pipeline …
+16:30:09 [INFO] src.stt: Loading Whisper model 'base.en' (device=cpu, compute=int8) …
+16:30:09 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 200 OK"
+16:30:09 [INFO] src.stt: Whisper model loaded
+16:30:09 [INFO] src.wake_word: Resolving wake word 'jarvis' -> model 'hey_jarvis_v0.1'
+16:30:10 [INFO] src.wake_word: Wake-word detector started (word=jarvis, threshold=0.50)
+16:30:10 [INFO] src.pipeline: Jarvis pipeline is running — say 'jarvis' to begin
