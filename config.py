@@ -105,8 +105,20 @@ OLLAMA_NUM_GPU: int = _get_env_int("OLLAMA_NUM_GPU", -1)
 # ---------------------------------------------------------------------------
 # Offline mode — entire stack works without internet
 # ---------------------------------------------------------------------------
-OFFLINE_MODE: bool = _get_env("EP_OFFLINE", "true", "JARVIS_OFFLINE").lower() in ("true", "1", "yes")
+OFFLINE_MODE: bool = _get_env("EP_OFFLINE", "false", "JARVIS_OFFLINE").lower() in ("true", "1", "yes")
 """When True, skip ALL network calls (HuggingFace model checks, etc). Models must be pre-cached."""
+
+# ---------------------------------------------------------------------------
+# Hybrid Mode — auto-switch between cloud and local
+# ---------------------------------------------------------------------------
+HYBRID_MODE: bool = _get_env("EP_HYBRID", "true").lower() in ("true", "1", "yes")
+"""When True, use the hybrid LLM client (cloud + local fallback). Requires OPENAI_API_KEY."""
+
+OPENAI_MODEL: str = _get_env("EP_OPENAI_MODEL", "gpt-4o")
+"""Cloud model for high-reasoning tasks when online."""
+
+PING_THRESHOLD_MS: int = _get_env_int("EP_PING_THRESHOLD_MS", 500)
+"""If ping to cloud exceeds this (ms), switch to local mode."""
 
 LLM_SYSTEM_PROMPT: str = _get_env(
     "EP_SYSTEM_PROMPT",
@@ -188,16 +200,16 @@ VISION_PROMPT: str = _get_env(
 )
 
 # ---------------------------------------------------------------------------
-# Overlay UI — DISABLED by default (renders only on demand)
+# Sidebar UI (always-on side panel)
 # ---------------------------------------------------------------------------
+SIDEBAR_ENABLED: bool = _get_env("EP_SIDEBAR", "true").lower() in ("true", "1", "yes")
+"""Enable the always-on sidebar. Cmd+Shift+E to toggle visibility."""
+
+# Legacy overlay settings (kept for backward compat)
 OVERLAY_WIDTH: int = _get_env_int("EP_OVERLAY_WIDTH", 380, "JARVIS_OVERLAY_WIDTH")
-"""Side-panel overlay width in pixels."""
-
 OVERLAY_OPACITY: float = _get_env_float("EP_OVERLAY_OPACITY", 0.92, "JARVIS_OVERLAY_OPACITY")
-"""Overlay window opacity (0.0-1.0)."""
-
 OVERLAY_ENABLED: bool = _get_env("EP_OVERLAY", "false", "JARVIS_OVERLAY").lower() in ("true", "1", "yes")
-"""Enable the side-panel overlay UI. Disabled by default — use menu bar to toggle."""
+"""Legacy overlay toggle. Sidebar replaces this."""
 
 # ---------------------------------------------------------------------------
 # Menu Bar (macOS system tray)

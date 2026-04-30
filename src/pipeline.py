@@ -14,6 +14,7 @@ from typing import Optional
 
 import config
 from src.commands import CommandResult, parse_command
+from src.hybrid_llm import HybridLLMClient
 from src.llm import OllamaClient
 from src.recorder import record_until_silence
 from src.resource_manager import KVCacheTimer
@@ -50,9 +51,19 @@ class EPAgentPipeline:
         tts_backend: str = config.TTS_BACKEND,
         voice: Optional[str] = None,
         enable_vision: bool = config.VISION_ENABLED,
+        hybrid_mode: bool = True,
     ) -> None:
         self.stt = SpeechToText(model_name=whisper_model)
-        self.llm = OllamaClient(model=ollama_model)
+
+        # Hybrid LLM: auto-switch between cloud (OpenAI) and local (Ollama)
+        if hybrid_mode and not config.OFFLINE_MODE:
+            self.llm = HybridLLMClient(
+                ollama_model=ollama_model,
+                on_mode_change=self._on_llm_mode_change,
+            )
+        else:
+            self.llm = OllamaClient(model=ollama_model)
+
         self.tts = TextToSpeech(backend=tts_backend, say_voice=voice)
         self.detector: Optional[WakeWordDetector] = None
 
@@ -91,6 +102,12 @@ class EPAgentPipeline:
     # Lifecycle
     # ------------------------------------------------------------------
 
+    def _on_llm_mode_change(self, mode: str):
+        """Callback when hybrid LLM switches between cloud/local."""
+        if self._overlay and hasattr(self._overlay, 'set_connectivity'):
+            self._overlay.set_connectivity(mode)
+        logger.info("LLM connectivity: %s", mode)
+
     def start(self) -> None:
         """Initialise components and begin listening for the wake word."""
         logger.info("Starting EP Agent pipeline …")
@@ -106,6 +123,10 @@ class EPAgentPipeline:
 
         # Start KV cache timer
         self._kv_timer.start()
+
+        # Start hybrid LLM heartbeat if available
+        if hasattr(self.llm, 'start'):
+            self.llm.start()
 
         self._running = True
         self._stop_event.clear()
@@ -125,6 +146,10 @@ class EPAgentPipeline:
         if self.analysis_mode is not None:
             self.analysis_mode.stop()
         self._kv_timer.stop()
+
+        # Stop hybrid LLM heartbeat
+        if hasattr(self.llm, 'stop'):
+            self.llm.stop()
 
         if self._menubar:
             self._menubar.set_pipeline_running(False)
@@ -174,6 +199,10 @@ class EPAgentPipeline:
             return
 
         logger.info("User said: %s", text)
+
+        # Push user message to sidebar transcript
+        if self._overlay and hasattr(self._overlay, 'push_transcript'):
+            self._overlay.push_transcript("user", text)
 
         # Switch to processing state
         if self._dock_glow:
@@ -245,6 +274,11 @@ class EPAgentPipeline:
 
         # 5. Speak response
         logger.info("EP Agent says: %s", reply[:120])
+
+        # Push agent reply to sidebar transcript
+        if self._overlay and hasattr(self._overlay, 'push_transcript'):
+            self._overlay.push_transcript("agent", reply)
+
         if self._dock_glow:
             self._dock_glow.set_state("speaking")
         if self._overlay:

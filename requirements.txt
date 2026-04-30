@@ -11,3 +11,5 @@ imagehash
 mss
 Pillow
 pytest
+PyQt6
+openai

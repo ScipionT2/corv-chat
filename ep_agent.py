@@ -181,40 +181,36 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
 
             logger.info("Menu bar app ready")
 
-    # ── Optional Overlay (only if explicitly enabled) ─────────────────
-    overlay = None
+    # ── Sidebar (always-on side panel) ─────────────────────────────────
+    sidebar = None
     dock_glow = None
     app = None
 
-    if config.OVERLAY_ENABLED and not no_overlay:
+    if not no_overlay:
         try:
             from PyQt6.QtWidgets import QApplication
-            from src.overlay import create_overlay
+            from src.sidebar import create_sidebar
             from src.dock_glow import create_dock_glow
 
             app = QApplication.instance() or QApplication(sys.argv)
 
-            def on_toggle():
-                if pipeline:
-                    pipeline._handle_vision_toggle()
-
-            overlay = create_overlay(on_toggle=on_toggle)
-            if overlay:
-                overlay.show()
-                logger.info("Overlay UI started")
+            sidebar = create_sidebar()
+            if sidebar:
+                sidebar.show()
+                logger.info("Sidebar UI started (right 15%% of screen)")
 
             dock_glow = create_dock_glow()
             if dock_glow:
                 logger.info("Dock glow indicator ready")
 
         except ImportError:
-            logger.warning("PyQt6 not available — running without overlay")
+            logger.warning("PyQt6 not available — running without sidebar")
         except Exception as exc:
             logger.warning("Failed to start UI: %s", exc)
 
     # ── Wire UI to pipeline ───────────────────────────────────────────
-    if pipeline and overlay:
-        pipeline.set_overlay(overlay)
+    if pipeline and sidebar:
+        pipeline.set_overlay(sidebar)
     if pipeline and dock_glow:
         pipeline.set_dock_glow(dock_glow)
 
@@ -251,12 +247,12 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
 
     # ── Run event loop ────────────────────────────────────────────────
     if menubar and not app:
-        # Menu bar is the primary event loop (no overlay)
+        # Menu bar is the primary event loop (no sidebar)
         logger.info("EP Agent ready — menu bar active, say wake word to interact")
         menubar.run()
-    elif app and overlay:
-        # PyQt event loop (overlay mode)
-        logger.info("EP Agent ready (overlay mode) — say wake word or use the overlay toggle")
+    elif app and sidebar:
+        # PyQt event loop (sidebar mode)
+        logger.info("EP Agent ready (sidebar mode) — Cmd+Shift+E to toggle, say wake word to interact")
         sys.exit(app.exec())
     else:
         # No GUI — just wait
