@@ -68,8 +68,8 @@ class CommandResponse:
 # Command patterns
 # ---------------------------------------------------------------------------
 
-# Normalise: lowercase, strip punctuation and leading "jarvis"
-_PREFIX_RE = re.compile(r"^(?:jarvis[,.]?\s*)", re.IGNORECASE)
+# Normalise: lowercase, strip punctuation and leading wake-word prefix
+_PREFIX_RE = re.compile(r"^(?:(?:jarvis|ep\s*agent)[,.]?\s*)", re.IGNORECASE)
 
 _CLEAR_HISTORY_RE = re.compile(
     r"^(?:clear|reset|delete|erase)\s+(?:the\s+)?(?:history|conversation|memory|chat)$",
@@ -108,8 +108,8 @@ _VISION_ANALYZE_RE = re.compile(
 )
 
 _SHUTDOWN_RE = re.compile(
-    r"^(?:(?:jarvis\s+)?off"
-    r"|(?:ep\s*agent\s+)?off"
+    r"^(?:(?:ep\s*agent\s+)?off"
+    r"|(?:jarvis\s+)?off"
     r"|shut\s*down"
     r"|power\s+off"
     r"|exit"
@@ -146,7 +146,7 @@ def parse_command(text: str) -> CommandResponse:
     if not text or not text.strip():
         return CommandResponse(CommandResult.NOT_A_COMMAND)
 
-    # Strip leading "Jarvis, " / "EP Agent, " prefix
+    # Strip leading "EP Agent, " / legacy "Jarvis, " prefix
     cleaned = _PREFIX_RE.sub("", text.strip()).strip()
     # Also strip trailing punctuation
     cleaned = cleaned.rstrip(".,!?")
