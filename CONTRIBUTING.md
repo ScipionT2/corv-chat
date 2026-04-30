@@ -1,4 +1,4 @@
-# Contributing to Jarvis Voice Bridge
+# Contributing to EP Agent (Voice Bridge)
 
 Thanks for your interest in contributing! Here's how to get started.
 

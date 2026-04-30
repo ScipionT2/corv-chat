@@ -1,1 +1,1 @@
-"""Jarvis Voice Bridge — test suite."""
+"""EP Agent (Voice Bridge) — test suite."""

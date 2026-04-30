@@ -37,9 +37,37 @@ class SpeechToText:
         compute_type: str = config.WHISPER_COMPUTE_TYPE,
     ) -> None:
         self.model_name = model_name
-        self.device = device
+        self.device = self._resolve_device(device)
         self.compute_type = compute_type
         self._model = None
+
+    @staticmethod
+    def _resolve_device(device: str) -> str:
+        """Resolve 'auto' to the best available device.
+
+        Apple Silicon → 'cpu' with int8 (faster-whisper uses CoreML/Accelerate
+        under the hood on ARM). CUDA → 'cuda' if available.
+        """
+        if device != "auto":
+            return device
+
+        import platform
+        if platform.system() == "Darwin" and platform.machine() == "arm64":
+            # faster-whisper on Apple Silicon: 'cpu' with int8 uses
+            # NEON/Accelerate — this is actually the fastest path since
+            # faster-whisper doesn't support Metal directly yet.
+            # The key win is using int8 quantization (already set).
+            return "cpu"
+
+        # Check for CUDA
+        try:
+            import torch
+            if torch.cuda.is_available():
+                return "cuda"
+        except ImportError:
+            pass
+
+        return "cpu"
 
     # ------------------------------------------------------------------
     # Public API
@@ -49,6 +77,7 @@ class SpeechToText:
         """Load the Whisper model into memory.
 
         Call once at startup.  Subsequent calls are no-ops.
+        In offline mode, forces local-only loading (no HuggingFace calls).
         """
         if self._model is not None:
             return
@@ -59,12 +88,22 @@ class SpeechToText:
             self.device,
             self.compute_type,
         )
+
+        # Block HuggingFace network calls in offline mode
+        import os
+        if getattr(config, "OFFLINE_MODE", False):
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            logger.info("Offline mode: using cached Whisper model only")
+
         from faster_whisper import WhisperModel  # noqa: WPS433
 
         self._model = WhisperModel(
             self.model_name,
             device=self.device,
             compute_type=self.compute_type,
+            # local_files_only ensures no network fetch attempt
+            local_files_only=getattr(config, "OFFLINE_MODE", False),
         )
         logger.info("Whisper model loaded")
 

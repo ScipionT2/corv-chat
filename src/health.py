@@ -1,5 +1,5 @@
 """
-Status and health HTTP server for monitoring Jarvis.
+Status and health HTTP server for EP Agent.
 
 Exposes ``/health`` and ``/status`` JSON endpoints on a configurable
 port (default 8765).  Designed to run in a background thread alongside
@@ -20,13 +20,13 @@ import config
 logger = logging.getLogger(__name__)
 
 
-class JarvisStats:
-    """Thread-safe statistics collector for Jarvis.
+class EPAgentStats:
+    """Thread-safe statistics collector for EP Agent.
 
     Attributes
     ----------
     start_time:
-        Unix timestamp when Jarvis started.
+        Unix timestamp when EP Agent started.
     total_queries:
         Total number of user queries processed.
     last_query:
@@ -89,7 +89,7 @@ class HealthHandler(BaseHTTPRequestHandler):
     """HTTP request handler for /health and /status endpoints."""
 
     # Class-level reference to stats (set before server starts)
-    stats: Optional[JarvisStats] = None
+    stats: Optional[EPAgentStats] = None
 
     def do_GET(self) -> None:  # noqa: N802
         """Handle GET requests."""
@@ -123,14 +123,14 @@ class HealthServer:
     Parameters
     ----------
     stats:
-        The :class:`JarvisStats` instance to expose.
+        The :class:`EPAgentStats` instance to expose.
     port:
         TCP port to listen on.
     """
 
     def __init__(
         self,
-        stats: JarvisStats,
+        stats: EPAgentStats,
         port: int = config.HEALTH_PORT,
     ) -> None:
         self.stats = stats
@@ -172,3 +172,7 @@ class HealthServer:
     def is_running(self) -> bool:
         """Return ``True`` if the server thread is alive."""
         return self._thread is not None and self._thread.is_alive()
+
+
+# Backward compat aliases
+JarvisStats = EPAgentStats

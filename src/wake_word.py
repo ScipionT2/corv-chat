@@ -2,8 +2,10 @@
 Wake-word detection using OpenWakeWord.
 
 Continuously streams microphone audio and fires a callback when the
-configured wake word (default: "jarvis") is detected with sufficient
-confidence.
+configured wake word is detected with sufficient confidence.
+
+Note: Uses the "hey_jarvis" OpenWakeWord model as the trigger.
+The display name is EP Agent but the acoustic model remains jarvis-based.
 """
 
 from __future__ import annotations
@@ -20,10 +22,13 @@ from src.audio import generate_blip, open_input_stream, play_audio
 logger = logging.getLogger(__name__)
 
 # Map friendly wake-word names to actual OpenWakeWord model names
+# "jarvis" is kept as the acoustic model — it's what OpenWakeWord ships.
 _WAKE_WORD_ALIASES: dict[str, str] = {
     "jarvis": "hey_jarvis_v0.1",
     "hey jarvis": "hey_jarvis_v0.1",
     "hey_jarvis": "hey_jarvis_v0.1",
+    "ep": "hey_jarvis_v0.1",
+    "ep agent": "hey_jarvis_v0.1",
     "rhasspy": "hey_rhasspy_v0.1",
     "hey rhasspy": "hey_rhasspy_v0.1",
     "timer": "timer_v0.1",
@@ -117,7 +122,7 @@ class WakeWordDetector:
         logger.info("Wake-word detector stopped")
 
     def pause(self) -> None:
-        """Temporarily ignore detections (e.g. while Jarvis is speaking)."""
+        """Temporarily ignore detections (e.g. while EP Agent is speaking)."""
         self._paused = True
 
     def resume(self) -> None:

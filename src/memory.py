@@ -1,9 +1,9 @@
 """
 Conversation memory persistence.
 
-Stores conversation history to a JSON file so Jarvis remembers past
+Stores conversation history to a JSON file so EP Agent remembers past
 conversations across restarts.  The history file is stored at
-``~/.jarvis/history.json`` by default (configurable).
+``~/.ep-agent/history.json`` by default (configurable).
 """
 
 from __future__ import annotations

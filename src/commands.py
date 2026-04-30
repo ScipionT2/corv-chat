@@ -1,5 +1,5 @@
 """
-Built-in voice command system.
+Built-in voice command system for EP Agent.
 
 Parses user speech for special commands before sending to the LLM.
 Commands like "clear history", "what time is it", "stop listening",
@@ -34,6 +34,15 @@ class CommandResult(Enum):
 
     CLEAR_HISTORY = auto()
     """Request to clear conversation history."""
+
+    VISION_ANALYZE = auto()
+    """Request a one-shot screen analysis."""
+
+    VISION_TOGGLE = auto()
+    """Toggle continuous analysis mode on/off."""
+
+    SHUTDOWN = auto()
+    """Immediately shut down EP Agent."""
 
 
 class CommandResponse:
@@ -85,6 +94,40 @@ _RESUME_RE = re.compile(
     re.IGNORECASE,
 )
 
+_VISION_ANALYZE_RE = re.compile(
+    r"^(?:what\s+(?:do\s+you|can\s+you)\s+see"
+    r"|(?:analyze|analyse)\s+(?:my\s+)?(?:the\s+)?screen"
+    r"|look\s+at\s+(?:my\s+)?(?:the\s+)?screen"
+    r"|read\s+(?:my\s+)?(?:the\s+)?screen"
+    r"|what(?:'s|\s+is)\s+on\s+(?:my\s+)?(?:the\s+)?screen"
+    r"|screen\s+analysis"
+    r"|(?:my\s+)?screen"  # catch partial "my screen" from truncated speech
+    r"|describe\s+(?:my\s+)?(?:the\s+)?screen)"
+    r"[?.]?$",
+    re.IGNORECASE,
+)
+
+_SHUTDOWN_RE = re.compile(
+    r"^(?:(?:jarvis\s+)?off"
+    r"|(?:ep\s*agent\s+)?off"
+    r"|shut\s*down"
+    r"|power\s+off"
+    r"|exit"
+    r"|quit"
+    r"|goodbye"
+    r"|good\s*bye"
+    r"|terminate)$",
+    re.IGNORECASE,
+)
+
+_VISION_TOGGLE_RE = re.compile(
+    r"^(?:(?:start|begin|enable|turn\s+on)\s+(?:analysis|screen)(?:\s+(?:analysis|mode))?"
+    r"|(?:stop|end|disable|turn\s+off)\s+(?:analysis|screen)(?:\s+(?:analysis|mode))?"
+    r"|toggle\s+(?:analysis|screen)(?:\s+(?:analysis|mode))?)"
+    r"$",
+    re.IGNORECASE,
+)
+
 
 def parse_command(text: str) -> CommandResponse:
     """Parse user text for built-in voice commands.
@@ -103,7 +146,7 @@ def parse_command(text: str) -> CommandResponse:
     if not text or not text.strip():
         return CommandResponse(CommandResult.NOT_A_COMMAND)
 
-    # Strip leading "Jarvis, " prefix
+    # Strip leading "Jarvis, " / "EP Agent, " prefix
     cleaned = _PREFIX_RE.sub("", text.strip()).strip()
     # Also strip trailing punctuation
     cleaned = cleaned.rstrip(".,!?")
@@ -128,7 +171,7 @@ def parse_command(text: str) -> CommandResponse:
         logger.info("Command: stop listening")
         return CommandResponse(
             CommandResult.PAUSE,
-            message="Going to sleep. Say the wake word to wake me up.",
+            message="Going to sleep. Say the wake word when you need me.",
         )
 
     if _RESUME_RE.match(cleaned):
@@ -136,6 +179,27 @@ def parse_command(text: str) -> CommandResponse:
         return CommandResponse(
             CommandResult.RESUME,
             message="I'm back and listening.",
+        )
+
+    if _VISION_ANALYZE_RE.match(cleaned):
+        logger.info("Command: vision analyze (one-shot)")
+        return CommandResponse(
+            CommandResult.VISION_ANALYZE,
+            message="Analyzing your screen now.",
+        )
+
+    if _VISION_TOGGLE_RE.match(cleaned):
+        logger.info("Command: toggle analysis mode")
+        return CommandResponse(
+            CommandResult.VISION_TOGGLE,
+            message=None,  # Pipeline sets the message based on new state
+        )
+
+    if _SHUTDOWN_RE.match(cleaned):
+        logger.info("Command: shutdown")
+        return CommandResponse(
+            CommandResult.SHUTDOWN,
+            message="Shutting down. Goodbye.",
         )
 
     return CommandResponse(CommandResult.NOT_A_COMMAND)

@@ -76,8 +76,15 @@ def record_until_silence(
     frames: list[np.ndarray] = []
     silence_start: Optional[float] = None
     max_end = time.monotonic() + max_seconds
+    recording_start = time.monotonic()
 
-    logger.debug("Recording started (max %ds, silence %dms)", max_seconds, silence_duration_ms)
+    # Grace period: ignore silence for the first N ms so the user has
+    # time to start speaking after the wake word.
+    grace_ms = 1200  # 1.2 seconds
+    # Also require at least some speech before allowing silence to end
+    has_speech = False
+
+    logger.debug("Recording started (max %ds, silence %dms, grace %dms)", max_seconds, silence_duration_ms, grace_ms)
 
     try:
         with sd.InputStream(
@@ -92,14 +99,19 @@ def record_until_silence(
                 frames.append(mono.copy())
 
                 rms = compute_rms(mono)
-                if rms < silence_threshold:
+                elapsed_ms = (time.monotonic() - recording_start) * 1000
+
+                if rms >= silence_threshold:
+                    has_speech = True
+                    silence_start = None
+                elif has_speech and elapsed_ms > grace_ms:
+                    # Only start counting silence after grace period
+                    # and after we've heard at least some speech
                     if silence_start is None:
                         silence_start = time.monotonic()
                     elif (time.monotonic() - silence_start) * 1000 >= silence_duration_ms:
                         logger.debug("Silence detected — stopping recording")
                         break
-                else:
-                    silence_start = None
     except Exception as exc:  # noqa: BLE001
         logger.error("Recording failed: %s", exc)
         return None

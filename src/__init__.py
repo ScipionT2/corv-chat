@@ -1,1 +1,1 @@
-"""Jarvis Voice Bridge — core modules."""
+"""EP Agent — core modules (formerly Jarvis Voice Bridge)."""

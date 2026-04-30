@@ -4,5 +4,10 @@ sounddevice
 numpy
 requests
 python-dotenv
+psutil
 piper-tts; platform_machine == "x86_64"
+rumps; sys_platform == "darwin"
+imagehash
+mss
+Pillow
 pytest

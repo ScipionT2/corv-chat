@@ -5,7 +5,7 @@ On ARM64 macOS where piper-tts wheels are unavailable, the module
 gracefully falls back to the built-in ``say`` command.
 
 Supports multiple macOS voices — configurable via ``--voice`` CLI flag,
-``JARVIS_VOICE`` environment variable, or ``JARVIS_SAY_VOICE``.
+``EP_VOICE`` / ``EP_SAY_VOICE`` environment variables.
 """
 
 from __future__ import annotations
@@ -152,9 +152,9 @@ class TextToSpeech:
     ) -> None:
         self._backend_pref = backend
         self.piper_voice = piper_voice
-        # Priority: explicit say_voice param > JARVIS_VOICE env > JARVIS_SAY_VOICE config
+        # Priority: explicit say_voice param > EP_VOICE env > config default
         import os
-        self.say_voice = say_voice or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
+        self.say_voice = say_voice or os.environ.get("EP_VOICE") or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
         self._backend: Optional[str] = None
 
     @property

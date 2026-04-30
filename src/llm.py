@@ -1,5 +1,5 @@
 """
-Ollama LLM client for local chat completions.
+Ollama LLM client for EP Agent local chat completions.
 
 Communicates with a running Ollama instance over HTTP and maintains a
 rolling conversation history for multi-turn context.
@@ -81,6 +81,9 @@ class OllamaClient:
             "model": self.model,
             "messages": messages,
             "stream": True,
+            "options": {
+                "num_gpu": getattr(config, "OLLAMA_NUM_GPU", -1),
+            },
         }
 
         logger.debug("POST %s model=%s", url, self.model)

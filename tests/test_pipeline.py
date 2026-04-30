@@ -1,4 +1,4 @@
-"""Tests for the Jarvis pipeline orchestration."""
+"""Tests for the EP Agent pipeline orchestration."""
 
 from unittest.mock import patch, MagicMock, PropertyMock
 
