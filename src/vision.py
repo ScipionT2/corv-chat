@@ -81,6 +81,8 @@ def capture_screen(monitor: int = 0, scale: float = 0.5) -> Optional[bytes]:
 
     except ImportError:
         logger.warning("mss not available, trying PyAutoGUI fallback")
+    except Exception as exc:
+        logger.warning("mss screen capture failed: %s — trying PyAutoGUI fallback", exc)
 
     try:
         import pyautogui

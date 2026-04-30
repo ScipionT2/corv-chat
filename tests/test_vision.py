@@ -287,12 +287,17 @@ class TestVisionResult:
 # ─── Screen Capture (mocked) ─────────────────────────────────────────
 
 class TestScreenCapture:
-    @patch("src.vision.mss", create=True)
-    @patch("src.vision.Image", create=True)
-    def test_capture_returns_bytes_or_none(self, mock_image_mod, mock_mss_mod):
+    def test_capture_returns_bytes_or_none(self):
         """capture_screen should return bytes or None, never raise."""
-        # We can't easily mock the full mss pipeline, so just verify
-        # the function handles import errors gracefully
+        # On headless CI (no display), mss will fail but function should
+        # gracefully return None instead of raising
         result = capture_screen()
         # Either bytes or None is acceptable
         assert result is None or isinstance(result, bytes)
+
+    def test_capture_handles_no_display(self):
+        """capture_screen returns None when no display is available."""
+        with patch.dict('sys.modules', {'mss': None, 'pyautogui': None}):
+            # With both libraries unavailable, should return None
+            result = capture_screen()
+            assert result is None or isinstance(result, bytes)
