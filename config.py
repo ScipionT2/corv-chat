@@ -123,9 +123,12 @@ PING_THRESHOLD_MS: int = _get_env_int("EP_PING_THRESHOLD_MS", 500)
 LLM_SYSTEM_PROMPT: str = _get_env(
     "EP_SYSTEM_PROMPT",
     (
-        "You are EP Agent, a helpful local AI assistant. "
-        "Be concise and direct. "
-        "You run entirely on this machine — no cloud, no cost, full privacy."
+        "You are EP Agent, a personal AI assistant with full system access. "
+        "You can see and analyze the user's screen, open/close your side panel, "
+        "and control applications. Be concise and direct. "
+        "You have a visual side panel on the right side of the screen. "
+        "When asked about the screen, you analyze it with your vision system. "
+        "You run in hybrid mode: cloud when connected, local when offline."
     ),
     "JARVIS_SYSTEM_PROMPT",
 )
@@ -147,6 +150,15 @@ TTS_BACKEND: str = _get_env("EP_TTS_BACKEND", "auto", "JARVIS_TTS_BACKEND")
 # ---------------------------------------------------------------------------
 BLIP_FREQUENCY_HZ: int = _get_env_int("EP_BLIP_FREQ", 880, "JARVIS_BLIP_FREQ")
 BLIP_DURATION_MS: int = _get_env_int("EP_BLIP_DURATION_MS", 150, "JARVIS_BLIP_DURATION_MS")
+
+# New calm chime settings
+CHIME_FREQUENCY_HZ: int = _get_env_int("EP_CHIME_FREQ", 480)
+CHIME_DURATION_MS: int = _get_env_int("EP_CHIME_DURATION_MS", 200)
+
+# ---------------------------------------------------------------------------
+# Accent color (from profile or default)
+# ---------------------------------------------------------------------------
+ACCENT_COLOR: str = _get_env("EP_ACCENT_COLOR", "cyan")
 
 # ---------------------------------------------------------------------------
 # Conversation Memory
@@ -233,3 +245,8 @@ KV_CACHE_FLUSH_INTERVAL: int = _get_env_int("EP_KV_FLUSH_MINUTES", 10)
 # Logging
 # ---------------------------------------------------------------------------
 LOG_LEVEL: str = _get_env("EP_LOG_LEVEL", "INFO", "JARVIS_LOG_LEVEL")
+
+# ---------------------------------------------------------------------------
+# Profile / Onboarding
+# ---------------------------------------------------------------------------
+PROFILE_PATH: str = os.path.expanduser("~/.ep-agent/profile.json")

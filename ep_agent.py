@@ -13,18 +13,28 @@ Usage:
     python ep_agent.py --no-overlay       # Voice only, no GUI at all
     python ep_agent.py --vision-only      # Vision + menu bar only
     python ep_agent.py --check            # Check system readiness
+    python ep_agent.py --reset            # Reset profile, re-trigger onboarding
 
 All processing runs 100% locally. No cloud dependencies.
 """
 
 import argparse
 import logging
+import os
 import signal
 import sys
 import threading
 
 import config
 from src.vision import VisionClient
+
+# Error log file for crash reports
+_ERROR_LOG = os.path.expanduser("~/.ep-agent/error.log")
+
+
+def _setup_error_logging():
+    """Ensure error log directory exists."""
+    os.makedirs(os.path.dirname(_ERROR_LOG), exist_ok=True)
 
 
 def check_system():
@@ -116,7 +126,6 @@ def check_system():
 
     # Resource info
     print()
-    import os
     total_cores = os.cpu_count() or 4
     max_threads = max(2, total_cores // 4)
     print(f"  ℹ️  CPU threads: {max_threads}/{total_cores} (25% cap)")
@@ -136,6 +145,30 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
     """Launch the full multimodal EP Agent experience."""
     logger = logging.getLogger(__name__)
 
+    try:
+        _run_multimodal_inner(no_overlay, vision_only, logger)
+    except SystemExit:
+        raise
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+        sys.exit(0)
+    except Exception as exc:
+        # Log to error file and exit cleanly — no crash dump to stderr
+        import traceback
+        try:
+            with open(_ERROR_LOG, "a") as f:
+                f.write(f"\n{'='*60}\n")
+                f.write(f"Crash at {__import__('datetime').datetime.now().isoformat()}\n")
+                traceback.print_exc(file=f)
+        except OSError:
+            pass
+        logger.error("Fatal error: %s (logged to %s)", exc, _ERROR_LOG)
+        sys.exit(1)
+
+
+def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
+    """Inner implementation — wrapped by run_multimodal for crash safety."""
+
     # ── Resource optimization (BEFORE heavy imports) ──────────────────
     from src.resource_manager import (
         limit_cpu_threads,
@@ -154,32 +187,13 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
         from src.pipeline import EPAgentPipeline
         pipeline = EPAgentPipeline()
 
-    # ── Menu Bar (primary UI on macOS) ────────────────────────────────
+    # ── Menu Bar (DISABLED — sidebar replaces it) ───────────────────
     menubar = None
-    if config.MENUBAR_ENABLED and not no_overlay:
-        from src.menubar import create_menubar, is_available as menubar_available
+    # Menu bar (yellow mic icon) is disabled — sidebar is now primary UI
 
-        if menubar_available():
-            def _on_quit():
-                if pipeline:
-                    pipeline.stop()
-                sys.exit(0)
-
-            def _on_toggle_vision():
-                if pipeline and pipeline.analysis_mode:
-                    pipeline._handle_vision_toggle()
-
-            menubar = create_menubar(
-                on_start=lambda: pipeline.start() if pipeline else None,
-                on_stop=lambda: pipeline.stop() if pipeline else None,
-                on_toggle_vision=_on_toggle_vision,
-                on_quit=_on_quit,
-            )
-
-            if pipeline:
-                pipeline.set_menubar(menubar)
-
-            logger.info("Menu bar app ready")
+    # ── Load profile (onboarding) ──────────────────────────────────────
+    from src.onboarding import run_onboarding, PERSONALITIES, load_profile
+    profile = load_profile()
 
     # ── Sidebar (always-on side panel) ─────────────────────────────────
     sidebar = None
@@ -192,12 +206,58 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
             from src.sidebar import create_sidebar
             from src.dock_glow import create_dock_glow
 
+            # QApplication MUST be created on the main thread (macOS Cocoa requirement)
             app = QApplication.instance() or QApplication(sys.argv)
 
-            sidebar = create_sidebar()
+            # Run onboarding if needed (must happen after QApplication for dialog)
+            if profile is None:
+                profile = run_onboarding()
+
+            # Extract profile settings
+            accent_color = profile.get("accent_color", "cyan") if profile else "cyan"
+            personality = profile.get("personality", "friendly") if profile else "friendly"
+            voice = profile.get("voice", config.MACOS_SAY_VOICE) if profile else config.MACOS_SAY_VOICE
+
+            # Apply voice to pipeline
+            if pipeline and voice:
+                pipeline.tts.say_voice = voice
+
+            # Apply personality to LLM system prompt
+            if pipeline and personality in PERSONALITIES:
+                prompt_prefix = PERSONALITIES[personality]["prompt_prefix"]
+                base_prompt = config.LLM_SYSTEM_PROMPT
+                pipeline.llm.system_prompt = prompt_prefix + base_prompt
+
+            # Create sidebar on main thread (critical for NSWindow)
+            sidebar = create_sidebar(
+                accent_color=accent_color,
+                personality=personality,
+            )
             if sidebar:
                 sidebar.show()
                 logger.info("Sidebar UI started (right 15%% of screen)")
+
+                # Connect settings button to re-open onboarding
+                def _on_settings_requested():
+                    from src.onboarding import OnboardingDialog, save_profile
+                    dialog = OnboardingDialog(sidebar)
+                    if dialog.exec():
+                        new_profile = dialog.get_profile()
+                        save_profile(new_profile)
+                        # Apply changes live
+                        sidebar.apply_accent_color(new_profile.get("accent_color", "cyan"))
+                        sidebar.apply_personality(new_profile.get("personality", "friendly"))
+                        if pipeline:
+                            new_voice = new_profile.get("voice", config.MACOS_SAY_VOICE)
+                            pipeline.tts.say_voice = new_voice
+                            new_pers = new_profile.get("personality", "friendly")
+                            if new_pers in PERSONALITIES:
+                                pipeline.llm.system_prompt = (
+                                    PERSONALITIES[new_pers]["prompt_prefix"]
+                                    + config.LLM_SYSTEM_PROMPT
+                                )
+
+                sidebar.settings_requested.connect(_on_settings_requested)
 
             dock_glow = create_dock_glow()
             if dock_glow:
@@ -206,7 +266,22 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
         except ImportError:
             logger.warning("PyQt6 not available — running without sidebar")
         except Exception as exc:
-            logger.warning("Failed to start UI: %s", exc)
+            logger.warning("Failed to start UI: %s — falling back to headless", exc)
+            app = None
+            sidebar = None
+    else:
+        # Headless mode — still load profile for voice/personality
+        if profile is None:
+            profile = run_onboarding()
+        if pipeline and profile:
+            voice = profile.get("voice", config.MACOS_SAY_VOICE)
+            personality = profile.get("personality", "friendly")
+            pipeline.tts.say_voice = voice
+            if personality in PERSONALITIES:
+                pipeline.llm.system_prompt = (
+                    PERSONALITIES[personality]["prompt_prefix"]
+                    + config.LLM_SYSTEM_PROMPT
+                )
 
     # ── Wire UI to pipeline ───────────────────────────────────────────
     if pipeline and sidebar:
@@ -251,9 +326,17 @@ def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
         logger.info("EP Agent ready — menu bar active, say wake word to interact")
         menubar.run()
     elif app and sidebar:
-        # PyQt event loop (sidebar mode)
+        # PyQt event loop (sidebar mode) — main thread stays here
         logger.info("EP Agent ready (sidebar mode) — Cmd+Shift+E to toggle, say wake word to interact")
-        sys.exit(app.exec())
+        try:
+            sys.exit(app.exec())
+        except Exception as exc:
+            # If Qt event loop crashes, fall back to headless
+            logger.warning("Qt event loop failed: %s — switching to headless", exc)
+            if pipeline:
+                pipeline.wait()
+            else:
+                signal.pause()
     else:
         # No GUI — just wait
         logger.info("EP Agent ready (headless) — say wake word to interact")
@@ -271,6 +354,7 @@ def main():
     parser.add_argument("--no-overlay", action="store_true", help="Disable all GUI (headless mode)")
     parser.add_argument("--vision-only", action="store_true", help="Vision + UI only (no voice)")
     parser.add_argument("--check", action="store_true", help="Check system readiness")
+    parser.add_argument("--reset", action="store_true", help="Reset profile (re-trigger onboarding)")
     parser.add_argument("--log-level", default=config.LOG_LEVEL, help="Log level")
 
     args = parser.parse_args()
@@ -281,8 +365,22 @@ def main():
         datefmt="%H:%M:%S",
     )
 
+    # Pipe safety (prevents BrokenPipeError in LaunchAgent context)
+    try:
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    except (AttributeError, OSError):
+        pass  # SIGPIPE not available on Windows
+
+    _setup_error_logging()
+
     if args.check:
         sys.exit(0 if check_system() else 1)
+
+    if args.reset:
+        from src.onboarding import delete_profile
+        delete_profile()
+        print("✅ Profile reset — onboarding will re-run on next launch")
+        # Continue to launch (will show onboarding)
 
     run_multimodal(no_overlay=args.no_overlay, vision_only=args.vision_only)
 

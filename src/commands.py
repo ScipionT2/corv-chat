@@ -44,6 +44,15 @@ class CommandResult(Enum):
     SHUTDOWN = auto()
     """Immediately shut down EP Agent."""
 
+    SIDEBAR_TOGGLE = auto()
+    """Toggle the sidebar panel visibility."""
+
+    SIDEBAR_SHOW = auto()
+    """Show the sidebar panel."""
+
+    SIDEBAR_HIDE = auto()
+    """Hide the sidebar panel."""
+
 
 class CommandResponse:
     """Response from the command parser.
@@ -128,6 +137,20 @@ _VISION_TOGGLE_RE = re.compile(
     re.IGNORECASE,
 )
 
+_SIDEBAR_SHOW_RE = re.compile(
+    r"^(?:(?:open|show|display|bring\s+up)\s+(?:the\s+)?(?:side\s*panel|sidebar|panel|interface|ui|overlay)"
+    r"|(?:side\s*panel|sidebar|panel)\s+(?:on|open|show))"
+    r"[?.]?$",
+    re.IGNORECASE,
+)
+
+_SIDEBAR_HIDE_RE = re.compile(
+    r"^(?:(?:close|hide|dismiss|minimize)\s+(?:the\s+)?(?:side\s*panel|sidebar|panel|interface|ui|overlay)"
+    r"|(?:side\s*panel|sidebar|panel)\s+(?:off|close|hide))"
+    r"[?.]?$",
+    re.IGNORECASE,
+)
+
 
 def parse_command(text: str) -> CommandResponse:
     """Parse user text for built-in voice commands.
@@ -200,6 +223,20 @@ def parse_command(text: str) -> CommandResponse:
         return CommandResponse(
             CommandResult.SHUTDOWN,
             message="Shutting down. Goodbye.",
+        )
+
+    if _SIDEBAR_SHOW_RE.match(cleaned):
+        logger.info("Command: show sidebar")
+        return CommandResponse(
+            CommandResult.SIDEBAR_SHOW,
+            message="Opening the side panel.",
+        )
+
+    if _SIDEBAR_HIDE_RE.match(cleaned):
+        logger.info("Command: hide sidebar")
+        return CommandResponse(
+            CommandResult.SIDEBAR_HIDE,
+            message="Closing the side panel.",
         )
 
     return CommandResponse(CommandResult.NOT_A_COMMAND)

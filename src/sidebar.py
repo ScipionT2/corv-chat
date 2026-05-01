@@ -23,7 +23,17 @@ import time
 from datetime import datetime
 from typing import Optional
 
+import config
+
 logger = logging.getLogger(__name__)
+
+# Accent color map (shared with onboarding)
+ACCENT_COLOR_MAP = {
+    "cyan": (0, 200, 255),
+    "purple": (168, 85, 247),
+    "green": (34, 197, 94),
+    "amber": (245, 158, 11),
+}
 
 try:
     from PyQt6.QtCore import (
@@ -34,7 +44,7 @@ try:
     from PyQt6.QtGui import (
         QColor, QFont, QPainter, QLinearGradient, QPen, QRadialGradient,
         QBrush, QPaintEvent, QKeySequence, QShortcut, QPixmap, QImage,
-        QPainterPath, QAction,
+        QPainterPath, QAction, QIcon,
     )
     from PyQt6.QtWidgets import (
         QApplication, QFrame, QGraphicsBlurEffect, QGraphicsDropShadowEffect,
@@ -82,10 +92,11 @@ if PYQT6_AVAILABLE:
         The glow pulses (breathing effect) when the agent is listening/active.
         """
 
-        def __init__(self, parent=None):
+        def __init__(self, parent=None, accent_color: str = "cyan"):
             super().__init__(parent)
             self._glow_opacity = 0.0
-            self._glow_color = QColor(0, 200, 255)  # Cyan default
+            r, g, b = ACCENT_COLOR_MAP.get(accent_color, (0, 200, 255))
+            self._glow_color = QColor(r, g, b)
             self._breathing = False
             self._breath_phase = 0.0
 
@@ -160,12 +171,18 @@ if PYQT6_AVAILABLE:
         vision_thumbnail_received = pyqtSignal(object)  # QPixmap
         connectivity_changed = pyqtSignal(str)  # "cloud" or "local"
 
-        def __init__(self, parent=None):
+        # Signal to open settings dialog
+        settings_requested = pyqtSignal()
+
+        def __init__(self, parent=None, accent_color: str = "cyan", personality: str = "friendly"):
             super().__init__(parent)
             self._visible = True
             self._state = "idle"
             self._connectivity = "local"
             self._drag_pos: Optional[QPoint] = None
+            self._accent_color = accent_color
+            self._personality = personality
+            self._accent_rgb = ACCENT_COLOR_MAP.get(accent_color, (0, 200, 255))
 
             self._setup_window()
             self._build_ui()
@@ -207,10 +224,11 @@ if PYQT6_AVAILABLE:
         def _setup_tray(self):
             """Create system tray icon with context menu."""
             self._tray = QSystemTrayIcon(self)
-            # Use a simple icon - we'll set it programmatically
+            # Create a QIcon from accent-colored pixmap
             pixmap = QPixmap(32, 32)
-            pixmap.fill(QColor(0, 200, 255))
-            self._tray.setIcon(pixmap)
+            r, g, b = self._accent_rgb
+            pixmap.fill(QColor(r, g, b))
+            self._tray.setIcon(QIcon(pixmap))
             self._tray.setToolTip("EP Agent")
 
             menu = QMenu()
@@ -276,7 +294,7 @@ if PYQT6_AVAILABLE:
 
         def _build_ui(self):
             # Glow border container
-            self._glow_border = GlowBorderWidget()
+            self._glow_border = GlowBorderWidget(accent_color=self._accent_color)
             self.setCentralWidget(self._glow_border)
 
             # Background panel inside glow border
@@ -370,7 +388,7 @@ if PYQT6_AVAILABLE:
 
             layout.addWidget(self._vision_card)
 
-            # ── Footer (connectivity indicator) ───────────────────────
+            # ── Footer (connectivity + personality indicator) ──────────
             footer = QWidget()
             footer.setStyleSheet("background: transparent;")
             footer_layout = QHBoxLayout(footer)
@@ -388,6 +406,15 @@ if PYQT6_AVAILABLE:
 
             footer_layout.addStretch()
 
+            # Personality indicator
+            r, g, b = self._accent_rgb
+            self._personality_label = QLabel(self._personality.capitalize())
+            self._personality_label.setFont(QFont(".AppleSystemUIFont", 9))
+            self._personality_label.setStyleSheet(
+                f"color: rgba({r},{g},{b},0.5); background: transparent; padding-right: 8px;"
+            )
+            footer_layout.addWidget(self._personality_label)
+
             self._status_label = QLabel("Idle")
             self._status_label.setFont(QFont(".AppleSystemUIFont", 9))
             self._status_label.setStyleSheet("color: rgba(255,255,255,0.25); background: transparent;")
@@ -396,15 +423,16 @@ if PYQT6_AVAILABLE:
             layout.addWidget(footer)
 
         def _build_header(self) -> QWidget:
-            """Build the header card with title and controls."""
+            """Build the header card with title, settings button, and controls."""
             card = GlassCard()
             layout = QHBoxLayout(card)
             layout.setContentsMargins(14, 10, 14, 10)
 
-            # EP Agent title
+            # EP Agent title (use accent color)
+            r, g, b = self._accent_rgb
             title = QLabel("EP")
             title.setFont(QFont(".AppleSystemUIFont", 20, QFont.Weight.Bold))
-            title.setStyleSheet("color: #00c8ff; background: transparent; letter-spacing: 2px;")
+            title.setStyleSheet(f"color: rgb({r},{g},{b}); background: transparent; letter-spacing: 2px;")
             layout.addWidget(title)
 
             subtitle = QLabel("AGENT")
@@ -413,6 +441,27 @@ if PYQT6_AVAILABLE:
             layout.addWidget(subtitle)
 
             layout.addStretch()
+
+            # Settings button
+            settings_btn = QPushButton("⚙️")
+            settings_btn.setFixedSize(28, 28)
+            settings_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255,255,255,0.04);
+                    color: rgba(255,255,255,0.5);
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 14px;
+                }
+                QPushButton:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: rgba(255,255,255,0.8);
+                }
+            """)
+            settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            settings_btn.setToolTip("Settings")
+            settings_btn.clicked.connect(self._open_settings)
+            layout.addWidget(settings_btn)
 
             # Minimize button
             min_btn = QPushButton("─")
@@ -435,6 +484,10 @@ if PYQT6_AVAILABLE:
             layout.addWidget(min_btn)
 
             return card
+
+        def _open_settings(self):
+            """Emit signal to open settings/onboarding dialog."""
+            self.settings_requested.emit()
 
         # ── Signals ───────────────────────────────────────────────────
 
@@ -632,13 +685,33 @@ if PYQT6_AVAILABLE:
         def mouseReleaseEvent(self, event):
             self._drag_pos = None
 
+        # ── Profile Application ───────────────────────────────────────
 
-    def create_sidebar() -> Optional["EPAgentSidebar"]:
+        def apply_accent_color(self, color_name: str):
+            """Update accent color across the sidebar."""
+            self._accent_color = color_name
+            self._accent_rgb = ACCENT_COLOR_MAP.get(color_name, (0, 200, 255))
+            r, g, b = self._accent_rgb
+            self._glow_border._glow_color = QColor(r, g, b)
+            self._personality_label.setStyleSheet(
+                f"color: rgba({r},{g},{b},0.5); background: transparent; padding-right: 8px;"
+            )
+
+        def apply_personality(self, personality: str):
+            """Update personality label."""
+            self._personality = personality
+            self._personality_label.setText(personality.capitalize())
+
+
+    def create_sidebar(
+        accent_color: str = "cyan",
+        personality: str = "friendly",
+    ) -> Optional["EPAgentSidebar"]:
         """Create the EP Agent sidebar. Requires a running QApplication."""
         if not PYQT6_AVAILABLE:
             logger.error("PyQt6 not installed")
             return None
-        return EPAgentSidebar()
+        return EPAgentSidebar(accent_color=accent_color, personality=personality)
 
 else:
     def create_sidebar(*args, **kwargs):

@@ -236,6 +236,22 @@ class EPAgentPipeline:
             self._set_idle()
             return
 
+        # Sidebar show/hide
+        if cmd.result == CommandResult.SIDEBAR_SHOW:
+            if self._overlay and hasattr(self._overlay, '_slide_in'):
+                self._overlay._slide_in()
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            self._set_idle()
+            return
+        if cmd.result == CommandResult.SIDEBAR_HIDE:
+            if self._overlay and hasattr(self._overlay, '_slide_out'):
+                self._overlay._slide_out()
+            if cmd.message:
+                self.tts.speak(cmd.message)
+            self._set_idle()
+            return
+
         # Shutdown
         if cmd.result == CommandResult.SHUTDOWN:
             if cmd.message:

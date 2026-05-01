@@ -2,7 +2,7 @@
 Audio playback and utility helpers.
 
 Provides thin wrappers around ``sounddevice`` for recording and playback,
-plus a simple activation-blip generator.
+plus activation/deactivation chime generators.
 """
 
 from __future__ import annotations
@@ -17,13 +17,126 @@ import config
 logger = logging.getLogger(__name__)
 
 
+def generate_chime(
+    frequency_hz: int = config.CHIME_FREQUENCY_HZ,
+    duration_ms: int = config.CHIME_DURATION_MS,
+    sample_rate: int = config.SAMPLE_RATE,
+    amplitude: float = 0.25,
+) -> np.ndarray:
+    """Generate a calm, harmonically-rich activation chime.
+
+    Uses a fundamental frequency with a softer octave harmonic layered on top,
+    and a smooth fade-in/fade-out envelope to avoid harshness.
+
+    Parameters
+    ----------
+    frequency_hz:
+        Fundamental tone frequency in Hz (default ~480 Hz).
+    duration_ms:
+        Duration in milliseconds (default 200 ms).
+    sample_rate:
+        Audio sample rate.
+    amplitude:
+        Peak amplitude (0.0–1.0). Default 0.25 for a gentle sound.
+
+    Returns
+    -------
+    np.ndarray
+        1-D float32 array of audio samples.
+    """
+    num_samples = int(sample_rate * duration_ms / 1000)
+    t = np.linspace(0, duration_ms / 1000.0, num_samples, endpoint=False)
+
+    # Fundamental + octave harmonic at 30% volume for richness
+    fundamental = np.sin(2 * np.pi * frequency_hz * t)
+    harmonic = 0.3 * np.sin(2 * np.pi * (frequency_hz * 2) * t)
+    chime = amplitude * (fundamental + harmonic) / 1.3  # Normalize
+
+    # Smooth envelope: longer fade-in (30%) and fade-out (50%) for gentle attack/release
+    fade_in_samples = int(num_samples * 0.3)
+    fade_out_samples = int(num_samples * 0.5)
+
+    if fade_in_samples > 0:
+        # Raised cosine fade-in (smoother than linear)
+        fade_in = 0.5 * (1 - np.cos(np.pi * np.linspace(0, 1, fade_in_samples)))
+        chime[:fade_in_samples] *= fade_in
+
+    if fade_out_samples > 0:
+        # Raised cosine fade-out
+        fade_out = 0.5 * (1 + np.cos(np.pi * np.linspace(0, 1, fade_out_samples)))
+        chime[-fade_out_samples:] *= fade_out
+
+    return chime.astype(np.float32)
+
+
+def generate_deactivation_chime(
+    frequency_hz: int = config.CHIME_FREQUENCY_HZ,
+    duration_ms: int = 250,
+    sample_rate: int = config.SAMPLE_RATE,
+    amplitude: float = 0.2,
+) -> np.ndarray:
+    """Generate a gentle descending tone for deactivation/completion.
+
+    A soft pitch-drop from the base frequency down a major third,
+    with smooth envelope shaping.
+
+    Parameters
+    ----------
+    frequency_hz:
+        Starting frequency in Hz.
+    duration_ms:
+        Duration in milliseconds.
+    sample_rate:
+        Audio sample rate.
+    amplitude:
+        Peak amplitude (0.0–1.0).
+
+    Returns
+    -------
+    np.ndarray
+        1-D float32 array of audio samples.
+    """
+    num_samples = int(sample_rate * duration_ms / 1000)
+    t = np.linspace(0, duration_ms / 1000.0, num_samples, endpoint=False)
+
+    # Descending pitch: start at frequency_hz, end at frequency_hz * 0.8 (major third down)
+    freq_start = frequency_hz
+    freq_end = frequency_hz * 0.8
+    freq_sweep = np.linspace(freq_start, freq_end, num_samples)
+
+    # Instantaneous phase from frequency sweep
+    phase = 2 * np.pi * np.cumsum(freq_sweep) / sample_rate
+    fundamental = np.sin(phase)
+    harmonic = 0.2 * np.sin(phase * 1.5)  # Fifth harmonic for warmth
+
+    chime = amplitude * (fundamental + harmonic) / 1.2
+
+    # Gentle envelope: short attack, long release
+    fade_in_samples = int(num_samples * 0.15)
+    fade_out_samples = int(num_samples * 0.6)
+
+    if fade_in_samples > 0:
+        fade_in = 0.5 * (1 - np.cos(np.pi * np.linspace(0, 1, fade_in_samples)))
+        chime[:fade_in_samples] *= fade_in
+
+    if fade_out_samples > 0:
+        fade_out = 0.5 * (1 + np.cos(np.pi * np.linspace(0, 1, fade_out_samples)))
+        chime[-fade_out_samples:] *= fade_out
+
+    return chime.astype(np.float32)
+
+
+# Backward-compatible alias — existing code imports generate_blip
 def generate_blip(
     frequency_hz: int = config.BLIP_FREQUENCY_HZ,
     duration_ms: int = config.BLIP_DURATION_MS,
     sample_rate: int = config.SAMPLE_RATE,
     amplitude: float = 0.4,
 ) -> np.ndarray:
-    """Generate a short sine-wave beep as a float32 numpy array.
+    """Backward-compatible alias that now delegates to generate_chime.
+
+    Parameters are accepted for API compat but the output uses the new
+    calm chime algorithm with the caller's amplitude/duration.
 
     Parameters
     ----------
@@ -41,18 +154,12 @@ def generate_blip(
     np.ndarray
         1-D float32 array of audio samples.
     """
-    t = np.linspace(
-        0, duration_ms / 1000.0, int(sample_rate * duration_ms / 1000), endpoint=False
+    return generate_chime(
+        frequency_hz=frequency_hz,
+        duration_ms=duration_ms,
+        sample_rate=sample_rate,
+        amplitude=amplitude,
     )
-    # Apply a quick fade-in/out to avoid clicks
-    blip = (amplitude * np.sin(2 * np.pi * frequency_hz * t)).astype(np.float32)
-    fade_samples = min(len(blip) // 4, int(sample_rate * 0.01))
-    if fade_samples > 0:
-        fade_in = np.linspace(0.0, 1.0, fade_samples, dtype=np.float32)
-        fade_out = np.linspace(1.0, 0.0, fade_samples, dtype=np.float32)
-        blip[:fade_samples] *= fade_in
-        blip[-fade_samples:] *= fade_out
-    return blip
 
 
 def play_audio(
