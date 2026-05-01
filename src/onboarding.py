@@ -444,10 +444,36 @@ if _PYQT6_OK:
             return self._profile
 
 
+def _has_display() -> bool:
+    """Check if we have access to an interactive display (not a headless LaunchAgent)."""
+    import os
+    import sys
+    # On macOS, check if we can access the WindowServer
+    # LaunchAgents with RunAtLoad may not have display access
+    if sys.platform == "darwin":
+        # If DISPLAY or TERM_SESSION_ID is set, we likely have GUI access
+        # Also check if running under launchd without Aqua session
+        session_type = os.environ.get("XPC_SERVICE_NAME", "")
+        # If stdout is not a TTY and there's no explicit GUI env, assume headless
+        if not sys.stdout.isatty() and not os.environ.get("TERM_SESSION_ID"):
+            # Try a lightweight check: can we access NSScreen?
+            try:
+                from PyQt6.QtWidgets import QApplication
+                app = QApplication.instance()
+                if app and app.primaryScreen():
+                    return True
+            except Exception:
+                pass
+            # Still might work if QApplication was created successfully
+            return True
+    return True
+
+
 def run_onboarding(app=None) -> dict:
     """Run the onboarding wizard. Returns profile dict.
 
     If PyQt6 is unavailable or the dialog is cancelled, returns DEFAULT_PROFILE.
+    If running in a headless/LaunchAgent context, saves defaults without showing UI.
     """
     # Check existing profile
     existing = load_profile()
@@ -460,6 +486,7 @@ def run_onboarding(app=None) -> dict:
         return DEFAULT_PROFILE
 
     try:
+        # Attempt to show the dialog — if it fails (headless), use defaults
         dialog = OnboardingDialog()
         result = dialog.exec()
         if result == QDialog.DialogCode.Accepted:

@@ -224,9 +224,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
 
             # Apply personality to LLM system prompt
             if pipeline and personality in PERSONALITIES:
-                prompt_prefix = PERSONALITIES[personality]["prompt_prefix"]
-                base_prompt = config.LLM_SYSTEM_PROMPT
-                pipeline.llm.system_prompt = prompt_prefix + base_prompt
+                pipeline.llm.system_prompt = PERSONALITIES[personality]["system_prompt"]
 
             # Create sidebar on main thread (critical for NSWindow)
             sidebar = create_sidebar(
@@ -252,10 +250,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
                             pipeline.tts.say_voice = new_voice
                             new_pers = new_profile.get("personality", "friendly")
                             if new_pers in PERSONALITIES:
-                                pipeline.llm.system_prompt = (
-                                    PERSONALITIES[new_pers]["prompt_prefix"]
-                                    + config.LLM_SYSTEM_PROMPT
-                                )
+                                pipeline.llm.system_prompt = PERSONALITIES[new_pers]["system_prompt"]
 
                 sidebar.settings_requested.connect(_on_settings_requested)
 
@@ -278,10 +273,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
             personality = profile.get("personality", "friendly")
             pipeline.tts.say_voice = voice
             if personality in PERSONALITIES:
-                pipeline.llm.system_prompt = (
-                    PERSONALITIES[personality]["prompt_prefix"]
-                    + config.LLM_SYSTEM_PROMPT
-                )
+                pipeline.llm.system_prompt = PERSONALITIES[personality]["system_prompt"]
 
     # ── Wire UI to pipeline ───────────────────────────────────────────
     if pipeline and sidebar:
@@ -377,8 +369,8 @@ def main():
         sys.exit(0 if check_system() else 1)
 
     if args.reset:
-        from src.onboarding import delete_profile
-        delete_profile()
+        from src.onboarding import reset_profile
+        reset_profile()
         print("✅ Profile reset — onboarding will re-run on next launch")
         # Continue to launch (will show onboarding)
 
