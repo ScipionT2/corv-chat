@@ -59,7 +59,7 @@ def _get_env_float(key: str, default: float, legacy_key: str | None = None) -> f
 # ---------------------------------------------------------------------------
 # Wake word
 # ---------------------------------------------------------------------------
-WAKE_WORD: str = _get_env("EP_WAKE_WORD", "jarvis", "JARVIS_WAKE_WORD")
+WAKE_WORD: str = _get_env("EP_WAKE_WORD", "ep", "JARVIS_WAKE_WORD")
 WAKE_WORD_CONFIDENCE: float = _get_env_float("EP_WAKE_CONFIDENCE", 0.5, "JARVIS_WAKE_CONFIDENCE")
 
 # ---------------------------------------------------------------------------

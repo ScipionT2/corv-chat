@@ -40,10 +40,12 @@ if PYQT6_AVAILABLE:
     class DockGlow(QWidget):
         """Glowing bar indicator above the macOS Dock.
 
-        Emits no signals — controlled entirely via set_state().
+        Thread-safe: call set_state() from any thread; actual Qt
+        operations are marshalled to the main thread via signal.
         """
 
         state_changed = pyqtSignal(str)
+        _state_request = pyqtSignal(str)  # internal: cross-thread dispatch
 
         # ── Color Schemes ─────────────────────────────────────────────
         COLORS = {
@@ -105,10 +107,19 @@ if PYQT6_AVAILABLE:
             self._fade_timer.setInterval(16)  # ~60fps
             self._fade_timer.timeout.connect(self._tick_fade)
 
+            # Cross-thread signal → main-thread slot
+            self._state_request.connect(self._apply_state, Qt.ConnectionType.QueuedConnection)
+
         # ── Public API ────────────────────────────────────────────────
 
         def set_state(self, state: str):
-            """Thread-safe state update. Call from any thread via signal."""
+            """Thread-safe state update. Safe to call from any thread."""
+            # Dispatch to main thread via queued signal
+            self._state_request.emit(state)
+
+        @pyqtSlot(str)
+        def _apply_state(self, state: str):
+            """Apply state change on the main thread (slot)."""
             if state == self._state:
                 return
             self._state = state
@@ -138,7 +149,7 @@ if PYQT6_AVAILABLE:
                 self.show()
                 self.raise_()
                 # Auto-hide after 2s
-                QTimer.singleShot(2000, lambda: self.set_state("idle"))
+                QTimer.singleShot(2000, lambda: self._state_request.emit("idle"))
 
         @pyqtSlot()
         def _tick_pulse(self):

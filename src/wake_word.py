@@ -28,6 +28,8 @@ _WAKE_WORD_ALIASES: dict[str, str] = {
     "hey jarvis": "hey_jarvis_v0.1",
     "hey_jarvis": "hey_jarvis_v0.1",
     "ep": "hey_jarvis_v0.1",
+    "hey ep": "hey_jarvis_v0.1",
+    "hey_ep": "hey_jarvis_v0.1",
     "ep agent": "hey_jarvis_v0.1",
     "rhasspy": "hey_rhasspy_v0.1",
     "hey rhasspy": "hey_rhasspy_v0.1",

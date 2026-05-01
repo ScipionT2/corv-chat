@@ -9,7 +9,7 @@ class TestConfigDefaults:
 
     def test_wake_word_default(self):
         import config
-        expected = os.environ.get("EP_WAKE_WORD") or os.environ.get("JARVIS_WAKE_WORD", "jarvis")
+        expected = os.environ.get("EP_WAKE_WORD") or os.environ.get("JARVIS_WAKE_WORD", "ep")
         assert config.WAKE_WORD == expected
 
     def test_sample_rate_default(self):

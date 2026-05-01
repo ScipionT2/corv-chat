@@ -119,9 +119,9 @@ if PYQT6_AVAILABLE:
                 self.update()
 
         def _tick_breath(self):
-            self._breath_phase += 0.04
-            # Smooth sine breathing: 0.2 → 1.0
-            self._glow_opacity = 0.2 + 0.8 * (0.5 + 0.5 * math.sin(self._breath_phase))
+            self._breath_phase += 0.06  # Faster pulse for clear visual feedback
+            # Smooth sine breathing: 0.4 → 1.0 (more visible minimum)
+            self._glow_opacity = 0.4 + 0.6 * (0.5 + 0.5 * math.sin(self._breath_phase))
             self.update()
 
         def paintEvent(self, event: QPaintEvent):
@@ -136,22 +136,22 @@ if PYQT6_AVAILABLE:
             h = self.height()
             radius = 16
 
-            # Draw glowing border
+            # Draw glowing border (bold, clearly visible)
             color = QColor(self._glow_color)
-            color.setAlphaF(self._glow_opacity * 0.7)
+            color.setAlphaF(self._glow_opacity * 0.85)
 
-            pen = QPen(color, 2.5)
+            pen = QPen(color, 3.5)  # Thicker inner border
             painter.setPen(pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)
 
             path = QPainterPath()
-            path.addRoundedRect(QRectF(2, 2, w - 4, h - 4), radius, radius)
+            path.addRoundedRect(QRectF(3, 3, w - 6, h - 6), radius, radius)
             painter.drawPath(path)
 
-            # Outer soft glow (wider, more transparent)
+            # Outer soft glow (wider, brighter for clear activation indicator)
             outer_color = QColor(self._glow_color)
-            outer_color.setAlphaF(self._glow_opacity * 0.25)
-            outer_pen = QPen(outer_color, 6)
+            outer_color.setAlphaF(self._glow_opacity * 0.4)
+            outer_pen = QPen(outer_color, 10)  # Much wider outer glow
             painter.setPen(outer_pen)
             painter.drawPath(path)
 
@@ -222,7 +222,11 @@ if PYQT6_AVAILABLE:
         # ── System Tray ───────────────────────────────────────────────
 
         def _setup_tray(self):
-            """Create system tray icon with context menu."""
+            """Create system tray icon with context menu (hidden by default).
+
+            The tray icon is available but not shown to avoid clutter in the
+            menu bar. Users can toggle sidebar with Cmd+Shift+E instead.
+            """
             self._tray = QSystemTrayIcon(self)
             # Create a QIcon from accent-colored pixmap
             pixmap = QPixmap(32, 32)
@@ -248,7 +252,8 @@ if PYQT6_AVAILABLE:
 
             self._tray.setContextMenu(menu)
             self._tray.activated.connect(self._tray_activated)
-            self._tray.show()
+            # Don't show tray icon — no yellow/colored icon in menu bar
+            # self._tray.show()
 
         def _tray_activated(self, reason):
             if reason == QSystemTrayIcon.ActivationReason.Trigger:
@@ -510,8 +515,10 @@ if PYQT6_AVAILABLE:
             self._state = status
 
             # Smart Glow: pulse border when listening/active
+            # Listening uses the user's accent color for clear visual feedback
+            r, g, b = self._accent_rgb
             if status in ("listening",):
-                self._glow_border.set_glow_active(True, QColor(0, 200, 255))  # Cyan
+                self._glow_border.set_glow_active(True, QColor(r, g, b))  # Accent color
             elif status in ("analyzing",):
                 self._glow_border.set_glow_active(True, QColor(140, 80, 255))  # Purple
             elif status in ("processing",):
