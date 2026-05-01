@@ -204,7 +204,6 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
         try:
             from PyQt6.QtWidgets import QApplication
             from src.sidebar import create_sidebar
-            from src.dock_glow import create_dock_glow
 
             # QApplication MUST be created on the main thread (macOS Cocoa requirement)
             app = QApplication.instance() or QApplication(sys.argv)
@@ -254,9 +253,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
 
                 sidebar.settings_requested.connect(_on_settings_requested)
 
-            dock_glow = create_dock_glow()
-            if dock_glow:
-                logger.info("Dock glow indicator ready")
+            # Dock glow removed — no bottom-screen wave animation
 
         except ImportError:
             logger.warning("PyQt6 not available — running without sidebar")
@@ -278,8 +275,26 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     # ── Wire UI to pipeline ───────────────────────────────────────────
     if pipeline and sidebar:
         pipeline.set_overlay(sidebar)
-    if pipeline and dock_glow:
-        pipeline.set_dock_glow(dock_glow)
+
+        # Wire chat input to pipeline (background thread to avoid blocking Qt)
+        def _handle_chat_message(text: str):
+            def _process():
+                try:
+                    sidebar.set_status("processing")
+                    reply = pipeline.llm.chat(text)
+                    if reply:
+                        sidebar.push_transcript("agent", reply)
+                    else:
+                        sidebar.push_transcript("agent", "Sorry, I'm having trouble thinking right now.")
+                except Exception as exc:
+                    logger.error("Chat processing error: %s", exc)
+                    sidebar.push_transcript("agent", "An error occurred.")
+                finally:
+                    sidebar.set_status("idle")
+            threading.Thread(target=_process, daemon=True, name="chat-handler").start()
+
+        sidebar.chat_message_sent.connect(_handle_chat_message)
+
 
     # ── Start voice pipeline in background thread ─────────────────────
     if pipeline:

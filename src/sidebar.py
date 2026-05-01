@@ -48,7 +48,7 @@ try:
     )
     from PyQt6.QtWidgets import (
         QApplication, QFrame, QGraphicsBlurEffect, QGraphicsDropShadowEffect,
-        QHBoxLayout, QLabel, QMainWindow, QPushButton, QScrollArea,
+        QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QScrollArea,
         QSizePolicy, QVBoxLayout, QWidget, QSystemTrayIcon, QMenu,
         QGraphicsOpacityEffect,
     )
@@ -174,6 +174,9 @@ if PYQT6_AVAILABLE:
         # Signal to open settings dialog
         settings_requested = pyqtSignal()
 
+        # Signal emitted when user sends a chat message
+        chat_message_sent = pyqtSignal(str)
+
         def __init__(self, parent=None, accent_color: str = "cyan", personality: str = "friendly"):
             super().__init__(parent)
             self._visible = True
@@ -298,25 +301,17 @@ if PYQT6_AVAILABLE:
         # ── UI Build ──────────────────────────────────────────────────
 
         def _build_ui(self):
-            # Glow border container
-            self._glow_border = GlowBorderWidget(accent_color=self._accent_color)
-            self.setCentralWidget(self._glow_border)
-
-            # Background panel inside glow border
-            panel = QWidget(self._glow_border)
+            # Direct panel as central widget (no glow border)
+            panel = QWidget()
             panel.setStyleSheet("""
-                background-color: rgba(10, 12, 18, 220);
+                background-color: rgba(10, 12, 18, 200);
                 border-radius: 16px;
             """)
-
-            # Use a layout for the glow border
-            glow_layout = QVBoxLayout(self._glow_border)
-            glow_layout.setContentsMargins(4, 4, 4, 4)
-            glow_layout.addWidget(panel)
+            self.setCentralWidget(panel)
 
             # Main layout inside panel
             layout = QVBoxLayout(panel)
-            layout.setContentsMargins(16, 14, 16, 14)
+            layout.setContentsMargins(18, 16, 18, 12)
             layout.setSpacing(10)
 
             # ── Header ────────────────────────────────────────────────
@@ -392,6 +387,27 @@ if PYQT6_AVAILABLE:
             vision_layout.addLayout(vision_info, 1)
 
             layout.addWidget(self._vision_card)
+
+            # ── Chat Input ────────────────────────────────────────────
+            self._chat_input = QLineEdit()
+            self._chat_input.setPlaceholderText("Type a message…")
+            self._chat_input.setFont(QFont(".AppleSystemUIFont", 11))
+            r, g, b = self._accent_rgb
+            self._chat_input.setStyleSheet(f"""
+                QLineEdit {{
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba({r},{g},{b},0.2);
+                    border-radius: 8px;
+                    color: rgba(255,255,255,0.85);
+                    padding: 8px 12px;
+                }}
+                QLineEdit:focus {{
+                    border: 1px solid rgba({r},{g},{b},0.5);
+                    background: rgba(255,255,255,0.06);
+                }}
+            """)
+            self._chat_input.returnPressed.connect(self._on_chat_submit)
+            layout.addWidget(self._chat_input)
 
             # ── Footer (connectivity + personality indicator) ──────────
             footer = QWidget()
@@ -494,6 +510,15 @@ if PYQT6_AVAILABLE:
             """Emit signal to open settings/onboarding dialog."""
             self.settings_requested.emit()
 
+        def _on_chat_submit(self):
+            """Handle chat input submission."""
+            text = self._chat_input.text().strip()
+            if not text:
+                return
+            self._chat_input.clear()
+            self._add_message("user", text)
+            self.chat_message_sent.emit(text)
+
         # ── Signals ───────────────────────────────────────────────────
 
         def _connect_signals(self):
@@ -513,20 +538,6 @@ if PYQT6_AVAILABLE:
         @pyqtSlot(str)
         def _on_status_changed(self, status: str):
             self._state = status
-
-            # Smart Glow: pulse border when listening/active
-            # Listening uses the user's accent color for clear visual feedback
-            r, g, b = self._accent_rgb
-            if status in ("listening",):
-                self._glow_border.set_glow_active(True, QColor(r, g, b))  # Accent color
-            elif status in ("analyzing",):
-                self._glow_border.set_glow_active(True, QColor(140, 80, 255))  # Purple
-            elif status in ("processing",):
-                self._glow_border.set_glow_active(True, QColor(255, 180, 0))  # Amber
-            elif status == "speaking":
-                self._glow_border.set_glow_active(True, QColor(0, 220, 120))  # Green
-            else:
-                self._glow_border.set_glow_active(False)
 
             # Status label
             labels = {
@@ -699,7 +710,6 @@ if PYQT6_AVAILABLE:
             self._accent_color = color_name
             self._accent_rgb = ACCENT_COLOR_MAP.get(color_name, (0, 200, 255))
             r, g, b = self._accent_rgb
-            self._glow_border._glow_color = QColor(r, g, b)
             self._personality_label.setStyleSheet(
                 f"color: rgba({r},{g},{b},0.5); background: transparent; padding-right: 8px;"
             )

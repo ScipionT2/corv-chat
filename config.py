@@ -94,9 +94,11 @@ WHISPER_COMPUTE_TYPE: str = _get_env("EP_WHISPER_COMPUTE", "int8", "JARVIS_WHISP
 # LLM (Ollama — runs 100% offline)
 # ---------------------------------------------------------------------------
 OLLAMA_BASE_URL: str = _get_env("EP_OLLAMA_URL", "http://localhost:11434", "JARVIS_OLLAMA_URL")
-OLLAMA_MODEL: str = _get_env("EP_OLLAMA_MODEL", "qwen2.5:3b", "JARVIS_OLLAMA_MODEL")
-"""Default model. Quantized 3B is ~2GB VRAM and fast on Metal. Override with 7B if GPU headroom allows."""
-OLLAMA_TIMEOUT: int = _get_env_int("EP_OLLAMA_TIMEOUT", 120, "JARVIS_OLLAMA_TIMEOUT")
+OLLAMA_MODEL: str = _get_env("EP_OLLAMA_MODEL", "qwen2.5:1.5b", "JARVIS_OLLAMA_MODEL")
+"""Default model. Quantized 1.5B is <1GB VRAM and blazing fast on Metal. Override with 3B/7B if GPU headroom allows."""
+OLLAMA_TIMEOUT: int = _get_env_int("EP_OLLAMA_TIMEOUT", 60, "JARVIS_OLLAMA_TIMEOUT")
+OLLAMA_NUM_CTX: int = _get_env_int("EP_NUM_CTX", 2048)
+"""Context window size. Smaller = faster inference."""
 
 # GPU / Metal Acceleration — Ollama handles this via model format (GGUF Q4_K_M)
 OLLAMA_NUM_GPU: int = _get_env_int("OLLAMA_NUM_GPU", -1)
@@ -132,7 +134,7 @@ LLM_SYSTEM_PROMPT: str = _get_env(
     ),
     "JARVIS_SYSTEM_PROMPT",
 )
-LLM_MAX_HISTORY: int = _get_env_int("EP_MAX_HISTORY", 10, "JARVIS_MAX_HISTORY")
+LLM_MAX_HISTORY: int = _get_env_int("EP_MAX_HISTORY", 6, "JARVIS_MAX_HISTORY")
 """Maximum number of user/assistant exchange pairs to keep in context."""
 
 # ---------------------------------------------------------------------------
@@ -178,8 +180,8 @@ HEALTH_PORT: int = _get_env_int("EP_HEALTH_PORT", 8765, "JARVIS_HEALTH_PORT")
 # ---------------------------------------------------------------------------
 # Vision (Screen Analysis) — DISABLED by default
 # ---------------------------------------------------------------------------
-VISION_ENABLED: bool = _get_env("EP_VISION", "false", "JARVIS_VISION").lower() in ("true", "1", "yes")
-"""Vision is opt-in. Enable with EP_VISION=true or --vision flag."""
+VISION_ENABLED: bool = _get_env("EP_VISION", "true", "JARVIS_VISION").lower() in ("true", "1", "yes")
+"""Vision is enabled by default. Disable with EP_VISION=false."""
 
 VISION_MODEL: str = _get_env("EP_VISION_MODEL", "moondream:1.8b", "JARVIS_VISION_MODEL")
 """Ollama vision model for screen analysis. moondream 1.8B is 10x lighter than llama3.2-vision."""

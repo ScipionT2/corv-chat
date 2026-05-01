@@ -17,7 +17,7 @@ from typing import Callable, Optional
 import numpy as np
 
 import config
-from src.audio import generate_blip, open_input_stream, play_audio
+from src.audio import open_input_stream, play_audio
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,6 @@ class WakeWordDetector:
         self._running = False
         self._stream = None
         self._model = None
-        self._blip = generate_blip()
         self._lock = threading.Lock()
         self._paused = False
 
@@ -155,11 +154,7 @@ class WakeWordDetector:
             threading.Thread(target=self._handle_wake, daemon=True).start()
 
     def _handle_wake(self) -> None:
-        """Play the activation blip, then invoke the user callback."""
-        try:
-            play_audio(self._blip, blocking=True)
-        except Exception:  # noqa: BLE001
-            pass
+        """Invoke the user callback (no activation sound)."""
         try:
             self.on_wake()
         except Exception as exc:  # noqa: BLE001
