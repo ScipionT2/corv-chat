@@ -94,8 +94,8 @@ WHISPER_COMPUTE_TYPE: str = _get_env("EP_WHISPER_COMPUTE", "int8", "JARVIS_WHISP
 # LLM (Ollama — runs 100% offline)
 # ---------------------------------------------------------------------------
 OLLAMA_BASE_URL: str = _get_env("EP_OLLAMA_URL", "http://localhost:11434", "JARVIS_OLLAMA_URL")
-OLLAMA_MODEL: str = _get_env("EP_OLLAMA_MODEL", "qwen2.5:1.5b", "JARVIS_OLLAMA_MODEL")
-"""Default model. Quantized 1.5B is <1GB VRAM and blazing fast on Metal. Override with 3B/7B if GPU headroom allows."""
+OLLAMA_MODEL: str = _get_env("EP_OLLAMA_MODEL", "qwen2.5:3b", "JARVIS_OLLAMA_MODEL")
+"""Default model. Quantized 3B is ~2GB VRAM and fast on Metal. Override with 7B if GPU headroom allows."""
 OLLAMA_TIMEOUT: int = _get_env_int("EP_OLLAMA_TIMEOUT", 60, "JARVIS_OLLAMA_TIMEOUT")
 OLLAMA_NUM_CTX: int = _get_env_int("EP_NUM_CTX", 2048)
 """Context window size. Smaller = faster inference."""
