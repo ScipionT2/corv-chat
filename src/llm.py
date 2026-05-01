@@ -114,6 +114,66 @@ class OllamaClient:
                 self._history.pop()
             return None
 
+    def chat_stream(self, user_message: str):
+        """Generator that yields tokens as they stream in. Appends to history when done."""
+        self._history.append({"role": "user", "content": user_message})
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            *self._history,
+        ]
+
+        url = f"{self.base_url}/api/chat"
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True,
+            "options": {
+                "num_gpu": getattr(config, "OLLAMA_NUM_GPU", -1),
+                "num_ctx": getattr(config, "OLLAMA_NUM_CTX", 2048),
+            },
+        }
+
+        logger.debug("POST %s model=%s (streaming)", url, self.model)
+
+        import json as _json
+
+        try:
+            response = requests.post(url, json=payload, timeout=self.timeout, stream=True)
+            response.raise_for_status()
+
+            parts: list[str] = []
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = _json.loads(line)
+                    token = chunk.get("message", {}).get("content", "")
+                    if token:
+                        parts.append(token)
+                        yield token
+                    if chunk.get("done"):
+                        break
+                except _json.JSONDecodeError:
+                    continue
+
+            full_reply = "".join(parts)
+            if full_reply:
+                self._history.append({"role": "assistant", "content": full_reply})
+                logger.info("LLM stream reply: %s", full_reply[:120])
+            self._trim_history()
+
+        except requests.ConnectionError:
+            logger.error(
+                "Cannot connect to Ollama at %s — is it running?", self.base_url
+            )
+            if self._history and self._history[-1]["role"] == "user":
+                self._history.pop()
+        except Exception as exc:  # noqa: BLE001
+            logger.error("LLM stream request failed: %s", exc)
+            if self._history and self._history[-1]["role"] == "user":
+                self._history.pop()
+
     def clear_history(self) -> None:
         """Erase the conversation history."""
         self._history.clear()

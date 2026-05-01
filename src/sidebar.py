@@ -35,6 +35,43 @@ ACCENT_COLOR_MAP = {
     "amber": (245, 158, 11),
 }
 
+THEMES = {
+    "dark": {
+        "bg": "rgba(10, 12, 18, 200)",
+        "text": "rgba(255,255,255,0.85)",
+        "text_dim": "rgba(255,255,255,0.4)",
+        "text_muted": "rgba(255,255,255,0.25)",
+        "bubble_user_bg": "rgba(0, 200, 255, 0.08)",
+        "bubble_user_border": "rgba(0, 200, 255, 0.15)",
+        "bubble_agent_bg": "rgba(140, 80, 255, 0.06)",
+        "bubble_agent_border": "rgba(140, 80, 255, 0.12)",
+        "input_bg": "rgba(255,255,255,0.04)",
+        "input_focus_bg": "rgba(255,255,255,0.06)",
+        "separator": "rgba(255,255,255,0.06)",
+        "btn_bg": "rgba(255,255,255,0.04)",
+        "btn_hover": "rgba(255,255,255,0.1)",
+        "btn_text": "rgba(255,255,255,0.5)",
+        "btn_text_hover": "rgba(255,255,255,0.8)",
+    },
+    "light": {
+        "bg": "rgba(245, 245, 250, 235)",
+        "text": "rgba(20,20,30,0.9)",
+        "text_dim": "rgba(20,20,30,0.5)",
+        "text_muted": "rgba(20,20,30,0.3)",
+        "bubble_user_bg": "rgba(0, 150, 200, 0.1)",
+        "bubble_user_border": "rgba(0, 150, 200, 0.2)",
+        "bubble_agent_bg": "rgba(120, 60, 220, 0.08)",
+        "bubble_agent_border": "rgba(120, 60, 220, 0.15)",
+        "input_bg": "rgba(0,0,0,0.04)",
+        "input_focus_bg": "rgba(0,0,0,0.06)",
+        "separator": "rgba(0,0,0,0.08)",
+        "btn_bg": "rgba(0,0,0,0.04)",
+        "btn_hover": "rgba(0,0,0,0.08)",
+        "btn_text": "rgba(0,0,0,0.5)",
+        "btn_text_hover": "rgba(0,0,0,0.8)",
+    },
+}
+
 try:
     from PyQt6.QtCore import (
         Qt, QTimer, QPropertyAnimation, QEasingCurve, QParallelAnimationGroup,
@@ -177,6 +214,15 @@ if PYQT6_AVAILABLE:
         # Signal emitted when user sends a chat message
         chat_message_sent = pyqtSignal(str)
 
+        # Streaming: update last agent bubble
+        last_transcript_updated = pyqtSignal(str)
+
+        # Voice changed from settings panel
+        voice_changed = pyqtSignal(str)
+
+        # Theme changed
+        theme_changed = pyqtSignal(str)
+
         def __init__(self, parent=None, accent_color: str = "cyan", personality: str = "friendly"):
             super().__init__(parent)
             self._visible = True
@@ -186,6 +232,10 @@ if PYQT6_AVAILABLE:
             self._accent_color = accent_color
             self._personality = personality
             self._accent_rgb = ACCENT_COLOR_MAP.get(accent_color, (0, 200, 255))
+            self._theme = "dark"
+            self._last_agent_content_label = None
+            self._settings_panel = None
+            self._settings_visible = False
 
             self._setup_window()
             self._build_ui()
@@ -318,6 +368,11 @@ if PYQT6_AVAILABLE:
             header = self._build_header()
             layout.addWidget(header)
 
+            # ── Settings Panel (hidden by default) ────────────────────
+            self._settings_panel = self._build_settings_panel()
+            self._settings_panel.setVisible(False)
+            layout.addWidget(self._settings_panel)
+
             # ── Transcript (rolling chat) ─────────────────────────────
             self._scroll = QScrollArea()
             self._scroll.setWidgetResizable(True)
@@ -427,37 +482,28 @@ if PYQT6_AVAILABLE:
             self._chat_input.returnPressed.connect(self._on_chat_submit)
             layout.addWidget(self._chat_input)
 
-            # ── Footer (connectivity + personality indicator) ──────────
+            # ── Footer (minimal: dot + status) ───────────────────────
             footer = QWidget()
             footer.setStyleSheet("background: transparent;")
             footer_layout = QHBoxLayout(footer)
             footer_layout.setContentsMargins(8, 4, 8, 4)
 
             self._connectivity_dot = QLabel("●")
-            self._connectivity_dot.setFont(QFont("", 8))
+            self._connectivity_dot.setFont(QFont("", 7))
             self._connectivity_dot.setStyleSheet("color: #00dc78; background: transparent;")
             footer_layout.addWidget(self._connectivity_dot)
-
-            self._connectivity_label = QLabel("Local Mode (Private)")
-            self._connectivity_label.setFont(QFont(".AppleSystemUIFont", 9))
-            self._connectivity_label.setStyleSheet("color: rgba(255,255,255,0.3); background: transparent;")
-            footer_layout.addWidget(self._connectivity_label)
-
-            footer_layout.addStretch()
-
-            # Personality indicator
-            r, g, b = self._accent_rgb
-            self._personality_label = QLabel(self._personality.capitalize())
-            self._personality_label.setFont(QFont(".AppleSystemUIFont", 9))
-            self._personality_label.setStyleSheet(
-                f"color: rgba({r},{g},{b},0.5); background: transparent; padding-right: 8px;"
-            )
-            footer_layout.addWidget(self._personality_label)
 
             self._status_label = QLabel("Idle")
             self._status_label.setFont(QFont(".AppleSystemUIFont", 9))
             self._status_label.setStyleSheet("color: rgba(255,255,255,0.25); background: transparent;")
             footer_layout.addWidget(self._status_label)
+
+            footer_layout.addStretch()
+
+            self._connectivity_label = QLabel("Local")
+            self._connectivity_label.setFont(QFont(".AppleSystemUIFont", 9))
+            self._connectivity_label.setStyleSheet("color: rgba(255,255,255,0.2); background: transparent;")
+            footer_layout.addWidget(self._connectivity_label)
 
             layout.addWidget(footer)
 
@@ -481,6 +527,27 @@ if PYQT6_AVAILABLE:
 
             layout.addStretch()
 
+            # Theme toggle button
+            self._theme_btn = QPushButton("🌙")
+            self._theme_btn.setFixedSize(28, 28)
+            self._theme_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255,255,255,0.04);
+                    color: rgba(255,255,255,0.5);
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 14px;
+                }
+                QPushButton:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: rgba(255,255,255,0.8);
+                }
+            """)
+            self._theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            self._theme_btn.setToolTip("Toggle theme")
+            self._theme_btn.clicked.connect(self._toggle_theme)
+            layout.addWidget(self._theme_btn)
+
             # Settings button
             settings_btn = QPushButton("⚙️")
             settings_btn.setFixedSize(28, 28)
@@ -499,7 +566,7 @@ if PYQT6_AVAILABLE:
             """)
             settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             settings_btn.setToolTip("Settings")
-            settings_btn.clicked.connect(self._open_settings)
+            settings_btn.clicked.connect(self._toggle_settings)
             layout.addWidget(settings_btn)
 
             # Minimize button
@@ -524,9 +591,57 @@ if PYQT6_AVAILABLE:
 
             return card
 
-        def _open_settings(self):
-            """Emit signal to open settings/onboarding dialog."""
-            self.settings_requested.emit()
+        def _toggle_settings(self):
+            """Toggle the inline settings panel."""
+            self._settings_visible = not self._settings_visible
+            if self._settings_panel:
+                self._settings_panel.setVisible(self._settings_visible)
+
+        def _toggle_theme(self):
+            """Toggle between dark and light theme."""
+            new_theme = "light" if self._theme == "dark" else "dark"
+            self.set_theme(new_theme)
+
+        def set_theme(self, theme_name: str):
+            """Switch the sidebar theme."""
+            if theme_name not in THEMES:
+                return
+            self._theme = theme_name
+            t = THEMES[theme_name]
+
+            # Update panel background
+            panel = self.centralWidget()
+            if panel:
+                panel.setStyleSheet(f"""
+                    background-color: {t['bg']};
+                    border-radius: 16px;
+                """)
+
+            # Update theme button icon
+            self._theme_btn.setText("☀️" if theme_name == "dark" else "🌙")
+
+            # Update chat input
+            r, g, b = self._accent_rgb
+            self._chat_input.setStyleSheet(f"""
+                QLineEdit {{
+                    background: {t['input_bg']};
+                    border: 1px solid rgba({r},{g},{b},0.2);
+                    border-radius: 8px;
+                    color: {t['text']};
+                    padding: 8px 12px;
+                }}
+                QLineEdit:focus {{
+                    border: 1px solid rgba({r},{g},{b},0.5);
+                    background: {t['input_focus_bg']};
+                }}
+            """)
+
+            # Update status/footer labels
+            self._status_label.setStyleSheet(f"color: {t['text_muted']}; background: transparent;")
+            self._connectivity_label.setStyleSheet(f"color: {t['text_muted']}; background: transparent;")
+            self._thinking_label.setStyleSheet(f"color: {t['text_muted']}; background: transparent; padding-left: 12px;")
+
+            self.theme_changed.emit(theme_name)
 
         def _on_chat_submit(self):
             """Handle chat input submission."""
@@ -552,6 +667,82 @@ if PYQT6_AVAILABLE:
             else:
                 self._thinking_timer.stop()
 
+        def _build_settings_panel(self) -> QWidget:
+            """Build the collapsible settings panel with voice and theme options."""
+            panel = GlassCard()
+            layout = QVBoxLayout(panel)
+            layout.setContentsMargins(12, 10, 12, 10)
+            layout.setSpacing(8)
+
+            # Voice selector
+            voice_row = QHBoxLayout()
+            voice_label = QLabel("Voice")
+            voice_label.setFont(QFont(".AppleSystemUIFont", 10))
+            voice_label.setStyleSheet("color: rgba(255,255,255,0.6); background: transparent;")
+            voice_row.addWidget(voice_label)
+
+            from PyQt6.QtWidgets import QComboBox
+            self._voice_combo = QComboBox()
+            self._voice_combo.setFont(QFont(".AppleSystemUIFont", 10))
+            self._voice_combo.setStyleSheet("""
+                QComboBox {
+                    background: rgba(255,255,255,0.06);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 6px;
+                    color: rgba(255,255,255,0.8);
+                    padding: 4px 8px;
+                    min-width: 100px;
+                }
+                QComboBox::drop-down {
+                    border: none;
+                    width: 20px;
+                }
+                QComboBox QAbstractItemView {
+                    background: rgba(20,22,30,240);
+                    color: rgba(255,255,255,0.8);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    selection-background-color: rgba(0,200,255,0.2);
+                }
+            """)
+
+            # Populate voices
+            try:
+                from src.tts import get_available_voices
+                voices = get_available_voices()
+                for v in voices:
+                    self._voice_combo.addItem(v["name"])
+                # Set current
+                current = getattr(config, "MACOS_SAY_VOICE", "Daniel")
+                idx = self._voice_combo.findText(current)
+                if idx >= 0:
+                    self._voice_combo.setCurrentIndex(idx)
+            except Exception:
+                self._voice_combo.addItem("Daniel")
+
+            self._voice_combo.currentTextChanged.connect(self._on_voice_changed)
+            voice_row.addWidget(self._voice_combo, 1)
+            layout.addLayout(voice_row)
+
+            return panel
+
+        def _on_voice_changed(self, voice_name: str):
+            """Emit voice_changed signal when user picks a new voice."""
+            self.voice_changed.emit(voice_name)
+
+        @pyqtSlot(str)
+        def _on_last_transcript_updated(self, text: str):
+            """Update the last agent bubble's content (for streaming)."""
+            if self._last_agent_content_label:
+                self._last_agent_content_label.setText(text)
+                # Auto-scroll
+                QTimer.singleShot(20, lambda: self._scroll.verticalScrollBar().setValue(
+                    self._scroll.verticalScrollBar().maximum()
+                ))
+
+        def update_last_transcript(self, text: str):
+            """Thread-safe: update the last agent bubble text (streaming)."""
+            self.last_transcript_updated.emit(text)
+
         # ── Signals ───────────────────────────────────────────────────
 
         def _connect_signals(self):
@@ -560,6 +751,7 @@ if PYQT6_AVAILABLE:
             self.transcript_received.connect(self._on_transcript)
             self.vision_thumbnail_received.connect(self._on_vision_thumbnail)
             self.connectivity_changed.connect(self._on_connectivity_changed)
+            self.last_transcript_updated.connect(self._on_last_transcript_updated)
 
         # ── Slots ────────────────────────────────────────────────────
 
@@ -616,10 +808,10 @@ if PYQT6_AVAILABLE:
             self._connectivity = mode
             if mode == "cloud":
                 self._connectivity_dot.setStyleSheet("color: #00c8ff; background: transparent;")
-                self._connectivity_label.setText("Cloud Connected")
+                self._connectivity_label.setText("Cloud")
             else:
                 self._connectivity_dot.setStyleSheet("color: #00dc78; background: transparent;")
-                self._connectivity_label.setText("Local Mode (Private)")
+                self._connectivity_label.setText("Local")
 
         # ── Transcript Management ─────────────────────────────────────
 
@@ -660,10 +852,14 @@ if PYQT6_AVAILABLE:
             # Content
             content = QLabel(text)
             content.setWordWrap(True)
-            content.setFont(QFont(".AppleSystemUIFont", 11))
+            content.setFont(QFont(".AppleSystemUIFont", 10))
             content.setStyleSheet("color: rgba(255,255,255,0.85); background: transparent;")
             content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             bubble_layout.addWidget(content)
+
+            # Track last agent bubble for streaming updates
+            if role != "user":
+                self._last_agent_content_label = content
 
             # Timing (for agent messages)
             if elapsed_ms > 0 and role != "user":
@@ -745,15 +941,10 @@ if PYQT6_AVAILABLE:
             """Update accent color across the sidebar."""
             self._accent_color = color_name
             self._accent_rgb = ACCENT_COLOR_MAP.get(color_name, (0, 200, 255))
-            r, g, b = self._accent_rgb
-            self._personality_label.setStyleSheet(
-                f"color: rgba({r},{g},{b},0.5); background: transparent; padding-right: 8px;"
-            )
 
         def apply_personality(self, personality: str):
-            """Update personality label."""
+            """Update personality setting."""
             self._personality = personality
-            self._personality_label.setText(personality.capitalize())
 
 
     def create_sidebar(
