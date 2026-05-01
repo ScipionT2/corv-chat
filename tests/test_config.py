@@ -23,7 +23,7 @@ class TestConfigDefaults:
 
     def test_ollama_model_default(self):
         import config
-        expected = os.environ.get("EP_OLLAMA_MODEL") or os.environ.get("JARVIS_OLLAMA_MODEL", "qwen2.5:3b")
+        expected = os.environ.get("EP_OLLAMA_MODEL") or os.environ.get("JARVIS_OLLAMA_MODEL", "qwen2.5:1.5b")
         assert config.OLLAMA_MODEL == expected
 
     def test_whisper_model_default(self):

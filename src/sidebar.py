@@ -388,6 +388,24 @@ if PYQT6_AVAILABLE:
 
             layout.addWidget(self._vision_card)
 
+            # ── Thinking Indicator ─────────────────────────────────────
+            self._thinking_label = QLabel("●○○")
+            self._thinking_label.setFont(QFont(".AppleSystemUIFont", 10))
+            self._thinking_label.setStyleSheet("color: rgba(255,255,255,0.25); background: transparent; padding-left: 12px;")
+            self._thinking_label.setVisible(False)
+            layout.addWidget(self._thinking_label)
+
+            self._thinking_phase = 0
+            self._thinking_timer = QTimer(self)
+            self._thinking_timer.setInterval(400)
+            self._thinking_timer.timeout.connect(self._tick_thinking)
+
+            # ── Separator ──────────────────────────────────────────────
+            separator = QFrame()
+            separator.setFrameShape(QFrame.Shape.HLine)
+            separator.setStyleSheet("background: rgba(255,255,255,0.06); max-height: 1px;")
+            layout.addWidget(separator)
+
             # ── Chat Input ────────────────────────────────────────────
             self._chat_input = QLineEdit()
             self._chat_input.setPlaceholderText("Type a message…")
@@ -519,6 +537,21 @@ if PYQT6_AVAILABLE:
             self._add_message("user", text)
             self.chat_message_sent.emit(text)
 
+        def _tick_thinking(self):
+            """Cycle the thinking dots animation."""
+            patterns = ["●○○", "○●○", "○○●"]
+            self._thinking_phase = (self._thinking_phase + 1) % 3
+            self._thinking_label.setText(patterns[self._thinking_phase])
+
+        def _show_thinking(self, visible: bool):
+            """Show or hide the thinking indicator."""
+            self._thinking_label.setVisible(visible)
+            if visible:
+                self._thinking_phase = 0
+                self._thinking_timer.start()
+            else:
+                self._thinking_timer.stop()
+
         # ── Signals ───────────────────────────────────────────────────
 
         def _connect_signals(self):
@@ -538,6 +571,9 @@ if PYQT6_AVAILABLE:
         @pyqtSlot(str)
         def _on_status_changed(self, status: str):
             self._state = status
+
+            # Show thinking dots when processing
+            self._show_thinking(status == "processing")
 
             # Status label
             labels = {
@@ -591,15 +627,15 @@ if PYQT6_AVAILABLE:
             """Add a bubble to the rolling transcript."""
             bubble = QFrame()
             bubble_layout = QVBoxLayout(bubble)
-            bubble_layout.setContentsMargins(10, 8, 10, 8)
-            bubble_layout.setSpacing(2)
+            bubble_layout.setContentsMargins(12, 10, 12, 10)
+            bubble_layout.setSpacing(3)
 
             if role == "user":
                 bubble.setStyleSheet("""
                     QFrame {
                         background: rgba(0, 200, 255, 0.08);
                         border: 1px solid rgba(0, 200, 255, 0.15);
-                        border-radius: 10px;
+                        border-radius: 12px;
                     }
                 """)
                 prefix = "You"
@@ -609,7 +645,7 @@ if PYQT6_AVAILABLE:
                     QFrame {
                         background: rgba(140, 80, 255, 0.06);
                         border: 1px solid rgba(140, 80, 255, 0.12);
-                        border-radius: 10px;
+                        border-radius: 12px;
                     }
                 """)
                 prefix = "EP"

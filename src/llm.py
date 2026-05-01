@@ -83,6 +83,7 @@ class OllamaClient:
             "stream": True,
             "options": {
                 "num_gpu": getattr(config, "OLLAMA_NUM_GPU", -1),
+                "num_ctx": getattr(config, "OLLAMA_NUM_CTX", 2048),
             },
         }
 
