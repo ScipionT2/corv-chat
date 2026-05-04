@@ -113,9 +113,10 @@ OFFLINE_MODE: bool = _get_env("EP_OFFLINE", "false", "JARVIS_OFFLINE").lower() i
 # ---------------------------------------------------------------------------
 # Hybrid Mode — auto-switch between cloud and local
 # ---------------------------------------------------------------------------
-HYBRID_MODE: bool = _get_env("EP_HYBRID", "false").lower() in ("true", "1", "yes")
-"""When True, use the hybrid LLM client (cloud + local fallback). Requires OPENAI_API_KEY.
-Default is offline-only. Set EP_HYBRID=true to enable cloud when connected."""
+HYBRID_MODE: bool = _get_env("EP_HYBRID", "true").lower() in ("true", "1", "yes")
+"""When True, use the hybrid LLM client (cloud primary, local fallback).
+Default is online — uses cloud when connected, auto-falls back to local when offline.
+Set EP_HYBRID=false to force offline-only."""
 
 OPENAI_MODEL: str = _get_env("EP_OPENAI_MODEL", "gpt-4o")
 """Cloud model for high-reasoning tasks when online."""
@@ -131,7 +132,7 @@ LLM_SYSTEM_PROMPT: str = _get_env(
         "and control applications. Be concise and direct. "
         "You have a visual side panel on the right side of the screen. "
         "When asked about the screen, you analyze it with your vision system. "
-        "You run fully offline by default — all processing stays on-device."
+        "You run online by default (cloud LLM when connected, local fallback when offline)."
     ),
     "JARVIS_SYSTEM_PROMPT",
 )
