@@ -181,6 +181,17 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     set_ollama_gpu_layers()     # Force Metal/CUDA offload
     log_system_info()
 
+    # ── Auto-start Ollama (before any model calls) ────────────────────
+    from src.ollama_manager import get_manager
+    ollama_mgr = get_manager()
+    if not ollama_mgr.ensure_running(timeout=10.0):
+        logger.warning(
+            "Ollama could not be started automatically. "
+            "Vision and LLM features may not work until Ollama is running."
+        )
+    else:
+        logger.info("Ollama is running and ready")
+
     # ── Start voice pipeline (unless vision-only) ─────────────────────
     pipeline = None
     if not vision_only:

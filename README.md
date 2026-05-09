@@ -88,12 +88,46 @@ Then say **"Jarvis"** and ask a question!
 ### Launch Options
 
 ```bash
+# Control Center (recommended — GUI launcher)
+python launcher.py                    # Opens Control Center dashboard
+
+# Direct launch (terminal users)
 python ep_agent.py                    # Full experience (menu bar + voice)
 python ep_agent.py --no-overlay       # Voice only, no GUI at all
 python ep_agent.py --vision-only      # Vision + menu bar only
 python ep_agent.py --check            # Check system readiness
 python ep_agent.py --log-level DEBUG  # Verbose logging
 ```
+
+## Control Center
+
+The Control Center is a compact dashboard window that lets you manage EP Agent visually:
+
+- **Start/Stop** the full pipeline with one click
+- **Status dashboard** — Ollama, models, voice status with colored indicators
+- **Quick settings** — theme (dark/light), accent color, voice selector
+- **Open Sidebar** — launch the sidebar panel on demand
+- **Menu bar icon** — always visible with status dot (green/yellow/red)
+- **Start on Login** — toggle auto-start via macOS LaunchAgent
+
+Launch via `python launcher.py` or the `.app` bundle.
+
+## Building the .app Bundle
+
+Build a native macOS `.app` that shows in Dock:
+
+```bash
+# Install build dependencies
+pip install -r requirements-dev.txt
+
+# Build the .app
+bash scripts/build-app.sh
+
+# Install to /Applications
+cp -r "dist/EP Agent.app" /Applications/
+```
+
+The `.app` launches the Control Center on startup. From there you can start the full EP Agent experience.
 
 ## Voice Commands
 

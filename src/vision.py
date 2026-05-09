@@ -29,6 +29,14 @@ import numpy as np
 import requests
 
 import config
+from src.app_detector import get_active_app, get_window_bounds
+from src.vision_prompts import (
+    GENERAL_ANALYSIS_PROMPT,
+    build_contextual_prompt,
+    select_prompt_for_app,
+    categorize_suggestion,
+)
+from src.ollama_manager import get_manager
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +48,33 @@ VISION_MAX_TOKENS: int = config.VISION_MAX_TOKENS
 VISION_PROMPT: str = config.VISION_PROMPT
 VISION_CHANGE_THRESHOLD: float = config.VISION_CHANGE_THRESHOLD
 VISION_SLEEP_TIMEOUT: float = config.VISION_SLEEP_TIMEOUT
+VISION_FAST_MODE: bool = config.VISION_FAST_MODE
+
+
+# ─── Error types for clear messaging ─────────────────────────────────
+
+class VisionError(Exception):
+    """Base class for vision errors with user-friendly messages."""
+    def __init__(self, message: str, user_message: str):
+        super().__init__(message)
+        self.user_message = user_message
+
+
+class OllamaNotRunningError(VisionError):
+    def __init__(self):
+        super().__init__(
+            "Ollama is not running and could not be started",
+            "Ollama is not running. Please start it with 'ollama serve' or install from ollama.com.",
+        )
+
+
+class ModelNotAvailableError(VisionError):
+    def __init__(self, model: str):
+        super().__init__(
+            f"Model '{model}' is not available",
+            f"Model '{model}' not available. Pulling it now — this may take a minute...",
+        )
+        self.model = model
 
 
 @dataclass
@@ -54,12 +89,15 @@ class VisionResult:
 
 # ─── Screen Capture ───────────────────────────────────────────────────
 
-def capture_screen(monitor: int = 0, scale: float = 0.5) -> Optional[bytes]:
+def capture_screen(monitor: int = 0, scale: float = None) -> Optional[bytes]:
     """Capture the screen and return as PNG bytes.
 
     Uses mss for fast capture. Falls back to PyAutoGUI if mss
     is unavailable. Downscales by `scale` factor to reduce cost.
+    If scale is None, uses 0.3 in fast mode or config.VISION_SCALE otherwise.
     """
+    if scale is None:
+        scale = 0.3 if VISION_FAST_MODE else config.VISION_SCALE
     try:
         import mss
         from PIL import Image
@@ -130,6 +168,71 @@ def capture_screen_array(monitor: int = 0, scale: float = 0.5) -> Optional[np.nd
         return None
 
 
+def capture_active_window(scale: float = 0.5) -> Optional[bytes]:
+    """Capture only the active window region instead of the full screen.
+
+    Uses AppleScript to get the frontmost window's bounds, then captures
+    just that region with mss. Falls back to full screen capture on failure.
+
+    Parameters
+    ----------
+    scale : float
+        Downscale factor for the captured image.
+
+    Returns
+    -------
+    Optional[bytes]
+        PNG image bytes of the active window, or full screen on failure.
+    """
+    bounds = get_window_bounds()
+    if bounds is None:
+        logger.debug("Window bounds detection failed, falling back to full screen")
+        return capture_screen(monitor=config.VISION_MONITOR, scale=scale)
+
+    x, y, w, h = bounds
+
+    # Sanity check
+    if w <= 0 or h <= 0:
+        logger.debug("Invalid window bounds (%d, %d, %d, %d), falling back", x, y, w, h)
+        return capture_screen(monitor=config.VISION_MONITOR, scale=scale)
+
+    try:
+        import mss
+        from PIL import Image
+
+        with mss.MSS() as sct:
+            monitor_region = {"left": x, "top": y, "width": w, "height": h}
+            screenshot = sct.grab(monitor_region)
+
+            img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
+
+            if scale < 1.0:
+                new_size = (int(img.width * scale), int(img.height * scale))
+                img = img.resize(new_size, Image.LANCZOS)
+
+            buf = io.BytesIO()
+            img.save(buf, format="PNG", optimize=True)
+            return buf.getvalue()
+
+    except ImportError:
+        logger.debug("mss not available for window capture, falling back")
+        return capture_screen(monitor=config.VISION_MONITOR, scale=scale)
+    except Exception as exc:
+        logger.debug("Window capture failed: %s — falling back to full screen", exc)
+        return capture_screen(monitor=config.VISION_MONITOR, scale=scale)
+
+
+def smart_capture(scale: float = 0.5) -> Optional[bytes]:
+    """Capture screen using the best available method.
+
+    If EP_VISION_WINDOW_ONLY is true, tries window-only capture first.
+    Falls back to full screen if window capture fails.
+    """
+    if config.VISION_WINDOW_ONLY:
+        return capture_active_window(scale=scale)
+    return capture_screen(monitor=config.VISION_MONITOR, scale=scale)
+
+
 def compute_frame_diff(frame_a: np.ndarray, frame_b: np.ndarray) -> float:
     """Compute the normalized pixel difference ratio between two frames.
 
@@ -153,7 +256,10 @@ def image_to_base64(png_bytes: bytes) -> str:
 # ─── Ollama Vision Client ────────────────────────────────────────────
 
 class VisionClient:
-    """Send images to a local Ollama vision model for analysis."""
+    """Send images to a local Ollama vision model for analysis.
+
+    Includes auto-start of Ollama, retry logic, and clear error reporting.
+    """
 
     def __init__(
         self,
@@ -164,13 +270,68 @@ class VisionClient:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
+        self._manager = get_manager()
+
+    def _get_max_tokens(self) -> int:
+        """Get max tokens based on fast mode setting."""
+        if VISION_FAST_MODE:
+            return 256
+        return VISION_MAX_TOKENS
+
+    def _build_options(self) -> dict:
+        """Build options dict, respecting fast mode."""
+        opts = {"num_predict": self._get_max_tokens()}
+        return opts
+
+    def _ensure_ready(self) -> Optional[str]:
+        """Ensure Ollama is running and model is available.
+
+        Returns None if ready, or an error message string if not.
+        """
+        # Check/start Ollama
+        if not self._manager.ensure_running(timeout=10.0):
+            return (
+                "Ollama is not running and could not be started automatically. "
+                "Please run 'ollama serve' manually."
+            )
+
+        # Check model availability
+        if not self._manager.is_model_available(self.model):
+            logger.warning("Model '%s' not found — attempting pull...", self.model)
+            # Start pull in background and inform caller
+            self._manager.pull_model_background(self.model)
+            return (
+                f"Model '{self.model}' is not available. "
+                f"Pulling it now — this may take a few minutes. Please try again shortly."
+            )
+
+        return None
 
     def analyze_image(
         self,
         image_bytes: bytes,
         prompt: str = VISION_PROMPT,
+        _retry: bool = True,
     ) -> Optional[VisionResult]:
-        """Send an image to the vision model and get analysis."""
+        """Send an image to the vision model and get analysis.
+
+        Includes retry logic:
+        - Connection refused → try auto-start Ollama, retry once
+        - Model not found → pull in background, inform user
+        - Other failures → wait 1s, retry once
+        """
+        # Pre-flight: ensure Ollama + model ready
+        error_msg = self._ensure_ready()
+        if error_msg:
+            logger.error(error_msg)
+            return VisionResult(
+                timestamp=datetime.now(),
+                analysis=error_msg,
+                model=self.model,
+                elapsed_ms=0,
+                frame_size_bytes=len(image_bytes),
+            )
+
         b64_image = image_to_base64(image_bytes)
 
         url = f"{self.base_url}/api/generate"
@@ -179,9 +340,7 @@ class VisionClient:
             "prompt": prompt,
             "images": [b64_image],
             "stream": True,
-            "options": {
-                "num_predict": VISION_MAX_TOKENS,
-            },
+            "options": self._build_options(),
         }
 
         start = time.monotonic()
@@ -227,24 +386,64 @@ class VisionClient:
 
         except requests.ConnectionError:
             logger.error(
-                "Cannot connect to Ollama at %s — is it running?", self.base_url
+                "Cannot connect to Ollama at %s — attempting recovery...", self.base_url
             )
+            if _retry:
+                # Try to start Ollama and retry once
+                if self._manager.ensure_running(timeout=10.0):
+                    time.sleep(1)
+                    return self.analyze_image(image_bytes, prompt, _retry=False)
+            return VisionResult(
+                timestamp=datetime.now(),
+                analysis="Cannot connect to Ollama. Please ensure it's installed and running.",
+                model=self.model,
+                elapsed_ms=0,
+                frame_size_bytes=len(image_bytes),
+            )
+
+        except requests.HTTPError as exc:
+            if "not found" in str(exc).lower() or (hasattr(exc, 'response') and exc.response and exc.response.status_code == 404):
+                logger.error("Model '%s' not found — pulling...", self.model)
+                self._manager.pull_model_background(self.model)
+                return VisionResult(
+                    timestamp=datetime.now(),
+                    analysis=f"Model '{self.model}' not found. Pulling it now — please try again in a minute.",
+                    model=self.model,
+                    elapsed_ms=0,
+                    frame_size_bytes=len(image_bytes),
+                )
+            logger.error("Vision request HTTP error: %s", exc)
+            if _retry:
+                time.sleep(1)
+                return self.analyze_image(image_bytes, prompt, _retry=False)
             return None
+
         except Exception as exc:
             logger.error("Vision request failed: %s", exc)
+            if _retry:
+                time.sleep(1)
+                return self.analyze_image(image_bytes, prompt, _retry=False)
             return None
 
     def analyze_image_stream(
         self,
         image_bytes: bytes,
         prompt: str = VISION_PROMPT,
+        _retry: bool = True,
     ):
         """Generator that yields tokens as they stream from the vision model.
 
         Yields individual string tokens. The caller accumulates them.
-        Does NOT produce a VisionResult — use for chat integration where
-        you want token-by-token streaming into the UI.
+        Includes retry logic: on connection error, tries auto-start + retry once.
+        On model not found, yields an error message token.
         """
+        # Pre-flight: ensure Ollama + model ready
+        error_msg = self._ensure_ready()
+        if error_msg:
+            logger.error(error_msg)
+            yield error_msg
+            return
+
         b64_image = image_to_base64(image_bytes)
 
         url = f"{self.base_url}/api/generate"
@@ -253,9 +452,7 @@ class VisionClient:
             "prompt": prompt,
             "images": [b64_image],
             "stream": True,
-            "options": {
-                "num_predict": VISION_MAX_TOKENS,
-            },
+            "options": self._build_options(),
         }
 
         logger.debug("POST %s model=%s image_size=%d (streaming)", url, self.model, len(image_bytes))
@@ -279,10 +476,34 @@ class VisionClient:
 
         except requests.ConnectionError:
             logger.error(
-                "Cannot connect to Ollama at %s — is it running?", self.base_url
+                "Cannot connect to Ollama at %s — attempting recovery...", self.base_url
             )
+            if _retry:
+                if self._manager.ensure_running(timeout=10.0):
+                    time.sleep(1)
+                    yield from self.analyze_image_stream(image_bytes, prompt, _retry=False)
+                    return
+            yield "Cannot connect to Ollama. Please ensure it's installed and running."
+
+        except requests.HTTPError as exc:
+            if "not found" in str(exc).lower() or (hasattr(exc, 'response') and exc.response and exc.response.status_code == 404):
+                self._manager.pull_model_background(self.model)
+                yield f"Model '{self.model}' not found. Pulling it now — please try again in a minute."
+                return
+            logger.error("Vision stream HTTP error: %s", exc)
+            if _retry:
+                time.sleep(1)
+                yield from self.analyze_image_stream(image_bytes, prompt, _retry=False)
+                return
+            yield "Vision analysis failed. Please try again."
+
         except Exception as exc:
             logger.error("Vision stream request failed: %s", exc)
+            if _retry:
+                time.sleep(1)
+                yield from self.analyze_image_stream(image_bytes, prompt, _retry=False)
+                return
+            yield "Vision analysis failed. Please try again."
 
     def analyze_with_question(
         self,
@@ -292,12 +513,9 @@ class VisionClient:
         """Analyze an image with a user's specific question as context.
 
         Frames the prompt around the user's question for contextual analysis.
+        Uses the improved contextual prompt template.
         """
-        prompt = (
-            f"The user is asking: '{question}'. "
-            f"Look at the screen and answer their question. "
-            f"Be concise and helpful."
-        )
+        prompt = build_contextual_prompt(question)
         return self.analyze_image(image_bytes, prompt=prompt)
 
     def analyze_with_question_stream(
@@ -307,13 +525,9 @@ class VisionClient:
     ):
         """Stream tokens for a contextual screen question.
 
-        Yields individual string tokens.
+        Yields individual string tokens. Uses the improved contextual prompt.
         """
-        prompt = (
-            f"The user is asking: '{question}'. "
-            f"Look at the screen and answer their question. "
-            f"Be concise and helpful."
-        )
+        prompt = build_contextual_prompt(question)
         yield from self.analyze_image_stream(image_bytes, prompt=prompt)
 
     def check_model_available(self) -> bool:
@@ -448,16 +662,24 @@ class AnalysisMode:
                     self._frames_checked, self._frames_analyzed)
 
     def analyze_once(self, prompt: Optional[str] = None) -> Optional[VisionResult]:
-        """Capture and analyze a single frame (no loop)."""
-        frame = capture_screen(monitor=self.monitor, scale=self.scale)
+        """Capture and analyze a single frame (no loop).
+
+        If no prompt is provided, auto-selects based on active app.
+        Uses window-only capture when configured.
+        """
+        frame = smart_capture(scale=self.scale)
         if not frame:
             return None
 
-        result = self.client.analyze_image(
-            frame,
-            prompt=prompt or VISION_PROMPT,
-        )
+        # Auto-select prompt based on active app if none provided
+        if prompt is None:
+            app_name = get_active_app()
+            prompt = select_prompt_for_app(app_name)
+
+        result = self.client.analyze_image(frame, prompt=prompt)
         if result:
+            # Store frame bytes for history saving by pipeline
+            result.frame_bytes = frame  # type: ignore[attr-defined]
             self._results.append(result)
         return result
 

@@ -40,7 +40,14 @@ def mock_png():
 
 @pytest.fixture
 def vision_client():
-    return VisionClient(base_url="http://localhost:11434", model="test-vision")
+    client = VisionClient(base_url="http://localhost:11434", model="test-vision")
+    # Mock the manager so tests don't require a running Ollama
+    mock_mgr = MagicMock()
+    mock_mgr.ensure_running.return_value = True
+    mock_mgr.is_model_available.return_value = True
+    mock_mgr.pull_model_background.return_value = MagicMock()
+    client._manager = mock_mgr
+    return client
 
 
 @pytest.fixture
@@ -106,13 +113,16 @@ class TestVisionClient:
         mock_post.side_effect = requests.ConnectionError("refused")
 
         result = vision_client.analyze_image(mock_png)
-        assert result is None
+        # Now returns a VisionResult with error message instead of None
+        assert result is not None
+        assert "Cannot connect" in result.analysis or "Ollama" in result.analysis
 
     @patch("src.vision.requests.post")
     def test_analyze_image_timeout(self, mock_post, vision_client, mock_png):
         import requests
         mock_post.side_effect = requests.Timeout("timed out")
 
+        # Timeout is a general exception, retry once then return None
         result = vision_client.analyze_image(mock_png)
         assert result is None
 
@@ -228,9 +238,11 @@ class TestAnalysisMode:
         assert len(mode.results) == 1
         assert mode.latest == result
 
+    @patch("src.vision.capture_active_window")
     @patch("src.vision.capture_screen")
-    def test_analyze_once_capture_failure(self, mock_capture, mock_analysis_callback):
+    def test_analyze_once_capture_failure(self, mock_capture, mock_window_capture, mock_analysis_callback):
         mock_capture.return_value = None
+        mock_window_capture.return_value = None
 
         mode = AnalysisMode(on_result=mock_analysis_callback)
         result = mode.analyze_once()

@@ -1,0 +1,12 @@
+# Development / build dependencies for EP Agent
+# Install with: pip install -r requirements-dev.txt
+
+# App bundling
+py2app>=0.28
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+
+# Icon generation
+Pillow>=9.0

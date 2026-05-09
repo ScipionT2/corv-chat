@@ -206,6 +206,9 @@ VISION_CHANGE_THRESHOLD: float = _get_env_float("EP_VISION_CHANGE_THRESHOLD", 0.
 VISION_SLEEP_TIMEOUT: float = _get_env_float("EP_VISION_SLEEP_TIMEOUT", 30.0)
 """Seconds of no screen change before vision enters deep sleep."""
 
+VISION_FAST_MODE: bool = _get_env("EP_VISION_FAST_MODE", "false").lower() in ("true", "1", "yes")
+"""Fast mode: lower resolution (0.3x) and fewer tokens (256) for faster vision responses."""
+
 VISION_PROMPT: str = _get_env(
     "EP_VISION_PROMPT",
     (
@@ -214,6 +217,12 @@ VISION_PROMPT: str = _get_env(
     ),
     "JARVIS_VISION_PROMPT",
 )
+
+VISION_WINDOW_ONLY: bool = _get_env("EP_VISION_WINDOW_ONLY", "true").lower() in ("true", "1", "yes")
+"""When True, capture only the active window instead of the full screen (more focused analysis)."""
+
+VISION_HISTORY_SIZE: int = _get_env_int("EP_VISION_HISTORY_SIZE", 20)
+"""Maximum number of vision analysis entries to keep in history."""
 
 # ---------------------------------------------------------------------------
 # Sidebar UI (always-on side panel)

@@ -13,14 +13,18 @@ import threading
 from typing import Optional
 
 import config
+from src.app_detector import get_active_app
 from src.commands import CommandResult, parse_command
 from src.hybrid_llm import HybridLLMClient
 from src.llm import OllamaClient
+from src.ollama_manager import get_manager
 from src.recorder import record_until_silence
 from src.resource_manager import KVCacheTimer
 from src.stt import SpeechToText
 from src.tts import TextToSpeech
 from src.vision import AnalysisMode, VisionClient, VisionResult
+from src.vision_history import save_analysis as _save_vision_history
+from src.vision_prompts import categorize_suggestion, select_prompt_for_app
 from src.wake_word import WakeWordDetector
 
 logger = logging.getLogger(__name__)
@@ -79,6 +83,10 @@ class EPAgentPipeline:
                 vision_client=self.vision_client,
             )
             logger.info("Vision subsystem enabled (event-driven)")
+
+            # Pre-warm models in background (non-blocking)
+            manager = get_manager()
+            manager.warmup_models()
         else:
             self.vision_client = None
             self.analysis_mode = None
@@ -344,65 +352,109 @@ class EPAgentPipeline:
         self._menubar = menubar
 
     def _handle_vision_once(self) -> None:
-        """Capture and analyze the screen once, speak the result."""
+        """Capture and analyze the screen once, speak the result.
+
+        Auto-detects the active app and selects the best prompt.
+        Saves results to history with category tags.
+        """
         logger.info("Vision: one-shot screen analysis")
         if self._overlay:
             self._overlay.set_status("analyzing")
         if self._menubar:
             self._menubar.set_state("analyzing")
 
-        result = self.analysis_mode.analyze_once(
-            prompt="What do you see on this screen? Describe the key content and suggest what the user should do next. Be concise."
-        )
+        # Detect active app for smart prompt selection
+        app_name = get_active_app()
+        prompt = select_prompt_for_app(app_name)
+
+        # analyze_once will also detect app if no prompt given,
+        # but we pass it explicitly so we can use app_name for history/category
+        result = self.analysis_mode.analyze_once(prompt=prompt)
 
         self._set_idle()
 
         if result:
+            # Categorize the suggestion
+            category = categorize_suggestion(result.analysis, app_name)
+            tagged_analysis = f"{category} {result.analysis}"
+
+            # Save to history
+            frame_bytes = getattr(result, 'frame_bytes', None)
+            _save_vision_history(
+                result_text=result.analysis,
+                app_name=app_name,
+                prompt_used=prompt,
+                screenshot_bytes=frame_bytes,
+                max_history=config.VISION_HISTORY_SIZE,
+            )
+
             # Inject vision result into LLM history for follow-up questions
             if hasattr(self.llm, 'inject_context'):
                 self.llm.inject_context(
                     "assistant",
-                    f"[Screen Analysis] {result.analysis}",
+                    f"[Screen Analysis] {tagged_analysis}",
                 )
             self.tts.speak(result.analysis)
             if self._overlay:
-                self._overlay.push_analysis(result.analysis, result.elapsed_ms)
+                self._overlay.push_analysis(tagged_analysis, result.elapsed_ms)
         else:
             self._speak_error("Sorry, I couldn't analyze the screen right now.")
 
     def _handle_vision_contextual(self, user_text: str) -> None:
-        """Capture screen and analyze with the user's specific question as context."""
+        """Capture screen and analyze with the user's specific question as context.
+
+        Uses the improved contextual prompt template and saves to history.
+        """
         logger.info("Vision: contextual analysis — %s", user_text[:80])
         if self._overlay:
             self._overlay.set_status("analyzing")
         if self._menubar:
             self._menubar.set_state("analyzing")
 
-        # Use the user's actual question as the vision prompt
-        prompt = f"The user is asking: '{user_text}'. Look at the screen and answer their question. Be concise and helpful."
+        # Detect active app for context
+        app_name = get_active_app()
+
+        # Use the improved contextual prompt (analyze_once handles it via
+        # build_contextual_prompt in vision.py, but we pass it explicitly here)
+        from src.vision_prompts import build_contextual_prompt
+        prompt = build_contextual_prompt(user_text)
         result = self.analysis_mode.analyze_once(prompt=prompt)
 
         self._set_idle()
 
         if result:
+            # Categorize the result
+            category = categorize_suggestion(result.analysis, app_name)
+            tagged_analysis = f"{category} {result.analysis}"
+
+            # Save to history
+            frame_bytes = getattr(result, 'frame_bytes', None)
+            _save_vision_history(
+                result_text=result.analysis,
+                app_name=app_name,
+                prompt_used=prompt,
+                screenshot_bytes=frame_bytes,
+                max_history=config.VISION_HISTORY_SIZE,
+            )
+
             # Inject both user question and vision answer into LLM history
             if hasattr(self.llm, 'inject_context'):
                 self.llm.inject_context("user", user_text)
                 self.llm.inject_context(
                     "assistant",
-                    f"[Screen Analysis] {result.analysis}",
+                    f"[Screen Analysis] {tagged_analysis}",
                 )
 
             # Push to sidebar transcript
             if self._overlay and hasattr(self._overlay, 'push_transcript'):
-                self._overlay.push_transcript("agent", result.analysis)
+                self._overlay.push_transcript("agent", tagged_analysis)
 
             logger.info("EP Agent (vision) says: %s", result.analysis[:120])
             if self._dock_glow:
                 self._dock_glow.set_state("speaking")
             if self._overlay:
                 self._overlay.set_status("speaking")
-                self._overlay.push_analysis(result.analysis, result.elapsed_ms)
+                self._overlay.push_analysis(tagged_analysis, result.elapsed_ms)
             if self._menubar:
                 self._menubar.set_state("speaking")
             self.tts.speak(result.analysis)
