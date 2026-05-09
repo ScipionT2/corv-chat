@@ -38,6 +38,9 @@ class CommandResult(Enum):
     VISION_ANALYZE = auto()
     """Request a one-shot screen analysis."""
 
+    VISION_CONTEXTUAL = auto()
+    """User is asking a specific question about their screen content."""
+
     VISION_TOGGLE = auto()
     """Toggle continuous analysis mode on/off."""
 
@@ -137,6 +140,18 @@ _VISION_TOGGLE_RE = re.compile(
     re.IGNORECASE,
 )
 
+_VISION_CONTEXTUAL_RE = re.compile(
+    r"^(?:"
+    r"what(?:'s|\s+is|\s+does)\s+(?:that|this|the)\s+.+?\s+(?:on\s+)?(?:my\s+)?(?:the\s+)?screen(?:\s+\w+)?"
+    r"|help\s+(?:me\s+)?with\s+(?:what(?:'s)?\s+(?:on\s+)?)?(?:my\s+)?(?:the\s+)?screen"
+    r"|can\s+you\s+(?:see|read|help\s+(?:me\s+)?with)\s+(?:what(?:'s)?\s+(?:on\s+)?)?(?:my\s+)?(?:the\s+)?screen"
+    r"|(?:explain|summarize|summarise|tell\s+me\s+about)\s+(?:what(?:'s)?\s+(?:on\s+)?)?(?:my\s+)?(?:the\s+)?screen"
+    r"|what\s+(?:do\s+you|can\s+you)\s+see\s+.+"
+    r")"
+    r"[?.]?$",
+    re.IGNORECASE,
+)
+
 _SIDEBAR_SHOW_RE = re.compile(
     r"^(?:(?:open|show|display|bring\s+up)\s+(?:the\s+)?(?:side\s*panel|sidebar|panel|interface|ui|overlay)"
     r"|(?:side\s*panel|sidebar|panel)\s+(?:on|open|show))"
@@ -202,6 +217,13 @@ def parse_command(text: str) -> CommandResponse:
         return CommandResponse(
             CommandResult.RESUME,
             message="I'm back and listening.",
+        )
+
+    if _VISION_CONTEXTUAL_RE.match(cleaned):
+        logger.info("Command: vision contextual question")
+        return CommandResponse(
+            CommandResult.VISION_CONTEXTUAL,
+            message=None,  # Pipeline uses the original text as the prompt
         )
 
     if _VISION_ANALYZE_RE.match(cleaned):

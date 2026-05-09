@@ -276,6 +276,32 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     if pipeline and sidebar:
         pipeline.set_overlay(sidebar)
 
+        # ── Screen-related query detection for chat ───────────────────
+        import re as _re
+
+        _SCREEN_CHAT_PATTERNS = _re.compile(
+            r"(?:"
+            r"what(?:'s| is) on (?:my |the )?screen"
+            r"|analyze (?:my |the )?screen"
+            r"|help me with this"
+            r"|what should I do"
+            r"|what do you see"
+            r"|give me suggestions"
+            r"|suggest(?:ions)?"
+            r"|look at (?:my |the )?screen"
+            r"|describe (?:my |the )?screen"
+            r"|what(?:'s| is) (?:this|that)"
+            r"|explain (?:this|what(?:'s| is) (?:on|happening))"
+            r"|on my screen"
+            r"|(?:my |the )?(?:screen|display|monitor)"
+            r")",
+            _re.IGNORECASE,
+        )
+
+        def _is_screen_chat_query(text: str) -> bool:
+            """Detect if a chat message is asking about the screen."""
+            return bool(_SCREEN_CHAT_PATTERNS.search(text))
+
         # Wire chat input to pipeline (background thread, streaming tokens)
         def _handle_chat_message(text: str):
             def _process():
@@ -285,10 +311,25 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
                     sidebar.push_transcript("agent", "")
                     accumulated = ""
                     got_tokens = False
-                    for token in pipeline.llm.chat_stream(text):
-                        accumulated += token
-                        got_tokens = True
-                        sidebar.update_last_transcript(accumulated)
+
+                    # Route through vision if screen-related
+                    if _is_screen_chat_query(text) and pipeline._vision_enabled:
+                        sidebar.set_status("analyzing")
+                        for token in pipeline.analyze_screen_for_chat(text):
+                            accumulated += token
+                            got_tokens = True
+                            sidebar.update_last_transcript(accumulated)
+                        # Inject into LLM history for follow-up context
+                        if got_tokens and accumulated and hasattr(pipeline.llm, 'inject_context'):
+                            pipeline.llm.inject_context("user", text)
+                            pipeline.llm.inject_context("assistant", f"[Screen Analysis] {accumulated}")
+                    else:
+                        # Normal text LLM chat
+                        for token in pipeline.llm.chat_stream(text):
+                            accumulated += token
+                            got_tokens = True
+                            sidebar.update_last_transcript(accumulated)
+
                     if not got_tokens:
                         sidebar.update_last_transcript("Sorry, I'm having trouble thinking right now.")
                 except Exception as exc:
@@ -299,6 +340,33 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
             threading.Thread(target=_process, daemon=True, name="chat-handler").start()
 
         sidebar.chat_message_sent.connect(_handle_chat_message)
+
+        # Wire Suggest button to one-click screen analysis
+        def _handle_suggest_request():
+            def _process_suggest():
+                try:
+                    sidebar.set_status("analyzing")
+                    sidebar.push_transcript("agent", "")
+                    accumulated = ""
+                    got_tokens = False
+                    question = "What do you see on the screen? Describe the key content and suggest what the user should do next. Be concise."
+                    for token in pipeline.analyze_screen_for_chat(question):
+                        accumulated += token
+                        got_tokens = True
+                        sidebar.update_last_transcript(accumulated)
+                    if not got_tokens:
+                        sidebar.update_last_transcript("Sorry, I couldn't analyze the screen right now.")
+                    # Inject into history for follow-up
+                    if got_tokens and accumulated and hasattr(pipeline.llm, 'inject_context'):
+                        pipeline.llm.inject_context("assistant", f"[Screen Analysis] {accumulated}")
+                except Exception as exc:
+                    logger.error("Suggest processing error: %s", exc)
+                    sidebar.update_last_transcript("An error occurred during screen analysis.")
+                finally:
+                    sidebar.set_status("idle")
+            threading.Thread(target=_process_suggest, daemon=True, name="suggest-handler").start()
+
+        sidebar.screen_suggest_requested.connect(_handle_suggest_request)
 
         # Wire voice selector to TTS
         def _handle_voice_change(voice_name: str):

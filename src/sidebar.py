@@ -214,6 +214,9 @@ if PYQT6_AVAILABLE:
         # Signal emitted when user sends a chat message
         chat_message_sent = pyqtSignal(str)
 
+        # Signal emitted when user clicks the Suggest button
+        screen_suggest_requested = pyqtSignal()
+
         # Streaming: update last agent bubble
         last_transcript_updated = pyqtSignal(str)
 
@@ -527,6 +530,27 @@ if PYQT6_AVAILABLE:
 
             layout.addStretch()
 
+            # Suggest button (one-click screen analysis)
+            self._suggest_btn = QPushButton("📷")
+            self._suggest_btn.setFixedSize(28, 28)
+            self._suggest_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255,255,255,0.04);
+                    color: rgba(255,255,255,0.5);
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 14px;
+                }
+                QPushButton:hover {
+                    background: rgba(0,200,255,0.15);
+                    color: rgba(255,255,255,0.9);
+                }
+            """)
+            self._suggest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            self._suggest_btn.setToolTip("Analyze screen")
+            self._suggest_btn.clicked.connect(self._on_suggest_clicked)
+            layout.addWidget(self._suggest_btn)
+
             # Theme toggle button
             self._theme_btn = QPushButton("🌙")
             self._theme_btn.setFixedSize(28, 28)
@@ -651,6 +675,10 @@ if PYQT6_AVAILABLE:
             self._chat_input.clear()
             self._add_message("user", text)
             self.chat_message_sent.emit(text)
+
+        def _on_suggest_clicked(self):
+            """Handle Suggest button click — request one-click screen analysis."""
+            self.screen_suggest_requested.emit()
 
         def _tick_thinking(self):
             """Cycle the thinking dots animation."""

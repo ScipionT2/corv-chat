@@ -261,6 +261,15 @@ class EPAgentPipeline:
             import os
             os._exit(0)
 
+        # Vision: contextual screen question
+        if cmd.result == CommandResult.VISION_CONTEXTUAL:
+            if not self._vision_enabled:
+                self.tts.speak("Vision is disabled. Start with --vision flag to enable screen analysis.")
+                self._set_idle()
+                return
+            self._handle_vision_contextual(text)
+            return
+
         # Vision: one-shot screen analysis
         if cmd.result == CommandResult.VISION_ANALYZE:
             if not self._vision_enabled:
@@ -281,7 +290,12 @@ class EPAgentPipeline:
             self._handle_vision_toggle()
             return
 
-        # 4. Query LLM
+        # 4. Check if user is implicitly asking about their screen
+        if self._vision_enabled and self._is_screen_related(text):
+            self._handle_vision_contextual(text)
+            return
+
+        # 5. Query LLM
         self._kv_timer.mark_active()
         reply = self.llm.chat(text)
         if not reply:
@@ -344,11 +358,79 @@ class EPAgentPipeline:
         self._set_idle()
 
         if result:
+            # Inject vision result into LLM history for follow-up questions
+            if hasattr(self.llm, 'inject_context'):
+                self.llm.inject_context(
+                    "assistant",
+                    f"[Screen Analysis] {result.analysis}",
+                )
             self.tts.speak(result.analysis)
             if self._overlay:
                 self._overlay.push_analysis(result.analysis, result.elapsed_ms)
         else:
             self._speak_error("Sorry, I couldn't analyze the screen right now.")
+
+    def _handle_vision_contextual(self, user_text: str) -> None:
+        """Capture screen and analyze with the user's specific question as context."""
+        logger.info("Vision: contextual analysis — %s", user_text[:80])
+        if self._overlay:
+            self._overlay.set_status("analyzing")
+        if self._menubar:
+            self._menubar.set_state("analyzing")
+
+        # Use the user's actual question as the vision prompt
+        prompt = f"The user is asking: '{user_text}'. Look at the screen and answer their question. Be concise and helpful."
+        result = self.analysis_mode.analyze_once(prompt=prompt)
+
+        self._set_idle()
+
+        if result:
+            # Inject both user question and vision answer into LLM history
+            if hasattr(self.llm, 'inject_context'):
+                self.llm.inject_context("user", user_text)
+                self.llm.inject_context(
+                    "assistant",
+                    f"[Screen Analysis] {result.analysis}",
+                )
+
+            # Push to sidebar transcript
+            if self._overlay and hasattr(self._overlay, 'push_transcript'):
+                self._overlay.push_transcript("agent", result.analysis)
+
+            logger.info("EP Agent (vision) says: %s", result.analysis[:120])
+            if self._dock_glow:
+                self._dock_glow.set_state("speaking")
+            if self._overlay:
+                self._overlay.set_status("speaking")
+                self._overlay.push_analysis(result.analysis, result.elapsed_ms)
+            if self._menubar:
+                self._menubar.set_state("speaking")
+            self.tts.speak(result.analysis)
+            self._set_idle()
+        else:
+            self._speak_error("Sorry, I couldn't analyze the screen right now.")
+
+    @staticmethod
+    def _is_screen_related(text: str) -> bool:
+        """Check if user text implicitly refers to their screen content.
+
+        Only triggers when the text looks like a *question* about screen content,
+        not a statement (e.g., 'my screen is broken' should NOT match).
+        """
+        import re as _re
+        # Must contain a screen reference AND look like a question/request
+        _HAS_SCREEN_REF = _re.compile(
+            r"\b(?:on\s+(?:my\s+)?(?:the\s+)?screen"
+            r"|(?:my\s+)?(?:display|monitor)"
+            r"|looking\s+at)",
+            _re.IGNORECASE,
+        )
+        _IS_QUESTION_OR_REQUEST = _re.compile(
+            r"(?:^(?:what|how|why|can\s+you|could\s+you|help|explain|tell\s+me|summarize|describe)"
+            r"|\?$)",
+            _re.IGNORECASE,
+        )
+        return bool(_HAS_SCREEN_REF.search(text) and _IS_QUESTION_OR_REQUEST.search(text))
 
     def _handle_vision_toggle(self) -> None:
         """Toggle continuous analysis mode."""
@@ -369,10 +451,61 @@ class EPAgentPipeline:
         logger.info("Vision: analysis mode %s", "ON" if new_state else "OFF")
         self.tts.speak(msg)
 
+    def analyze_screen_for_chat(self, question: str):
+        """Capture the screen and stream vision model tokens for a chat question.
+
+        Yields string tokens as the vision model generates them.
+        Callable from the chat handler to route screen-related questions
+        through vision instead of the text LLM.
+        """
+        if not self._vision_enabled or not self.vision_client:
+            yield "Vision is not enabled. Start with --vision flag."
+            return
+
+        from src.vision import capture_screen
+
+        frame = capture_screen(
+            monitor=getattr(config, 'VISION_MONITOR', 0),
+            scale=getattr(config, 'VISION_SCALE', 0.5),
+        )
+        if not frame:
+            yield "Sorry, I couldn't capture the screen right now."
+            return
+
+        # Update the vision thumbnail in sidebar if available
+        if self._overlay and hasattr(self._overlay, 'set_vision_thumbnail'):
+            try:
+                from PyQt6.QtGui import QPixmap, QImage
+                qimg = QImage.fromData(frame)
+                if not qimg.isNull():
+                    pixmap = QPixmap.fromImage(qimg)
+                    self._overlay.set_vision_thumbnail(pixmap)
+            except Exception:
+                pass  # Non-critical
+
+        # Stream tokens from the vision model
+        got_tokens = False
+        for token in self.vision_client.analyze_with_question_stream(frame, question):
+            got_tokens = True
+            yield token
+
+        if not got_tokens:
+            yield "Sorry, I couldn't analyze the screen right now."
+
     def _on_vision_result(self, result: VisionResult) -> None:
-        """Callback for continuous analysis results."""
+        """Callback for continuous analysis results.
+
+        Pushes meaningful insights to the sidebar chat area (not just
+        the analysis card), filtering out trivial observations.
+        """
         if self._overlay:
             self._overlay.push_analysis(result.analysis, result.elapsed_ms)
+            # Also push to chat area if the insight seems meaningful
+            # Filter out very short/trivial responses
+            if result.analysis and len(result.analysis) > 20:
+                self._overlay.push_transcript(
+                    "agent", f"🔍 {result.analysis}"
+                )
 
     def _speak_error(self, message: str) -> None:
         """Speak an error message to the user."""

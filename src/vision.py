@@ -234,6 +234,88 @@ class VisionClient:
             logger.error("Vision request failed: %s", exc)
             return None
 
+    def analyze_image_stream(
+        self,
+        image_bytes: bytes,
+        prompt: str = VISION_PROMPT,
+    ):
+        """Generator that yields tokens as they stream from the vision model.
+
+        Yields individual string tokens. The caller accumulates them.
+        Does NOT produce a VisionResult — use for chat integration where
+        you want token-by-token streaming into the UI.
+        """
+        b64_image = image_to_base64(image_bytes)
+
+        url = f"{self.base_url}/api/generate"
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "images": [b64_image],
+            "stream": True,
+            "options": {
+                "num_predict": VISION_MAX_TOKENS,
+            },
+        }
+
+        logger.debug("POST %s model=%s image_size=%d (streaming)", url, self.model, len(image_bytes))
+
+        try:
+            resp = requests.post(url, json=payload, timeout=self.timeout, stream=True)
+            resp.raise_for_status()
+
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                    token = chunk.get("response", "")
+                    if token:
+                        yield token
+                    if chunk.get("done"):
+                        break
+                except json.JSONDecodeError:
+                    continue
+
+        except requests.ConnectionError:
+            logger.error(
+                "Cannot connect to Ollama at %s — is it running?", self.base_url
+            )
+        except Exception as exc:
+            logger.error("Vision stream request failed: %s", exc)
+
+    def analyze_with_question(
+        self,
+        image_bytes: bytes,
+        question: str,
+    ) -> Optional[VisionResult]:
+        """Analyze an image with a user's specific question as context.
+
+        Frames the prompt around the user's question for contextual analysis.
+        """
+        prompt = (
+            f"The user is asking: '{question}'. "
+            f"Look at the screen and answer their question. "
+            f"Be concise and helpful."
+        )
+        return self.analyze_image(image_bytes, prompt=prompt)
+
+    def analyze_with_question_stream(
+        self,
+        image_bytes: bytes,
+        question: str,
+    ):
+        """Stream tokens for a contextual screen question.
+
+        Yields individual string tokens.
+        """
+        prompt = (
+            f"The user is asking: '{question}'. "
+            f"Look at the screen and answer their question. "
+            f"Be concise and helpful."
+        )
+        yield from self.analyze_image_stream(image_bytes, prompt=prompt)
+
     def check_model_available(self) -> bool:
         """Check if the vision model is available in Ollama."""
         try:

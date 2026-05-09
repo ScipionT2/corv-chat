@@ -174,6 +174,23 @@ class OllamaClient:
             if self._history and self._history[-1]["role"] == "user":
                 self._history.pop()
 
+    def inject_context(self, role: str, content: str) -> None:
+        """Inject a message into history without triggering an LLM call.
+
+        Useful for adding context (e.g., vision results) that the LLM
+        should be aware of in future turns.
+
+        Parameters
+        ----------
+        role:
+            Message role ('assistant', 'user', or 'system').
+        content:
+            The message content to inject.
+        """
+        self._history.append({"role": role, "content": content})
+        self._trim_history()
+        logger.debug("Injected context [%s]: %s", role, content[:80])
+
     def clear_history(self) -> None:
         """Erase the conversation history."""
         self._history.clear()
