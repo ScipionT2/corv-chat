@@ -74,6 +74,10 @@ class HybridLLMClient:
         self._mode: str = "local"  # Start local, prove cloud later
         self._lock = threading.Lock()
 
+        # Connection pooling for lower latency on repeated Ollama requests
+        self._session = requests.Session()
+        self._session.headers.update({"Connection": "keep-alive"})
+
         # OpenAI client
         self._openai_client = None
         if OPENAI_AVAILABLE:
@@ -213,7 +217,7 @@ class HybridLLMClient:
         }
 
         try:
-            response = requests.post(url, json=payload, timeout=config.OLLAMA_TIMEOUT, stream=True)
+            response = self._session.post(url, json=payload, timeout=config.OLLAMA_TIMEOUT, stream=True)
             response.raise_for_status()
 
             parts: list[str] = []

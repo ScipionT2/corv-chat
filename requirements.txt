@@ -13,3 +13,6 @@ Pillow
 pytest
 PyQt6
 openai
+fastapi
+uvicorn
+sse-starlette

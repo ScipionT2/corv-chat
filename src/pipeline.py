@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from typing import Optional
 
 import config
@@ -105,6 +106,7 @@ class EPAgentPipeline:
         self._wake_word = wake_word
         self._running = False
         self._stop_event = threading.Event()
+        self._interrupted = threading.Event()  # Set when wake word fires during TTS
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -172,11 +174,48 @@ class EPAgentPipeline:
     # Core interaction
     # ------------------------------------------------------------------
 
+    def _on_interrupt(self) -> None:
+        """Called when wake word fires during TTS playback.
+
+        Sets the interrupt flag and kills TTS so on_wake can restart.
+        """
+        logger.info("Interrupt detected — stopping TTS and re-entering listen mode")
+        self._interrupted.set()
+        self.tts.stop()
+
+    def _speak_interruptible(self, text: str) -> bool:
+        """Speak text while keeping wake word detection active.
+
+        Returns ``True`` if speech completed normally, ``False`` if it was
+        interrupted by a wake word detection.
+        """
+        self._interrupted.clear()
+
+        # Re-enable wake word detection during speech, with interrupt callback
+        if self.detector is not None:
+            original_on_wake = self.detector.on_wake
+            self.detector.on_wake = self._on_interrupt
+            self.detector._paused = False
+
+        try:
+            self.tts.speak(text)
+        finally:
+            # Restore original callback and pause state
+            if self.detector is not None:
+                self.detector._paused = True
+                self.detector.on_wake = original_on_wake
+
+        was_interrupted = self._interrupted.is_set()
+        if was_interrupted:
+            logger.info("Speech was interrupted by wake word")
+        return not was_interrupted
+
     def on_wake(self) -> None:
         """Handle a single wake-word activation."""
         if not self._running:
             return
 
+        t_wake = time.monotonic()
         logger.info("Wake word activated — recording …")
 
         # Mark activity for KV cache timer (don't flush mid-conversation)
@@ -196,12 +235,18 @@ class EPAgentPipeline:
 
         # 1. Record speech
         audio = record_until_silence()
+        t_record = time.monotonic()
+        logger.info("[TIMING] Record: %.0fms", (t_record - t_wake) * 1000)
+
         if audio is None or audio.size == 0:
             self._speak_error("Sorry, I didn't catch that.")
             return
 
         # 2. Transcribe
         text = self.stt.transcribe(audio)
+        t_stt = time.monotonic()
+        logger.info("[TIMING] STT: %.0fms", (t_stt - t_record) * 1000)
+
         if not text:
             self._speak_error("Sorry, I couldn't understand what you said.")
             return
@@ -306,11 +351,14 @@ class EPAgentPipeline:
         # 5. Query LLM
         self._kv_timer.mark_active()
         reply = self.llm.chat(text)
+        t_llm = time.monotonic()
+        logger.info("[TIMING] LLM: %.0fms", (t_llm - t_stt) * 1000)
+
         if not reply:
             self._speak_error("Sorry, I'm having trouble thinking right now.")
             return
 
-        # 5. Speak response
+        # 6. Speak response (interruptible)
         logger.info("EP Agent says: %s", reply[:120])
 
         # Push agent reply to sidebar transcript
@@ -323,8 +371,18 @@ class EPAgentPipeline:
             self._overlay.set_status("speaking")
         if self._menubar:
             self._menubar.set_state("speaking")
-        self.tts.speak(reply)
+
+        completed = self._speak_interruptible(reply)
+        t_tts = time.monotonic()
+        logger.info("[TIMING] TTS: %.0fms | Total: %.0fms",
+                    (t_tts - t_llm) * 1000, (t_tts - t_wake) * 1000)
+
         self._set_idle()
+
+        # If interrupted, immediately re-enter the listen flow
+        if not completed:
+            logger.info("Re-entering listen mode after interrupt")
+            self.on_wake()
 
     # ------------------------------------------------------------------
     # Helpers

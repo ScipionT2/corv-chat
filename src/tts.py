@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -156,6 +157,9 @@ class TextToSpeech:
         import os
         self.say_voice = say_voice or os.environ.get("EP_VOICE") or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
         self._backend: Optional[str] = None
+        self._current_process: Optional[subprocess.Popen] = None
+        self._process_lock = threading.Lock()
+        self._interrupted = False
 
     @property
     def backend(self) -> str:
@@ -164,6 +168,32 @@ class TextToSpeech:
             self._backend = _select_backend(self._backend_pref)
             logger.info("TTS backend: %s", self._backend)
         return self._backend
+
+    @property
+    def is_speaking(self) -> bool:
+        """Return ``True`` if TTS is currently playing audio."""
+        with self._process_lock:
+            if self._current_process is not None:
+                return self._current_process.poll() is None
+        return False
+
+    @property
+    def was_interrupted(self) -> bool:
+        """Return ``True`` if the last speak() call was interrupted via stop()."""
+        return self._interrupted
+
+    def stop(self) -> None:
+        """Immediately stop any in-progress speech playback."""
+        with self._process_lock:
+            if self._current_process is not None and self._current_process.poll() is None:
+                logger.info("Interrupting TTS playback")
+                self._interrupted = True
+                try:
+                    self._current_process.kill()
+                    self._current_process.wait(timeout=2)
+                except Exception:  # noqa: BLE001
+                    pass
+                self._current_process = None
 
     def speak(self, text: str) -> None:
         """Synthesise and play *text* through the selected backend.
@@ -176,6 +206,7 @@ class TextToSpeech:
         if not text or not text.strip():
             return
 
+        self._interrupted = False
         text = text.strip()
         logger.debug("Speaking (%s): %s", self.backend, text[:80])
 
@@ -213,13 +244,27 @@ class TextToSpeech:
                 self._speak_say(text)
 
     def _speak_say(self, text: str) -> None:
-        """Speak using macOS ``say`` command."""
+        """Speak using macOS ``say`` command.
+
+        Uses Popen instead of run so the process can be killed mid-speech
+        for interrupt support.
+        """
         try:
             cmd = ["say", "-v", self.say_voice, text]
-            subprocess.run(cmd, check=True, timeout=60)  # noqa: S603
+            proc = subprocess.Popen(cmd)  # noqa: S603
+            with self._process_lock:
+                self._current_process = proc
+            proc.wait(timeout=60)
         except FileNotFoundError:
             logger.error("macOS 'say' command not found")
         except subprocess.TimeoutExpired:
             logger.warning("say command timed out")
-        except subprocess.CalledProcessError as exc:
+            try:
+                proc.kill()
+            except Exception:  # noqa: BLE001
+                pass
+        except Exception as exc:  # noqa: BLE001
             logger.error("say command failed: %s", exc)
+        finally:
+            with self._process_lock:
+                self._current_process = None

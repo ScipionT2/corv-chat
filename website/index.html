@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EP Agent — Your Local AI Assistant</title>
+<meta name="description" content="EP Agent is a 100% local AI voice assistant for Mac. Private, fast, and free. Powered by Ollama, Whisper, and Metal acceleration.">
+<meta name="keywords" content="AI assistant, local AI, voice assistant, Mac, Apple Silicon, privacy, Ollama, Whisper, open source">
+<meta name="author" content="Escipion">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="EP Agent — Your Local AI Assistant">
+<meta property="og:description" content="100% local AI voice assistant for Mac. Private, fast, and free. No cloud, no cost, no data leaving your machine.">
+<meta property="og:url" content="https://escipionpedroza147-commits.github.io/EP-Agent/">
+<meta property="og:site_name" content="EP Agent">
+<meta property="og:image" content="https://escipionpedroza147-commits.github.io/EP-Agent/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EP Agent — Your Local AI Assistant">
+<meta name="twitter:description" content="100% local AI voice assistant for Mac. Private, fast, and free.">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<link rel="canonical" href="https://escipionpedroza147-commits.github.io/EP-Agent/">
+
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-mid: #0f0f1a;
+  --bg-surface: #1a1a2e;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(0, 200, 255, 0.15);
+  --accent: #00c8ff;
+  --accent-dim: #00BCD4;
+  --accent-glow: rgba(0, 200, 255, 0.25);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8aa0;
+  --text-muted: #5a5a70;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --max-w: 1140px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Ambient Background ─── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(0, 200, 255, 0.06) 0%, transparent 70%);
+  animation: drift 20s ease-in-out infinite;
+}
+.ambient::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: -20%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(0, 188, 212, 0.04) 0%, transparent 70%);
+  animation: drift 25s ease-in-out infinite reverse;
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(3%, -3%); }
+  66% { transform: translate(-2%, 2%); }
+}
+
+/* ─── Noise Overlay ─── */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ─── Layout ─── */
+.wrapper {
+  position: relative;
+  z-index: 2;
+}
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── Nav ─── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 24px;
+  transition: var(--transition);
+}
+nav.scrolled {
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.nav-logo .logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--transition);
+  letter-spacing: 0.01em;
+}
+.nav-links a:hover { color: var(--text-primary); }
+.nav-cta {
+  padding: 8px 20px;
+  background: rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 8px;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+  transition: all var(--transition) !important;
+}
+.nav-cta:hover {
+  background: rgba(0, 200, 255, 0.18) !important;
+  border-color: rgba(0, 200, 255, 0.4) !important;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.nav-mobile-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+}
+.nav-mobile-btn svg { width: 24px; height: 24px; }
+
+/* ─── Hero ─── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+}
+.hero-content {
+  max-width: 740px;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 100px;
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.15);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.hero-badge .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px transparent; }
+}
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero h1 span {
+  background: linear-gradient(135deg, var(--accent) 0%, #00e5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-tagline {
+  font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 560px;
+  margin: 0 auto 48px;
+  font-weight: 400;
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+  letter-spacing: -0.01em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+  color: #000;
+  box-shadow: 0 0 30px var(--accent-glow), 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(0, 200, 255, 0.35), 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+.btn-secondary:hover {
+  border-color: var(--border-glow);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+.hero-meta {
+  margin-top: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.hero-meta-item svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+
+/* Scroll indicator */
+.scroll-hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: float 3s ease-in-out infinite;
+}
+.scroll-hint .line {
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--text-muted), transparent);
+}
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ─── Section Shared ─── */
+section {
+  padding: 120px 0;
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--accent);
+}
+.section-title {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.section-desc {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  max-width: 540px;
+  line-height: 1.7;
+}
+
+/* ─── Features ─── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 64px;
+}
+.feature-card {
+  padding: 36px 28px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.feature-card:hover {
+  border-color: var(--border-glow);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+.feature-card:hover::before { opacity: 1; }
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 200, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+  border: 1px solid rgba(0, 200, 255, 0.1);
+}
+.feature-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.feature-card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+/* ─── How It Works ─── */
+.steps-section {
+  background: linear-gradient(180deg, transparent, rgba(0, 200, 255, 0.02), transparent);
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 64px;
+  position: relative;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 48px;
+  left: calc(16.66% + 24px);
+  right: calc(16.66% + 24px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-glow), var(--border-glow), transparent);
+}
+.step {
+  text-align: center;
+  position: relative;
+}
+.step-number {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-mid);
+  border: 2px solid var(--border-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 25px var(--accent-glow);
+}
+.step-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+.step h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.step p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+/* ─── Tech Specs ─── */
+.tech-section {
+  text-align: center;
+}
+.tech-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+.tech-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.tech-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  transition: all var(--transition);
+}
+.tech-item:hover .tech-logo {
+  border-color: var(--border-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+.tech-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.tech-banner {
+  margin-top: 48px;
+  padding: 28px 40px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.tech-banner p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+.tech-banner strong {
+  color: var(--text-primary);
+}
+
+/* ─── FAQ ─── */
+.faq-list {
+  max-width: 680px;
+  margin: 64px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.faq-item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.faq-item:hover,
+.faq-item.open {
+  border-color: var(--border-glow);
+}
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+  transition: color var(--transition);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+}
+.faq-q:hover { color: var(--accent); }
+.faq-q .icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.faq-item.open .faq-q .icon {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: rotate(45deg);
+}
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s;
+}
+.faq-item.open .faq-a {
+  max-height: 300px;
+}
+.faq-a-inner {
+  padding: 0 24px 20px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* ─── CTA Section ─── */
+.cta-section {
+  text-align: center;
+  position: relative;
+}
+.cta-card {
+  padding: 80px 40px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(0, 200, 255, 0.06), rgba(0, 188, 212, 0.03));
+  border: 1px solid var(--border-glow);
+  position: relative;
+  overflow: hidden;
+}
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.cta-card h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+.cta-card p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 36px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── Footer ─── */
+footer {
+  padding: 48px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+.footer-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color var(--transition);
+}
+.footer-links a:hover { color: var(--text-primary); }
+
+/* ─── Animations ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ─── Mobile ─── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 15, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 32px 24px;
+    gap: 24px;
+    align-items: flex-start;
+    z-index: 99;
+  }
+  .nav-links.open a { font-size: 1.1rem; }
+  .nav-mobile-btn { display: block; }
+
+  .hero { min-height: auto; padding: 140px 24px 80px; }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .steps::before { display: none; }
+
+  .tech-grid { gap: 24px; }
+
+  .cta-card { padding: 48px 24px; }
+
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  section { padding: 80px 0; }
+
+  .hero-meta { gap: 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero h1 { font-size: 2.5rem; }
+  .hero-tagline { font-size: 1rem; }
+  .hero-actions { flex-direction: column; width: 100%; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+  .feature-card { padding: 28px 22px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="ambient"></div>
+<div class="noise"></div>
+
+<div class="wrapper">
+  <!-- ─── Navigation ─── -->
+  <nav id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="logo-icon">⚡</div>
+        EP Agent
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#tech">Tech</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="https://github.com/escipionpedroza147-commits/EP-Agent/releases" class="nav-cta" target="_blank" rel="noopener">Download</a></li>
+      </ul>
+      <button class="nav-mobile-btn" id="mobileBtn" aria-label="Toggle menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── Hero ─── -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <span class="pulse"></span>
+        Open Source &amp; Free Forever
+      </div>
+      <h1 class="reveal reveal-delay-1"><span>EP</span> Agent</h1>
+      <p class="hero-tagline reveal reveal-delay-2">Your Local AI Assistant.<br>100% Private. Zero Cost.</p>
+      <div class="hero-actions reveal reveal-delay-3">
+        <a href="https://github.com/escipionpedroza147-commits/EP-Agent/releases" class="btn btn-primary" target="_blank" rel="noopener">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Now
+        </a>
+        <a href="https://github.com/escipionpedroza147-commits/EP-Agent" class="btn btn-secondary" target="_blank" rel="noopener">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          View Source
+        </a>
+      </div>
+      <div class="hero-meta reveal reveal-delay-4">
+        <div class="hero-meta-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+          macOS Only
+        </div>
+        <div class="hero-meta-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          100% Offline
+        </div>
+        <div class="hero-meta-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Apple Silicon
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="line"></div>
+    </div>
+  </section>
+
+  <!-- ─── Features ─── -->
+  <section id="features">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+        <p class="section-desc">Built for power users who care about privacy. No accounts, no subscriptions, no data collection.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">🎙️</div>
+          <h3>Voice Control</h3>
+          <p>Say "EP" and start talking. Natural voice interaction powered by local speech recognition. Hands-free, always ready.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">👁️</div>
+          <h3>Vision</h3>
+          <p>Analyzes your screen, suggests next steps. Context-aware assistance that sees what you see — without sending a single pixel to the cloud.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">🔒</div>
+          <h3>100% Local</h3>
+          <p>Runs entirely on your Mac. No cloud, no cost, no data leaving your machine. Your conversations stay yours. Always.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">⚡</div>
+          <h3>Fast</h3>
+          <p>Metal-accelerated inference. Responses in under 2 seconds. The speed of cloud AI with the privacy of local processing.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">🎨</div>
+          <h3>Beautiful UI</h3>
+          <p>Glassmorphism sidebar. Dark and light themes. Customizable accent colors. An interface you'll actually enjoy using.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">🌐</div>
+          <h3>Web Dashboard</h3>
+          <p>Control everything from your browser. Monitor conversations, adjust settings, and manage your assistant from any device on your network.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── How It Works ─── -->
+  <section id="how-it-works" class="steps-section">
+    <div class="container">
+      <div class="reveal" style="text-align:center">
+        <div class="section-label" style="justify-content:center">How It Works</div>
+        <h2 class="section-title">Up and running in minutes.</h2>
+        <p class="section-desc" style="margin:0 auto">No complex setup. No API keys. No configuration files. Just install, launch, and talk.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-icon">📦</div>
+          <h3>Install</h3>
+          <p>Download EP Agent and drop it in your Applications folder. One file, under 50 MB.</p>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-icon">🚀</div>
+          <h3>Launch</h3>
+          <p>Open the app. It automatically downloads the AI model and configures everything for your Mac.</p>
+        </div>
+        <div class="step reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-icon">🗣️</div>
+          <h3>Talk</h3>
+          <p>Say "EP" or click the mic. Ask anything. Your AI assistant is ready — fully local, fully private.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Tech Specs ─── -->
+  <section id="tech" class="tech-section">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label" style="justify-content:center">Under The Hood</div>
+        <h2 class="section-title">Powered by open source.</h2>
+        <p class="section-desc" style="margin:0 auto">Built on battle-tested open-source technology. No proprietary lock-in. No vendor dependencies.</p>
+      </div>
+      <div class="tech-grid reveal reveal-delay-1">
+        <div class="tech-item">
+          <div class="tech-logo">🦙</div>
+          <span class="tech-name">Ollama</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-logo">🎤</div>
+          <span class="tech-name">Whisper</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-logo">🖥️</div>
+          <span class="tech-name">PyQt6</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-logo">🍎</div>
+          <span class="tech-name">Metal</span>
+        </div>
+        <div class="tech-item">
+          <div class="tech-logo">🐍</div>
+          <span class="tech-name">Python</span>
+        </div>
+      </div>
+      <div class="tech-banner reveal reveal-delay-2">
+        <span style="font-size:1.4rem">🧠</span>
+        <p><strong>Ollama + Whisper + PyQt6.</strong> Runs on Apple Silicon with Metal acceleration.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FAQ ─── -->
+  <section id="faq">
+    <div class="container">
+      <div class="reveal" style="text-align:center">
+        <div class="section-label" style="justify-content:center">FAQ</div>
+        <h2 class="section-title">Common questions.</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item reveal reveal-delay-1">
+          <button class="faq-q" aria-expanded="false">
+            Is it really 100% free?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Yes, completely free. EP Agent is open source and always will be. No subscriptions, no premium tiers, no hidden costs. The AI runs locally on your hardware — there are no server costs to pass on.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-2">
+          <button class="faq-q" aria-expanded="false">
+            Does it send any data to the cloud?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Absolutely not. Every part of EP Agent runs on your local machine — the language model, speech recognition, and all processing. No internet connection is needed after the initial model download. Your conversations never leave your computer.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-3">
+          <button class="faq-q" aria-expanded="false">
+            What Mac do I need?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">EP Agent runs best on Apple Silicon Macs (M1 or later) with at least 8GB of RAM. It uses Metal acceleration for fast inference. Intel Macs are supported but performance will be significantly slower.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-4">
+          <button class="faq-q" aria-expanded="false">
+            How does it compare to ChatGPT / Siri?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">EP Agent runs entirely offline with zero cost and complete privacy — unlike ChatGPT (cloud-based, subscription). Compared to Siri, EP Agent offers deeper conversations, screen awareness, and is fully customizable. The trade-off: cloud models may have broader knowledge, but EP Agent keeps everything on your machine.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-q" aria-expanded="false">
+            Can I choose which AI model to use?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Yes. EP Agent uses Ollama under the hood, which supports dozens of open-source models — Llama, Mistral, Phi, Gemma, and more. Switch models in settings based on your preference for speed, capability, or memory usage.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-q" aria-expanded="false">
+            Is it open source?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Yes. The full source code is available on GitHub. You can inspect it, modify it, contribute to it, or fork it for your own projects. Transparency is a core principle of EP Agent.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card reveal">
+        <h2>Ready to take back your privacy?</h2>
+        <p>Download EP Agent and experience AI that respects you. Free, local, and open source.</p>
+        <div class="hero-actions">
+          <a href="https://github.com/escipionpedroza147-commits/EP-Agent/releases" class="btn btn-primary" target="_blank" rel="noopener">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download EP Agent
+          </a>
+          <a href="https://github.com/escipionpedroza147-commits/EP-Agent" class="btn btn-secondary" target="_blank" rel="noopener">
+            Star on GitHub ⭐
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span>© 2025 EP Agent.</span>
+          <span>Built by <strong style="color:var(--text-secondary)">Escipion</strong></span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/escipionpedroza147-commits/EP-Agent" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/escipionpedroza147-commits/EP-Agent/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/escipionpedroza147-commits/EP-Agent/issues" target="_blank" rel="noopener">Report a Bug</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* ─── Nav Scroll ─── */
+const nav = document.getElementById('nav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+}, { passive: true });
+
+/* ─── Mobile Menu ─── */
+const mobileBtn = document.getElementById('mobileBtn');
+const navLinks = document.getElementById('navLinks');
+mobileBtn.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
+  const isOpen = navLinks.classList.contains('open');
+  mobileBtn.innerHTML = isOpen
+    ? '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    : '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+});
+
+/* Close mobile menu on link click */
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    mobileBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  });
+});
+
+/* ─── Intersection Observer (Scroll Reveal) ─── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, {
+  threshold: 0.1,
+  rootMargin: '0px 0px -60px 0px'
+});
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* ─── FAQ Accordion ─── */
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    /* Close all */
+    document.querySelectorAll('.faq-item.open').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    });
+    /* Open clicked (if it wasn't already open) */
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ─── Smooth scroll for anchor links ─── */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>

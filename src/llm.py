@@ -50,6 +50,10 @@ class OllamaClient:
 
         self._history: list[dict[str, str]] = []
 
+        # Connection pooling for lower latency on repeated requests
+        self._session = requests.Session()
+        self._session.headers.update({"Connection": "keep-alive"})
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -90,7 +94,7 @@ class OllamaClient:
         logger.debug("POST %s model=%s", url, self.model)
 
         try:
-            response = requests.post(url, json=payload, timeout=self.timeout, stream=True)
+            response = self._session.post(url, json=payload, timeout=self.timeout, stream=True)
             response.raise_for_status()
 
             full_reply = self._read_stream(response)
@@ -139,7 +143,7 @@ class OllamaClient:
         import json as _json
 
         try:
-            response = requests.post(url, json=payload, timeout=self.timeout, stream=True)
+            response = self._session.post(url, json=payload, timeout=self.timeout, stream=True)
             response.raise_for_status()
 
             parts: list[str] = []

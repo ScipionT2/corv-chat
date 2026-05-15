@@ -388,6 +388,13 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
         sidebar.voice_changed.connect(_handle_voice_change)
 
 
+    # ── Start Web Control Hub ─────────────────────────────────────────
+    try:
+        from src.web import start_web_server
+        start_web_server(host="0.0.0.0", port=8766, pipeline=pipeline)
+    except Exception as exc:
+        logger.warning("Web Control Hub failed to start: %s", exc)
+
     # ── Start voice pipeline in background thread ─────────────────────
     if pipeline:
         def run_pipeline():
@@ -408,6 +415,11 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     # ── Handle shutdown ───────────────────────────────────────────────
     def shutdown(*_):
         logger.info("Shutting down EP Agent...")
+        try:
+            from src.web import stop_web_server
+            stop_web_server()
+        except Exception:
+            pass
         if pipeline:
             if pipeline.analysis_mode:
                 pipeline.analysis_mode.stop()

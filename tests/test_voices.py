@@ -73,10 +73,13 @@ class TestVoiceSelection:
         assert tts.say_voice is not None
         assert len(tts.say_voice) > 0
 
-    @patch("src.tts.subprocess.run")
-    def test_speak_uses_selected_voice(self, mock_run: MagicMock) -> None:
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_uses_selected_voice(self, mock_popen: MagicMock) -> None:
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_popen.return_value = mock_proc
         tts = TextToSpeech(say_voice="Karen")
         tts._backend = "say"
         tts.speak("Hello test")
-        args = mock_run.call_args[0][0]
+        args = mock_popen.call_args[0][0]
         assert "Karen" in args

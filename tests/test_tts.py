@@ -48,24 +48,31 @@ class TestBackendDetection:
 class TestTextToSpeech:
     """Tests for the TextToSpeech class."""
 
-    @patch("src.tts.subprocess.run")
+    @patch("src.tts.subprocess.Popen")
     @patch.object(tts_module, "_say_available", return_value=True)
     @patch.object(tts_module, "_check_piper", return_value=False)
-    def test_speak_say(self, _piper, _say, mock_run):
+    def test_speak_say(self, _piper, _say, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.poll.return_value = None
+        mock_proc.wait.return_value = 0
+        mock_popen.return_value = mock_proc
         tts = TextToSpeech(backend="say", say_voice="Alex")
         tts._backend = "say"
         tts.speak("Hello world")
-        mock_run.assert_called_once()
-        args = mock_run.call_args[0][0]
+        mock_popen.assert_called_once()
+        args = mock_popen.call_args[0][0]
         assert args[0] == "say"
         assert "Hello world" in args
 
-    @patch("src.tts.subprocess.run")
-    def test_speak_say_voice_argument(self, mock_run):
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_say_voice_argument(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_popen.return_value = mock_proc
         tts = TextToSpeech(say_voice="Samantha")
         tts._backend = "say"
         tts.speak("Test")
-        args = mock_run.call_args[0][0]
+        args = mock_popen.call_args[0][0]
         assert "-v" in args
         assert "Samantha" in args
 
@@ -76,17 +83,20 @@ class TestTextToSpeech:
         tts.speak("")
         tts.speak("   ")
 
-    @patch("src.tts.subprocess.run", side_effect=FileNotFoundError)
-    def test_speak_say_missing_binary(self, mock_run):
+    @patch("src.tts.subprocess.Popen", side_effect=FileNotFoundError)
+    def test_speak_say_missing_binary(self, mock_popen):
         tts = TextToSpeech()
         tts._backend = "say"
         # Should not raise — just logs
         tts.speak("hello")
 
-    @patch("src.tts.subprocess.run", side_effect=Exception("timeout"))
-    def test_speak_say_timeout(self, mock_run):
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_say_timeout(self, mock_popen):
         import subprocess
-        mock_run.side_effect = subprocess.TimeoutExpired("say", 60)
+        mock_proc = MagicMock()
+        mock_proc.wait.side_effect = subprocess.TimeoutExpired("say", 60)
+        mock_proc.kill.return_value = None
+        mock_popen.return_value = mock_proc
         tts = TextToSpeech()
         tts._backend = "say"
         tts.speak("hello")  # should not raise
