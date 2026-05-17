@@ -1,5 +1,5 @@
 """
-py2app setup for EP Agent .app bundle.
+py2app setup for Nova .app bundle.
 
 Usage:
     python setup_app.py py2app
@@ -16,7 +16,7 @@ from setuptools import setup
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 APP = ["launcher.py"]
-APP_NAME = "EP Agent"
+APP_NAME = "Nova"
 
 # Data files to include in the bundle
 DATA_FILES = [
@@ -31,15 +31,15 @@ OPTIONS = {
     "plist": {
         "CFBundleName": APP_NAME,
         "CFBundleDisplayName": APP_NAME,
-        "CFBundleIdentifier": "com.escipion.ep-agent",
+        "CFBundleIdentifier": "com.escipion.nova",
         "CFBundleVersion": "1.0.0",
         "CFBundleShortVersionString": "1.0.0",
         "CFBundleIconFile": "AppIcon",
         "LSMinimumSystemVersion": "12.0",
         "LSUIElement": False,  # Show in Dock
-        "NSMicrophoneUsageDescription": "EP Agent needs microphone access for voice commands.",
-        "NSCameraUsageDescription": "EP Agent can use the camera for vision features.",
-        "NSAppleEventsUsageDescription": "EP Agent needs automation access for screen capture.",
+        "NSMicrophoneUsageDescription": "Nova needs microphone access for voice commands.",
+        "NSCameraUsageDescription": "Nova can use the camera for vision features.",
+        "NSAppleEventsUsageDescription": "Nova needs automation access for screen capture.",
     },
     "packages": PACKAGES,
     "includes": [

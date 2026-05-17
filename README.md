@@ -1,10 +1,10 @@
-# ⚡ EP Agent (Voice Bridge)
+# ⚡ Nova (Voice Bridge)
 
 **A fully local, zero-cost multimodal voice assistant powered by open-source AI.**
 
 Talk to your computer naturally — everything runs on your machine. No cloud APIs, no API keys, no subscriptions, full privacy.
 
-[![Tests](https://github.com/escipionpedroza147-commits/jarvis-voice-bridge/actions/workflows/tests.yml/badge.svg)](https://github.com/escipionpedroza147-commits/jarvis-voice-bridge/actions/workflows/tests.yml)
+[![Tests](https://github.com/escipionpedroza147-commits/nova/actions/workflows/tests.yml/badge.svg)](https://github.com/escipionpedroza147-commits/nova/actions/workflows/tests.yml)
 
 ## Architecture
 
@@ -30,7 +30,7 @@ Talk to your computer naturally — everything runs on your machine. No cloud AP
 └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Wake word** — Listens for "Jarvis" using [OpenWakeWord](https://github.com/dscripka/openWakeWord)
+1. **Wake word** — Listens for "Nova" using [OpenWakeWord](https://github.com/dscripka/openWakeWord)
 2. **Record** — Captures speech with energy-based voice activity detection
 3. **Transcribe** — Converts speech to text with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 4. **Command check** — Intercepts built-in voice commands (time, clear history, pause/resume, vision)
@@ -41,11 +41,11 @@ Talk to your computer naturally — everything runs on your machine. No cloud AP
 
 ## Features
 
-- 🎙️ **Wake word detection** — "Jarvis" wake word with adjustable confidence
+- 🎙️ **Wake word detection** — "Nova" wake word with adjustable confidence
 - 👁 **Event-driven vision** — Screen analysis only on change (sleep/wake cycle, <2% idle CPU)
 - 📱 **Menu bar app** — macOS system tray with status, controls, and overlay toggle
-- 🧠 **Conversation memory** — Persists history to `~/.ep-agent/history.json`
-- 🗣️ **Multiple voices** — Choose from any macOS `say` voice (`--voice` flag or `EP_SAY_VOICE` env)
+- 🧠 **Conversation memory** — Persists history to `~/.nova/history.json`
+- 🗣️ **Multiple voices** — Choose from any macOS `say` voice (`--voice` flag or `NOVA_SAY_VOICE` env)
 - ⚡ **Built-in commands** — Time, clear history, pause/resume, screen analysis without LLM round-trip
 - 📊 **Health monitoring** — HTTP `/health` and `/status` endpoints for uptime/stats
 - 🔋 **Resource optimized** — 25% CPU thread cap, KV cache flushing, low process priority
@@ -65,8 +65,8 @@ Talk to your computer naturally — everything runs on your machine. No cloud AP
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/escipionpedroza147-commits/jarvis-voice-bridge.git
-cd jarvis-voice-bridge
+git clone https://github.com/escipionpedroza147-commits/nova.git
+cd nova
 
 # 2. Run setup (installs deps, creates venv)
 bash setup.sh
@@ -75,15 +75,15 @@ bash setup.sh
 ollama serve &
 ollama pull qwen2.5:3b
 
-# 4. Start EP Agent
+# 4. Start Nova
 source .venv/bin/activate
-python ep_agent.py
+python nova.py
 
 # Check system readiness first:
-python ep_agent.py --check
+python nova.py --check
 ```
 
-Then say **"Jarvis"** and ask a question!
+Then say **"Nova"** and ask a question!
 
 ### Launch Options
 
@@ -92,16 +92,16 @@ Then say **"Jarvis"** and ask a question!
 python launcher.py                    # Opens Control Center dashboard
 
 # Direct launch (terminal users)
-python ep_agent.py                    # Full experience (menu bar + voice)
-python ep_agent.py --no-overlay       # Voice only, no GUI at all
-python ep_agent.py --vision-only      # Vision + menu bar only
-python ep_agent.py --check            # Check system readiness
-python ep_agent.py --log-level DEBUG  # Verbose logging
+python nova.py                    # Full experience (menu bar + voice)
+python nova.py --no-overlay       # Voice only, no GUI at all
+python nova.py --vision-only      # Vision + menu bar only
+python nova.py --check            # Check system readiness
+python nova.py --log-level DEBUG  # Verbose logging
 ```
 
 ## Control Center
 
-The Control Center is a compact dashboard window that lets you manage EP Agent visually:
+The Control Center is a compact dashboard window that lets you manage Nova visually:
 
 - **Start/Stop** the full pipeline with one click
 - **Status dashboard** — Ollama, models, voice status with colored indicators
@@ -124,10 +124,10 @@ pip install -r requirements-dev.txt
 bash scripts/build-app.sh
 
 # Install to /Applications
-cp -r "dist/EP Agent.app" /Applications/
+cp -r "dist/Nova.app" /Applications/
 ```
 
-The `.app` launches the Control Center on startup. From there you can start the full EP Agent experience.
+The `.app` launches the Control Center on startup. From there you can start the full Nova experience.
 
 ## Voice Commands
 
@@ -141,18 +141,18 @@ Built-in commands are handled instantly without an LLM round-trip:
 | "Resume" / "Wake up" | Resumes after pause |
 | "Analyze my screen" / "What do you see?" | One-shot screen analysis |
 | "Start analysis" / "Toggle analysis" | Continuous screen monitoring |
-| "Shutdown" / "Goodbye" | Terminates EP Agent |
+| "Shutdown" / "Goodbye" | Terminates Nova |
 
 ## Vision System
 
-EP Agent includes an **event-driven** vision system that monitors your screen intelligently:
+Nova includes an **event-driven** vision system that monitors your screen intelligently:
 
 - **Change detection**: Captures frames and computes pixel diffs (very cheap)
 - **Threshold**: Only invokes the vision model when >15% of pixels change
 - **Sleep/wake**: Enters deep sleep after 30s of no change, wakes on voice trigger or screen change
 - **Result**: <2% CPU idle vs. ~30% with constant polling
 
-Enable with: `EP_VISION=true` or use the menu bar toggle.
+Enable with: `NOVA_VISION=true` or use the menu bar toggle.
 
 ## Menu Bar App (macOS)
 
@@ -164,43 +164,43 @@ The menu bar extra provides lightweight status + controls:
 - Show/hide overlay panel
 - Quit
 
-Enable with: `EP_MENUBAR=true` (default).
+Enable with: `NOVA_MENUBAR=true` (default).
 
 ## Configuration
 
-All settings use the `EP_*` prefix. Legacy `JARVIS_*` env vars still work as fallbacks.
+All settings use the `NOVA_*` prefix. Legacy `EP_*` and `JARVIS_*` env vars still work as fallbacks.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `EP_WAKE_WORD` | `jarvis` | Wake word to listen for |
-| `EP_WAKE_CONFIDENCE` | `0.5` | Detection confidence (0.0–1.0) |
-| `EP_OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
-| `EP_OLLAMA_MODEL` | `qwen2.5:3b` | Ollama model |
-| `EP_OLLAMA_TIMEOUT` | `120` | LLM timeout (seconds) |
-| `EP_WHISPER_MODEL` | `base.en` | Whisper model size |
-| `EP_WHISPER_DEVICE` | `auto` | Compute device |
-| `EP_WHISPER_COMPUTE` | `int8` | Quantisation type |
-| `EP_SILENCE_MS` | `800` | Silence duration to stop recording (ms) |
-| `EP_MAX_RECORD_SEC` | `30` | Maximum recording duration |
-| `EP_TTS_BACKEND` | `auto` | TTS: `auto`, `piper`, or `say` |
-| `EP_SAY_VOICE` | `Daniel` | macOS say voice |
-| `EP_MAX_HISTORY` | `10` | LLM context history pairs |
-| `EP_HISTORY_FILE` | `~/.ep-agent/history.json` | Persistent history path |
-| `EP_HEALTH_PORT` | `8765` | Health/status HTTP port |
-| `EP_VISION` | `false` | Enable vision subsystem |
-| `EP_VISION_MODEL` | `moondream:1.8b` | Ollama vision model |
-| `EP_VISION_INTERVAL` | `10.0` | Screen check interval (seconds) |
-| `EP_VISION_CHANGE_THRESHOLD` | `0.15` | Min pixel change ratio to trigger model |
-| `EP_VISION_SLEEP_TIMEOUT` | `30.0` | Seconds before entering deep sleep |
-| `EP_OVERLAY` | `false` | Enable side-panel overlay |
-| `EP_MENUBAR` | `true` | Enable menu bar extra |
-| `EP_KV_FLUSH_MINUTES` | `10` | KV cache flush interval |
-| `EP_MAX_CPU_PERCENT` | `25.0` | Soft CPU cap |
-| `EP_LOG_LEVEL` | `INFO` | Logging level |
+| `NOVA_WAKE_WORD` | `nova` | Wake word to listen for |
+| `NOVA_WAKE_CONFIDENCE` | `0.5` | Detection confidence (0.0–1.0) |
+| `NOVA_OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
+| `NOVA_OLLAMA_MODEL` | `qwen2.5:3b` | Ollama model |
+| `NOVA_OLLAMA_TIMEOUT` | `120` | LLM timeout (seconds) |
+| `NOVA_WHISPER_MODEL` | `base.en` | Whisper model size |
+| `NOVA_WHISPER_DEVICE` | `auto` | Compute device |
+| `NOVA_WHISPER_COMPUTE` | `int8` | Quantisation type |
+| `NOVA_SILENCE_MS` | `800` | Silence duration to stop recording (ms) |
+| `NOVA_MAX_RECORD_SEC` | `30` | Maximum recording duration |
+| `NOVA_TTS_BACKEND` | `auto` | TTS: `auto`, `piper`, or `say` |
+| `NOVA_SAY_VOICE` | `Daniel` | macOS say voice |
+| `NOVA_MAX_HISTORY` | `10` | LLM context history pairs |
+| `NOVA_HISTORY_FILE` | `~/.nova/history.json` | Persistent history path |
+| `NOVA_HEALTH_PORT` | `8765` | Health/status HTTP port |
+| `NOVA_VISION` | `false` | Enable vision subsystem |
+| `NOVA_VISION_MODEL` | `moondream:1.8b` | Ollama vision model |
+| `NOVA_VISION_INTERVAL` | `10.0` | Screen check interval (seconds) |
+| `NOVA_VISION_CHANGE_THRESHOLD` | `0.15` | Min pixel change ratio to trigger model |
+| `NOVA_VISION_SLEEP_TIMEOUT` | `30.0` | Seconds before entering deep sleep |
+| `NOVA_OVERLAY` | `false` | Enable side-panel overlay |
+| `NOVA_MENUBAR` | `true` | Enable menu bar extra |
+| `NOVA_KV_FLUSH_MINUTES` | `10` | KV cache flush interval |
+| `NOVA_MAX_CPU_PERCENT` | `25.0` | Soft CPU cap |
+| `NOVA_LOG_LEVEL` | `INFO` | Logging level |
 
 ## Resource Management
 
-EP Agent is optimized for background operation:
+Nova is optimized for background operation:
 
 - **CPU thread cap**: 25% of cores (via `OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OLLAMA_NUM_THREAD`)
 - **Low process priority**: `nice 10` prevents OS freezing
@@ -212,22 +212,22 @@ Target: **<10% CPU idle, <2GB RAM idle**.
 
 ## LaunchAgent (Auto-start)
 
-A macOS LaunchAgent is installed at `~/Library/LaunchAgents/com.escipion.ep-agent.plist`:
+A macOS LaunchAgent is installed at `~/Library/LaunchAgents/com.nova.plist`:
 
 ```bash
 # Load/start
-launchctl load ~/Library/LaunchAgents/com.escipion.ep-agent.plist
+launchctl load ~/Library/LaunchAgents/com.nova.plist
 
 # Unload/stop
-launchctl unload ~/Library/LaunchAgents/com.escipion.ep-agent.plist
+launchctl unload ~/Library/LaunchAgents/com.nova.plist
 
 # Check status
-launchctl list | grep ep-agent
+launchctl list | grep nova
 ```
 
 ## Health & Status Endpoint
 
-EP Agent exposes a lightweight HTTP server for monitoring (default port: 8765).
+Nova exposes a lightweight HTTP server for monitoring (default port: 8765).
 
 ```bash
 curl http://localhost:8765/health   # {"status": "ok"}
@@ -237,13 +237,13 @@ curl http://localhost:8765/status   # Full status JSON
 ## Project Structure
 
 ```
-jarvis-voice-bridge/
-├── ep_agent.py          # Main entry point (multimodal launcher)
-├── config.py            # Configuration (EP_* env vars with JARVIS_* fallback)
+nova/
+├── nova.py              # Main entry point (multimodal launcher)
+├── config.py            # Configuration (NOVA_* env vars with EP_*/JARVIS_* fallback)
 ├── main.py              # Legacy CLI entry point
-├── jarvis_multimodal.py # Backward-compat shim → ep_agent.py
+├── jarvis_multimodal.py # Backward-compat shim → nova.py
 ├── src/
-│   ├── pipeline.py      # Full pipeline orchestration (EPAgentPipeline)
+│   ├── pipeline.py      # Full pipeline orchestration (NovaPipeline)
 │   ├── wake_word.py     # OpenWakeWord listener
 │   ├── recorder.py      # Audio recorder with VAD
 │   ├── stt.py           # faster-whisper transcription
@@ -289,12 +289,12 @@ Tests mock all hardware and network calls — no audio devices or Ollama require
 
 ### Wake word not detecting
 - Speak clearly at normal volume
-- Lower confidence: `EP_WAKE_CONFIDENCE=0.3`
+- Lower confidence: `NOVA_WAKE_CONFIDENCE=0.3`
 - Check mic input level in System Settings → Sound
 
 ### Slow responses
-- Use a smaller model: `EP_OLLAMA_MODEL=qwen2.5:1.5b`
-- Use a smaller Whisper: `EP_WHISPER_MODEL=tiny.en`
+- Use a smaller model: `NOVA_OLLAMA_MODEL=qwen2.5:1.5b`
+- Use a smaller Whisper: `NOVA_WHISPER_MODEL=tiny.en`
 - Ensure 8GB+ free RAM
 
 ## 🔒 Privacy
@@ -303,15 +303,15 @@ Tests mock all hardware and network calls — no audio devices or Ollama require
 - **No telemetry** — No analytics, no phone-home
 - **No account required** — Clone and run
 - **Air-gap compatible** — Works fully offline once models are downloaded
-- **History under your control** — Stored in `~/.ep-agent/history.json`, delete anytime
+- **History under your control** — Stored in `~/.nova/history.json`, delete anytime
 
 ## Suite Integration
 
-EP Agent is part of the **Escipion AI Business Suite**:
+Nova is part of the **Escipion AI Business Suite**:
 
 - **[API Sentinel](https://github.com/escipionpedroza147-commits/API-Sentinel)** — Monitors OpenAI API spend, tracks tokens, fires budget alerts
 - **[Token Treasury](https://github.com/escipionpedroza147-commits/Token-Treasury)** — Analyzes Sentinel data, generates Cost-Efficiency Scores
-- **EP Agent** — Voice-driven interface, reads Treasury reports aloud
+- **Nova** — Voice-driven interface, reads Treasury reports aloud
 - **Master Controller** — Orchestration layer connecting all three (coming soon)
 
 ## License

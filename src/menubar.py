@@ -1,5 +1,5 @@
 """
-EP Agent Menu Bar — lightweight macOS system tray integration.
+Nova Menu Bar — lightweight macOS system tray integration.
 
 Uses `rumps` for a native menu bar extra that provides:
 - Status indicator (idle/listening/processing)
@@ -47,8 +47,8 @@ if RUMPS_AVAILABLE:
         "sleeping": "💤",
     }
 
-    class EPAgentMenuBar(rumps.App):
-        """macOS menu bar extra for EP Agent.
+    class NovaMenuBar(rumps.App):
+        """macOS menu bar extra for Nova.
 
         Provides lightweight status display and controls without
         rendering a full overlay window.
@@ -63,7 +63,7 @@ if RUMPS_AVAILABLE:
             on_quit: Optional[Callable] = None,
         ) -> None:
             super().__init__(
-                "EP Agent",
+                "Nova",
                 icon=None,
                 title="🟢",
                 quit_button=None,  # Custom quit handling
@@ -80,7 +80,7 @@ if RUMPS_AVAILABLE:
 
             # Build menu
             self.menu = [
-                rumps.MenuItem("EP Agent", callback=None),
+                rumps.MenuItem("Nova", callback=None),
                 None,  # separator
                 rumps.MenuItem("▶ Start", callback=self._handle_start_stop),
                 rumps.MenuItem("👁 Toggle Vision", callback=self._handle_vision),
@@ -153,11 +153,11 @@ if RUMPS_AVAILABLE:
         on_toggle_vision: Optional[Callable] = None,
         on_toggle_overlay: Optional[Callable] = None,
         on_quit: Optional[Callable] = None,
-    ) -> Optional[EPAgentMenuBar]:
+    ) -> Optional[NovaMenuBar]:
         """Create the menu bar app. Returns None if rumps unavailable."""
         if not RUMPS_AVAILABLE:
             return None
-        return EPAgentMenuBar(
+        return NovaMenuBar(
             on_start=on_start,
             on_stop=on_stop,
             on_toggle_vision=on_toggle_vision,

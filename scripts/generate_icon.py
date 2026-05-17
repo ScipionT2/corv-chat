@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate the EP Agent app icon (.icns) from a rendered ⚡ emoji.
+Generate the Nova app icon (.icns) from a rendered ⚡ emoji.
 
 Creates a simple dark circle with a lightning bolt — suitable for
 macOS Dock and menu bar display.

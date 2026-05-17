@@ -1,12 +1,12 @@
 """
-macOS Permissions Manager for EP Agent.
+macOS Permissions Manager for Nova.
 
 Handles the single-approval flow for public release:
 - Screen Recording (for vision/screen analysis)
 - Accessibility (for controlling apps, keyboard shortcuts)
 
 On macOS, both permissions are requested via the same binary path.
-Users just need to approve EP Agent ONCE in System Settings > Privacy.
+Users just need to approve Nova ONCE in System Settings > Privacy.
 
 Usage:
     from src.permissions import check_permissions, request_permissions
@@ -100,7 +100,7 @@ def request_permissions():
     Opens the Privacy & Security pane. On macOS 13+, this is the
     unified System Settings app.
     
-    For public release: users approve the EP Agent binary ONCE,
+    For public release: users approve the Nova binary ONCE,
     which grants all three permissions (screen, accessibility, mic).
     """
     if not is_macos():
@@ -119,16 +119,16 @@ def request_permissions():
     # Show a dialog explaining what's needed
     try:
         msg = (
-            "EP Agent needs permission to:\\n\\n"
+            "Nova needs permission to:\\n\\n"
             "• Screen Recording — to see and analyze your screen\\n"
             "• Accessibility — to control apps and use shortcuts\\n"
             "• Microphone — to hear your voice commands\\n\\n"
             "Click OK to open System Settings.\\n"
-            "Add EP Agent (or Terminal/Python) to each category."
+            "Add Nova (or Terminal/Python) to each category."
         )
         subprocess.run([
             "osascript", "-e",
-            f'display dialog "{msg}" with title "EP Agent Permissions" buttons {{"Cancel", "Open Settings"}} default button "Open Settings"'
+            f'display dialog "{msg}" with title "Nova Permissions" buttons {{"Cancel", "Open Settings"}} default button "Open Settings"'
         ], capture_output=True, timeout=30)
     except Exception:
         pass
@@ -169,13 +169,13 @@ BUNDLE_PERMISSIONS_INFO = """
 For public release as a .app bundle, add these to Info.plist:
 
 <key>NSMicrophoneUsageDescription</key>
-<string>EP Agent uses the microphone to listen for voice commands.</string>
+<string>Nova uses the microphone to listen for voice commands.</string>
 
 <key>NSScreenCaptureUsageDescription</key>  
-<string>EP Agent captures the screen to analyze what you're working on.</string>
+<string>Nova captures the screen to analyze what you're working on.</string>
 
 <key>NSAppleEventsUsageDescription</key>
-<string>EP Agent controls applications to help you work faster.</string>
+<string>Nova controls applications to help you work faster.</string>
 
 This way macOS shows ONE permission dialog on first launch that covers
 all three needs. The user clicks "Allow" once and everything works.

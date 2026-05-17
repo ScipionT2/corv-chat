@@ -1,5 +1,5 @@
 """
-EP Agent Pipeline — orchestrates the full voice-interaction loop.
+Nova Pipeline — orchestrates the full voice-interaction loop.
 
 Wake word → Record → Transcribe → LLM → Speak
 
@@ -31,7 +31,7 @@ from src.wake_word import WakeWordDetector
 logger = logging.getLogger(__name__)
 
 
-class EPAgentPipeline:
+class NovaPipeline:
     """End-to-end voice assistant pipeline.
 
     Parameters
@@ -120,7 +120,7 @@ class EPAgentPipeline:
 
     def start(self) -> None:
         """Initialise components and begin listening for the wake word."""
-        logger.info("Starting EP Agent pipeline …")
+        logger.info("Starting Nova pipeline …")
 
         # Pre-load the Whisper model so first interaction is fast
         self.stt.load()
@@ -144,11 +144,11 @@ class EPAgentPipeline:
         if self._menubar:
             self._menubar.set_pipeline_running(True)
 
-        logger.info("EP Agent pipeline is running — say '%s' to begin", self._wake_word)
+        logger.info("Nova pipeline is running — say '%s' to begin", self._wake_word)
 
     def stop(self) -> None:
         """Cleanly shut everything down."""
-        logger.info("Stopping EP Agent pipeline …")
+        logger.info("Stopping Nova pipeline …")
         self._running = False
         self._stop_event.set()
         if self.detector is not None:
@@ -164,7 +164,7 @@ class EPAgentPipeline:
         if self._menubar:
             self._menubar.set_pipeline_running(False)
 
-        logger.info("EP Agent pipeline stopped")
+        logger.info("Nova pipeline stopped")
 
     def wait(self) -> None:
         """Block until :meth:`stop` is called."""
@@ -309,7 +309,7 @@ class EPAgentPipeline:
         if cmd.result == CommandResult.SHUTDOWN:
             if cmd.message:
                 self.tts.speak(cmd.message)
-            logger.info("Shutdown command received — terminating EP Agent")
+            logger.info("Shutdown command received — terminating Nova")
             self.stop()
             import os
             os._exit(0)
@@ -359,7 +359,7 @@ class EPAgentPipeline:
             return
 
         # 6. Speak response (interruptible)
-        logger.info("EP Agent says: %s", reply[:120])
+        logger.info("Nova says: %s", reply[:120])
 
         # Push agent reply to sidebar transcript
         if self._overlay and hasattr(self._overlay, 'push_transcript'):
@@ -507,7 +507,7 @@ class EPAgentPipeline:
             if self._overlay and hasattr(self._overlay, 'push_transcript'):
                 self._overlay.push_transcript("agent", tagged_analysis)
 
-            logger.info("EP Agent (vision) says: %s", result.analysis[:120])
+            logger.info("Nova (vision) says: %s", result.analysis[:120])
             if self._dock_glow:
                 self._dock_glow.set_state("speaking")
             if self._overlay:
@@ -631,5 +631,6 @@ class EPAgentPipeline:
         self._set_idle()
 
 
-# Backward compat alias
-JarvisPipeline = EPAgentPipeline
+# Backward compat aliases
+EPAgentPipeline = NovaPipeline  # Legacy alias
+JarvisPipeline = NovaPipeline  # Legacy alias

@@ -1,18 +1,18 @@
-"""Tests for the EP Agent pipeline orchestration."""
+"""Tests for the Nova pipeline orchestration."""
 
 from unittest.mock import patch, MagicMock, PropertyMock
 
 import numpy as np
 import pytest
 
-from src.pipeline import JarvisPipeline
+from src.pipeline import NovaPipeline
 
 
 @pytest.fixture
-def pipeline() -> JarvisPipeline:
+def pipeline() -> NovaPipeline:
     """Return a pipeline with all heavy components mocked."""
-    p = JarvisPipeline(
-        wake_word="jarvis",
+    p = NovaPipeline(
+        wake_word="nova",
         ollama_model="test-model",
         whisper_model="base.en",
         tts_backend="say",

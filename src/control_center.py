@@ -1,8 +1,8 @@
 """
-EP Agent Control Center — launcher and dashboard window.
+Nova Control Center — launcher and dashboard window.
 
 A compact PyQt6 window (400x500) that acts as the main control panel:
-- Start/Stop the EP Agent pipeline + sidebar
+- Start/Stop the Nova pipeline + sidebar
 - Monitor Ollama, models, and voice status
 - Quick settings (theme, accent, voice)
 - Launch sidebar on demand
@@ -113,7 +113,7 @@ def _make_tray_icon(color: str) -> QIcon:
 
 
 class ControlCenter(QMainWindow):
-    """EP Agent Control Center — main launcher window."""
+    """Nova Control Center — main launcher window."""
 
     # Signals
     start_requested = pyqtSignal()
@@ -122,7 +122,7 @@ class ControlCenter(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("EP Agent")
+        self.setWindowTitle("Nova")
         self.setFixedSize(400, 540)
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -146,7 +146,7 @@ class ControlCenter(QMainWindow):
         layout.setSpacing(12)
 
         # ─── Header ──────────────────────────────────────────────────
-        header = QLabel("⚡ EP Agent")
+        header = QLabel("⚡ Nova")
         header.setFont(QFont(".AppleSystemUIFont", 22, QFont.Weight.Bold))
         header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(header)
@@ -160,7 +160,7 @@ class ControlCenter(QMainWindow):
         layout.addSpacing(8)
 
         # ─── Start/Stop button ────────────────────────────────────────
-        self._start_btn = QPushButton("▶  Start EP Agent")
+        self._start_btn = QPushButton("▶  Start Nova")
         self._start_btn.setFixedHeight(44)
         self._start_btn.setFont(QFont(".AppleSystemUIFont", 14, QFont.Weight.DemiBold))
         self._start_btn.clicked.connect(self._toggle_running)
@@ -371,7 +371,7 @@ class ControlCenter(QMainWindow):
 
         self._tray = QSystemTrayIcon(self)
         self._tray.setIcon(_make_tray_icon("#666"))
-        self._tray.setToolTip("EP Agent")
+        self._tray.setToolTip("Nova")
 
         menu = QMenu()
         show_action = QAction("Show Control Center", self)
@@ -391,7 +391,7 @@ class ControlCenter(QMainWindow):
 
         menu.addSeparator()
 
-        quit_action = QAction("Quit EP Agent", self)
+        quit_action = QAction("Quit Nova", self)
         quit_action.triggered.connect(self._quit_app)
         menu.addAction(quit_action)
 
@@ -421,17 +421,17 @@ class ControlCenter(QMainWindow):
     # ──────────────────────────────────────────────────────────────────
 
     def _toggle_running(self):
-        """Toggle the EP Agent running state."""
+        """Toggle the Nova running state."""
         if self._running:
             self._running = False
-            self._start_btn.setText("▶  Start EP Agent")
+            self._start_btn.setText("▶  Start Nova")
             self._sidebar_btn.setEnabled(False)
             self._tray_toggle_action.setText("Start")
             self._tray_sidebar_action.setEnabled(False)
             self.stop_requested.emit()
         else:
             self._running = True
-            self._start_btn.setText("⏹  Stop EP Agent")
+            self._start_btn.setText("⏹  Stop Nova")
             self._sidebar_btn.setEnabled(True)
             self._tray_toggle_action.setText("Stop")
             self._tray_sidebar_action.setEnabled(True)
@@ -515,7 +515,7 @@ class ControlCenter(QMainWindow):
     # LaunchAgent
     # ──────────────────────────────────────────────────────────────────
 
-    _PLIST_PATH = os.path.expanduser("~/Library/LaunchAgents/com.ep-agent.plist")
+    _PLIST_PATH = os.path.expanduser("~/Library/LaunchAgents/com.nova.plist")
 
     def _is_launchagent_installed(self) -> bool:
         """Check if the LaunchAgent plist exists."""

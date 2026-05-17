@@ -1,1 +1,1 @@
-"""EP Agent (Voice Bridge) — test suite."""
+"""Nova (Voice Bridge) — test suite."""

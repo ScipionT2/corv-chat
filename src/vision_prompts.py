@@ -1,5 +1,5 @@
 """
-Vision prompt templates and selection logic for EP Agent.
+Vision prompt templates and selection logic for Nova.
 
 Provides context-aware prompts that dramatically improve analysis quality
 by tailoring instructions to what's actually on screen.

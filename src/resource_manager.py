@@ -1,7 +1,7 @@
 """
 Resource Manager — CPU/memory throttling, thread limiting, and KV cache control.
 
-Ensures EP Agent runs as a lightweight background daemon:
+Ensures Nova runs as a lightweight background daemon:
 - Low process priority (never freezes the OS)
 - CPU thread cap at 25% of cores
 - Periodic KV cache flushing to prevent VRAM leaks

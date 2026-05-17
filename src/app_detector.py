@@ -1,5 +1,5 @@
 """
-macOS Active Application Detector for EP Agent.
+macOS Active Application Detector for Nova.
 
 Uses AppleScript via osascript to detect the frontmost app and window title.
 Gracefully degrades on non-macOS platforms (returns empty strings).

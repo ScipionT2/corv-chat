@@ -1,5 +1,5 @@
 """
-EP Agent Side-Panel Overlay — on-demand glass-effect GUI.
+Nova Side-Panel Overlay — on-demand glass-effect GUI.
 
 A polished, dark-glass side panel pinned to the right edge of the screen.
 Displays real-time vision analysis, voice status, and suggestions.
@@ -71,7 +71,7 @@ if PYQT6_AVAILABLE:
     # ── Status Ring ───────────────────────────────────────────────────
 
     class StatusRing(QWidget):
-        """Animated ring that shows EP Agent state."""
+        """Animated ring that shows Nova state."""
 
         STATE_COLORS = {
             "idle": QColor(100, 100, 120),
@@ -143,8 +143,8 @@ if PYQT6_AVAILABLE:
 
     # ── Main Overlay Window ───────────────────────────────────────────
 
-    class EPAgentOverlay(QMainWindow):
-        """Side-panel overlay with frosted glass design (EP Agent)."""
+    class NovaOverlay(QMainWindow):
+        """Side-panel overlay with frosted glass design (Nova)."""
 
         analysis_received = pyqtSignal(str, float)
         status_changed = pyqtSignal(str)
@@ -171,7 +171,7 @@ if PYQT6_AVAILABLE:
         # ── Window Setup ──────────────────────────────────────────────
 
         def _setup_window(self):
-            self.setWindowTitle("EP Agent")
+            self.setWindowTitle("Nova")
             self.setWindowFlags(
                 Qt.WindowType.FramelessWindowHint
                 | Qt.WindowType.WindowStaysOnTopHint
@@ -515,11 +515,11 @@ if PYQT6_AVAILABLE:
         on_toggle=None,
         width: int = 380,
         opacity: float = 0.95,
-    ) -> Optional["EPAgentOverlay"]:
+    ) -> Optional["NovaOverlay"]:
         if not PYQT6_AVAILABLE:
             logger.error("PyQt6 not installed")
             return None
-        return EPAgentOverlay(width=width, opacity=opacity, on_toggle=on_toggle)
+        return NovaOverlay(width=width, opacity=opacity, on_toggle=on_toggle)
 
 else:
     def create_overlay(*args, **kwargs):

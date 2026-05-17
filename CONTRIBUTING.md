@@ -1,4 +1,4 @@
-# Contributing to EP Agent (Voice Bridge)
+# Contributing to Nova (Voice Bridge)
 
 Thanks for your interest in contributing! Here's how to get started.
 
@@ -6,8 +6,8 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ```bash
 # 1. Fork and clone the repo
-git clone https://github.com/<your-username>/jarvis-voice-bridge.git
-cd jarvis-voice-bridge
+git clone https://github.com/<your-username>/nova.git
+cd nova
 
 # 2. Run setup
 bash setup.sh

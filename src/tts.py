@@ -155,7 +155,7 @@ class TextToSpeech:
         self.piper_voice = piper_voice
         # Priority: explicit say_voice param > EP_VOICE env > config default
         import os
-        self.say_voice = say_voice or os.environ.get("EP_VOICE") or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
+        self.say_voice = say_voice or os.environ.get("NOVA_VOICE") or os.environ.get("EP_VOICE") or os.environ.get("JARVIS_VOICE") or config.MACOS_SAY_VOICE
         self._backend: Optional[str] = None
         self._current_process: Optional[subprocess.Popen] = None
         self._process_lock = threading.Lock()

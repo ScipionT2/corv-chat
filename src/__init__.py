@@ -1,1 +1,1 @@
-"""EP Agent — core modules (formerly Jarvis Voice Bridge)."""
+"""Nova — core modules (formerly EP Agent / Jarvis Voice Bridge)."""

@@ -1,8 +1,8 @@
 """
-EP Agent Web Control Hub — FastAPI backend.
+Nova Web Control Hub — FastAPI backend.
 
 Provides REST endpoints and a WebSocket for real-time control of the
-EP Agent pipeline, plus a static single-page dashboard.
+Nova pipeline, plus a static single-page dashboard.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # ── FastAPI app ───────────────────────────────────────────────────────
 
-app = FastAPI(title="EP Agent Web Hub", version="1.0.0")
+app = FastAPI(title="Nova Web Hub", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -109,7 +109,7 @@ async def dashboard():
     index = _STATIC_DIR / "index.html"
     if index.exists():
         return HTMLResponse(content=index.read_text(encoding="utf-8"))
-    return HTMLResponse(content="<h1>EP Agent Web Hub</h1><p>Dashboard not found.</p>")
+    return HTMLResponse(content="<h1>Nova Web Hub</h1><p>Dashboard not found.</p>")
 
 
 @app.get("/api/status")
@@ -156,13 +156,13 @@ async def get_status():
 
 @app.post("/api/start")
 async def start_pipeline():
-    """Start the EP Agent pipeline."""
+    """Start the Nova pipeline."""
     global _pipeline_running
 
     if _pipeline is None:
         return JSONResponse(
             status_code=400,
-            content={"error": "No pipeline attached — launch EP Agent first"},
+            content={"error": "No pipeline attached — launch Nova first"},
         )
 
     if getattr(_pipeline, "_running", False):
@@ -177,7 +177,7 @@ async def start_pipeline():
             except Exception as exc:
                 _add_log("error", f"Pipeline start failed: {exc}")
 
-        threading.Thread(target=_do_start, daemon=True, name="web-pipeline-start").start()
+        threading.Thread(target=_do_start, daemon=True, name="nova-web-start").start()
         _pipeline_running = True
         _add_log("info", "Pipeline started via web hub")
         _broadcast({"type": "status", "data": {"pipeline": "running"}})
@@ -188,7 +188,7 @@ async def start_pipeline():
 
 @app.post("/api/stop")
 async def stop_pipeline():
-    """Stop the EP Agent pipeline."""
+    """Stop the Nova pipeline."""
     global _pipeline_running
 
     if _pipeline is None:
@@ -294,7 +294,7 @@ async def chat(body: ChatMessage):
     if _pipeline is None:
         return JSONResponse(
             status_code=400,
-            content={"error": "No pipeline attached — launch EP Agent first"},
+            content={"error": "No pipeline attached — launch Nova first"},
         )
 
     _add_log("info", f"Chat: {body.message[:80]}")

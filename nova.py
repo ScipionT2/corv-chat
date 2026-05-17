@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-EP Agent Multimodal Launcher — Voice + Vision + Menu Bar.
+Nova Multimodal Launcher — Voice + Vision + Menu Bar.
 
-Starts the full EP Agent experience:
+Starts the full Nova experience:
 1. Voice pipeline (wake word → STT → LLM → TTS)
 2. Vision system (event-driven screen analysis)
 3. Menu bar extra (lightweight status + controls)
 4. Optional side-panel overlay (on demand)
 
 Usage:
-    python ep_agent.py                    # Full experience (menu bar + voice)
-    python ep_agent.py --no-overlay       # Voice only, no GUI at all
-    python ep_agent.py --vision-only      # Vision + menu bar only
-    python ep_agent.py --check            # Check system readiness
-    python ep_agent.py --reset            # Reset profile, re-trigger onboarding
+    python nova.py                    # Full experience (menu bar + voice)
+    python nova.py --no-overlay       # Voice only, no GUI at all
+    python nova.py --vision-only      # Vision + menu bar only
+    python nova.py --check            # Check system readiness
+    python nova.py --reset            # Reset profile, re-trigger onboarding
 
 All processing runs 100% locally. No cloud dependencies.
 """
@@ -29,7 +29,7 @@ import config
 from src.vision import VisionClient
 
 # Error log file for crash reports
-_ERROR_LOG = os.path.expanduser("~/.ep-agent/error.log")
+_ERROR_LOG = os.path.expanduser("~/.nova/error.log")
 
 
 def _setup_error_logging():
@@ -39,7 +39,7 @@ def _setup_error_logging():
 
 def check_system():
     """Check if all required components are available."""
-    print("🔍 EP Agent System Check\n")
+    print("🔍 Nova System Check\n")
     all_ok = True
 
     # Ollama
@@ -134,7 +134,7 @@ def check_system():
 
     print()
     if all_ok:
-        print("🟢 System ready! Run: python ep_agent.py")
+        print("🟢 System ready! Run: python nova.py")
     else:
         print("🟡 Some components missing — fix the ❌ items above")
 
@@ -142,7 +142,7 @@ def check_system():
 
 
 def run_multimodal(no_overlay: bool = False, vision_only: bool = False):
-    """Launch the full multimodal EP Agent experience."""
+    """Launch the full multimodal Nova experience."""
     logger = logging.getLogger(__name__)
 
     try:
@@ -195,8 +195,8 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     # ── Start voice pipeline (unless vision-only) ─────────────────────
     pipeline = None
     if not vision_only:
-        from src.pipeline import EPAgentPipeline
-        pipeline = EPAgentPipeline()
+        from src.pipeline import NovaPipeline
+        pipeline = NovaPipeline()
 
     # ── Menu Bar (DISABLED — sidebar replaces it) ───────────────────
     menubar = None
@@ -406,7 +406,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
 
         pipeline_thread = threading.Thread(
             target=run_pipeline,
-            name="ep-agent-pipeline",
+            name="nova-pipeline",
             daemon=True,
         )
         pipeline_thread.start()
@@ -414,7 +414,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
 
     # ── Handle shutdown ───────────────────────────────────────────────
     def shutdown(*_):
-        logger.info("Shutting down EP Agent...")
+        logger.info("Shutting down Nova...")
         try:
             from src.web import stop_web_server
             stop_web_server()
@@ -434,11 +434,11 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
     # ── Run event loop ────────────────────────────────────────────────
     if menubar and not app:
         # Menu bar is the primary event loop (no sidebar)
-        logger.info("EP Agent ready — menu bar active, say wake word to interact")
+        logger.info("Nova ready — menu bar active, say wake word to interact")
         menubar.run()
     elif app and sidebar:
         # PyQt event loop (sidebar mode) — main thread stays here
-        logger.info("EP Agent ready (sidebar mode) — Cmd+Shift+E to toggle, say wake word to interact")
+        logger.info("Nova ready (sidebar mode) — Cmd+Shift+E to toggle, say wake word to interact")
         try:
             sys.exit(app.exec())
         except Exception as exc:
@@ -450,7 +450,7 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
                 signal.pause()
     else:
         # No GUI — just wait
-        logger.info("EP Agent ready (headless) — say wake word to interact")
+        logger.info("Nova ready (headless) — say wake word to interact")
         if pipeline:
             pipeline.wait()
         else:
@@ -459,8 +459,8 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="ep-agent",
-        description="EP Agent — Voice + Vision + Menu Bar",
+        prog="nova",
+        description="Nova — Voice + Vision + Menu Bar",
     )
     parser.add_argument("--no-overlay", action="store_true", help="Disable all GUI (headless mode)")
     parser.add_argument("--vision-only", action="store_true", help="Vision + UI only (no voice)")

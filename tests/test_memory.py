@@ -11,7 +11,7 @@ from src.memory import ConversationMemory
 @pytest.fixture
 def tmp_history(tmp_path: Path) -> Path:
     """Return a temporary history file path."""
-    return tmp_path / "jarvis" / "history.json"
+    return tmp_path / "nova" / "history.json"
 
 
 @pytest.fixture

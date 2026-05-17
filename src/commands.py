@@ -1,5 +1,5 @@
 """
-Built-in voice command system for EP Agent.
+Built-in voice command system for Nova.
 
 Parses user speech for special commands before sending to the LLM.
 Commands like "clear history", "what time is it", "stop listening",
@@ -45,7 +45,7 @@ class CommandResult(Enum):
     """Toggle continuous analysis mode on/off."""
 
     SHUTDOWN = auto()
-    """Immediately shut down EP Agent."""
+    """Immediately shut down Nova."""
 
     SIDEBAR_TOGGLE = auto()
     """Toggle the sidebar panel visibility."""
@@ -81,7 +81,7 @@ class CommandResponse:
 # ---------------------------------------------------------------------------
 
 # Normalise: lowercase, strip punctuation and leading wake-word prefix
-_PREFIX_RE = re.compile(r"^(?:(?:jarvis|ep\s*agent)[,.]?\s*)", re.IGNORECASE)
+_PREFIX_RE = re.compile(r"^(?:(?:nova|jarvis|ep\s*agent)[,.]?\s*)", re.IGNORECASE)
 
 _CLEAR_HISTORY_RE = re.compile(
     r"^(?:clear|reset|delete|erase)\s+(?:the\s+)?(?:history|conversation|memory|chat)$",
@@ -121,7 +121,8 @@ _VISION_ANALYZE_RE = re.compile(
 
 _SHUTDOWN_RE = re.compile(
     r"^(?:(?:ep\s*agent\s+)?off"
-    r"|(?:jarvis\s+)?off"
+    r"|(?:nova\s+)?off"
+    r"|(?:jarvis\s+)?off"  # Legacy fallback
     r"|shut\s*down"
     r"|power\s+off"
     r"|exit"
@@ -184,7 +185,7 @@ def parse_command(text: str) -> CommandResponse:
     if not text or not text.strip():
         return CommandResponse(CommandResult.NOT_A_COMMAND)
 
-    # Strip leading "EP Agent, " / legacy "Jarvis, " prefix
+    # Strip leading "Nova, " / legacy "EP Agent, " / "Jarvis, " prefix
     cleaned = _PREFIX_RE.sub("", text.strip()).strip()
     # Also strip trailing punctuation
     cleaned = cleaned.rstrip(".,!?")

@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Jarvis Voice Bridge — One-command setup
+# Nova — One-command setup
 #
 # Usage: bash setup.sh
 #
 set -e
 
-echo "🤖 Jarvis Voice Bridge — Setup"
-echo "================================"
+echo "⚡ Nova — Setup"
+echo "======================="
 echo ""
 
 # -------------------------------------------------------
@@ -73,13 +73,13 @@ fi
 echo ""
 echo "✅ Setup complete!"
 echo ""
-echo "   To run Jarvis:"
+echo "   To run Nova:"
 echo "     source .venv/bin/activate"
-echo "     python main.py"
+echo "     python nova.py"
 echo ""
 echo "   Options:"
-echo "     python main.py --model llama3:8b"
-echo "     python main.py --wake-word jarvis"
-echo "     python main.py --whisper-model small.en"
-echo "     python main.py --tts say"
+echo "     python nova.py --model llama3:8b"
+echo "     python nova.py --wake-word nova"
+echo "     python nova.py --whisper-model small.en"
+echo "     python nova.py --tts say"
 echo ""

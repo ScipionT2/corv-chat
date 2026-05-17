@@ -1,5 +1,5 @@
 """
-Vision Analysis History for EP Agent.
+Vision Analysis History for Nova.
 
 Stores the last N analyses with metadata and thumbnails for context
 continuity and debugging.
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Paths ────────────────────────────────────────────────────────────
 
-_HISTORY_DIR = Path(os.path.expanduser("~/.ep-agent"))
+_HISTORY_DIR = Path(os.path.expanduser("~/.nova"))
 _HISTORY_FILE = _HISTORY_DIR / "vision_history.json"
 _THUMBS_DIR = _HISTORY_DIR / "vision_thumbs"
 

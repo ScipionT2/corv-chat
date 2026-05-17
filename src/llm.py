@@ -1,5 +1,5 @@
 """
-Ollama LLM client for EP Agent local chat completions.
+Ollama LLM client for Nova local chat completions.
 
 Communicates with a running Ollama instance over HTTP and maintains a
 rolling conversation history for multi-turn context.

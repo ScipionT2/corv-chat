@@ -1,14 +1,14 @@
-# Jarvis Voice Bridge — Docker Image
+# Nova — Docker Image
 #
 # NOTE: Audio input/output (microphone, speaker) does NOT work inside Docker.
 # This image is intended for API-mode use, testing, or development.
 # The health/status HTTP endpoint works normally.
 #
 # Build:
-#   docker build -t jarvis-voice-bridge .
+#   docker build -t nova .
 #
 # Run (API/health mode):
-#   docker run -p 8765:8765 --env-file .env jarvis-voice-bridge
+#   docker run -p 8765:8765 --env-file .env nova
 
 FROM python:3.12-slim AS base
 
@@ -32,7 +32,7 @@ COPY . .
 # Expose health/status port
 EXPOSE 8765
 
-# Default: run Jarvis (will fail on audio without host devices)
+# Default: run Nova (will fail on audio without host devices)
 # Override with your own command for API-mode or testing
 ENTRYPOINT ["python", "main.py"]
 CMD ["--tts", "say", "--log-level", "INFO"]

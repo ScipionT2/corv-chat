@@ -1,5 +1,5 @@
 """
-EP Agent Sidebar — Always-on glass side panel with Smart Glow.
+Nova Sidebar — Always-on glass side panel with Smart Glow.
 
 A permanent, elegant sidebar anchored to the right edge of the screen.
 Features:
@@ -196,7 +196,7 @@ if PYQT6_AVAILABLE:
 
     # ── Main Sidebar Window ───────────────────────────────────────────
 
-    class EPAgentSidebar(QMainWindow):
+    class NovaSidebar(QMainWindow):
         """
         Always-on sidebar anchored to right 15% of screen.
         Glassmorphism design with Smart Glow indicator.
@@ -249,7 +249,7 @@ if PYQT6_AVAILABLE:
         # ── Window Setup ──────────────────────────────────────────────
 
         def _setup_window(self):
-            self.setWindowTitle("EP Agent")
+            self.setWindowTitle("Nova")
             self.setWindowFlags(
                 Qt.WindowType.FramelessWindowHint
                 | Qt.WindowType.WindowStaysOnTopHint
@@ -289,7 +289,7 @@ if PYQT6_AVAILABLE:
             r, g, b = self._accent_rgb
             pixmap.fill(QColor(r, g, b))
             self._tray.setIcon(QIcon(pixmap))
-            self._tray.setToolTip("EP Agent")
+            self._tray.setToolTip("Nova")
 
             menu = QMenu()
             show_action = QAction("Show Sidebar", self)
@@ -302,7 +302,7 @@ if PYQT6_AVAILABLE:
 
             menu.addSeparator()
 
-            quit_action = QAction("Quit EP Agent", self)
+            quit_action = QAction("Quit Nova", self)
             quit_action.triggered.connect(QApplication.quit)
             menu.addAction(quit_action)
 
@@ -516,17 +516,12 @@ if PYQT6_AVAILABLE:
             layout = QHBoxLayout(card)
             layout.setContentsMargins(14, 10, 14, 10)
 
-            # EP Agent title (use accent color)
+            # Nova title (use accent color)
             r, g, b = self._accent_rgb
-            title = QLabel("EP")
+            title = QLabel("NOVA")
             title.setFont(QFont(".AppleSystemUIFont", 20, QFont.Weight.Bold))
             title.setStyleSheet(f"color: rgb({r},{g},{b}); background: transparent; letter-spacing: 2px;")
             layout.addWidget(title)
-
-            subtitle = QLabel("AGENT")
-            subtitle.setFont(QFont(".AppleSystemUIFont", 12, QFont.Weight.Light))
-            subtitle.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; padding-top: 6px;")
-            layout.addWidget(subtitle)
 
             layout.addStretch()
 
@@ -978,12 +973,12 @@ if PYQT6_AVAILABLE:
     def create_sidebar(
         accent_color: str = "cyan",
         personality: str = "friendly",
-    ) -> Optional["EPAgentSidebar"]:
-        """Create the EP Agent sidebar. Requires a running QApplication."""
+    ) -> Optional["NovaSidebar"]:
+        """Create the Nova sidebar. Requires a running QApplication."""
         if not PYQT6_AVAILABLE:
             logger.error("PyQt6 not installed")
             return None
-        return EPAgentSidebar(accent_color=accent_color, personality=personality)
+        return NovaSidebar(accent_color=accent_color, personality=personality)
 
 else:
     def create_sidebar(*args, **kwargs):

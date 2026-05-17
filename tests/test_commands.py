@@ -15,11 +15,11 @@ class TestClearHistory:
     @pytest.mark.parametrize(
         "text",
         [
-            "Jarvis, clear history",
-            "jarvis clear history",
-            "Jarvis, reset conversation",
-            "Jarvis, delete the history",
-            "Jarvis, erase memory",
+            "Nova, clear history",
+            "nova clear history",
+            "Nova, reset conversation",
+            "Nova, delete the history",
+            "Nova, erase memory",
             "clear history",
             "reset the conversation",
             "erase chat",
@@ -32,7 +32,7 @@ class TestClearHistory:
         assert resp.message is not None
 
     def test_clear_history_has_message(self) -> None:
-        resp = parse_command("Jarvis, clear history")
+        resp = parse_command("Nova, clear history")
         assert "cleared" in resp.message.lower()
 
 
@@ -42,12 +42,12 @@ class TestTimeCommand:
     @pytest.mark.parametrize(
         "text",
         [
-            "Jarvis, what time is it",
-            "Jarvis, what's the time",
+            "Nova, what time is it",
+            "Nova, what's the time",
             "what time is it?",
             "what is the time right now?",
             "what is the current time",
-            "Jarvis, what's the time?",
+            "Nova, what's the time?",
         ],
     )
     def test_time_variants(self, text: str) -> None:
@@ -69,12 +69,12 @@ class TestStopListening:
     @pytest.mark.parametrize(
         "text",
         [
-            "Jarvis, stop listening",
-            "jarvis, pause",
+            "Nova, stop listening",
+            "nova, pause",
             "stop listening",
             "pause listening",
             "go to sleep",
-            "Jarvis, sleep",
+            "Nova, sleep",
         ],
     )
     def test_stop_variants(self, text: str) -> None:
@@ -83,7 +83,7 @@ class TestStopListening:
         assert resp.message is not None
 
     def test_stop_has_message(self) -> None:
-        resp = parse_command("Jarvis, stop listening")
+        resp = parse_command("Nova, stop listening")
         assert "sleep" in resp.message.lower()
 
 
@@ -93,7 +93,7 @@ class TestResume:
     @pytest.mark.parametrize(
         "text",
         [
-            "Jarvis, resume",
+            "Nova, resume",
             "resume listening",
             "wake up",
             "start listening",
@@ -116,7 +116,7 @@ class TestNotACommand:
             "What's the weather today?",
             "Tell me a joke",
             "How do I install Python?",
-            "Jarvis, tell me about history",
+            "Nova, tell me about history",
             "Clear my schedule",
             "",
             "   ",
@@ -132,10 +132,10 @@ class TestPipelineCommandIntegration:
 
     @patch("src.pipeline.record_until_silence")
     def test_clear_history_command_in_pipeline(self, mock_record) -> None:
-        from src.pipeline import JarvisPipeline
+        from src.pipeline import NovaPipeline
 
-        p = JarvisPipeline(
-            wake_word="jarvis",
+        p = NovaPipeline(
+            wake_word="nova",
             ollama_model="test",
             whisper_model="base.en",
             tts_backend="say",
@@ -146,7 +146,7 @@ class TestPipelineCommandIntegration:
         p._running = True
 
         mock_record.return_value = np.random.randn(16000).astype(np.float32)
-        p.stt.transcribe.return_value = "Jarvis, clear history"
+        p.stt.transcribe.return_value = "Nova, clear history"
 
         p.on_wake()
 
@@ -157,10 +157,10 @@ class TestPipelineCommandIntegration:
 
     @patch("src.pipeline.record_until_silence")
     def test_time_command_in_pipeline(self, mock_record) -> None:
-        from src.pipeline import JarvisPipeline
+        from src.pipeline import NovaPipeline
 
-        p = JarvisPipeline(
-            wake_word="jarvis",
+        p = NovaPipeline(
+            wake_word="nova",
             ollama_model="test",
             whisper_model="base.en",
             tts_backend="say",
@@ -171,7 +171,7 @@ class TestPipelineCommandIntegration:
         p._running = True
 
         mock_record.return_value = np.random.randn(16000).astype(np.float32)
-        p.stt.transcribe.return_value = "Jarvis, what time is it"
+        p.stt.transcribe.return_value = "Nova, what time is it"
 
         p.on_wake()
 
@@ -181,10 +181,10 @@ class TestPipelineCommandIntegration:
 
     @patch("src.pipeline.record_until_silence")
     def test_normal_speech_goes_to_llm(self, mock_record) -> None:
-        from src.pipeline import JarvisPipeline
+        from src.pipeline import NovaPipeline
 
-        p = JarvisPipeline(
-            wake_word="jarvis",
+        p = NovaPipeline(
+            wake_word="nova",
             ollama_model="test",
             whisper_model="base.en",
             tts_backend="say",

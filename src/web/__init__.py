@@ -1,5 +1,5 @@
 """
-EP Agent Web Control Hub — integration module.
+Nova Web Control Hub — integration module.
 
 Provides ``start_web_server()`` and ``stop_web_server()`` to run the
 FastAPI dashboard alongside the voice pipeline in a background thread.
@@ -31,7 +31,7 @@ def start_web_server(
     port:
         TCP port (default 8766).
     pipeline:
-        Optional :class:`EPAgentPipeline` instance for live control.
+        Optional :class:`NovaPipeline` instance for live control.
     """
     global _server_thread
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the EP Agent .app bundle using py2app.
+# Build the Nova .app bundle using py2app.
 #
 # Usage:
 #   bash scripts/build-app.sh
@@ -15,7 +15,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_ROOT"
 
-echo "⚡ Building EP Agent .app bundle..."
+echo "⚡ Building Nova .app bundle..."
 echo ""
 
 # ─── Check dependencies ──────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ echo "🔨 Running py2app..."
 python setup_app.py py2app
 
 # ─── Verify ──────────────────────────────────────────────────────────────────
-APP_PATH="dist/EP Agent.app"
+APP_PATH="dist/Nova.app"
 if [ -d "$APP_PATH" ]; then
     echo ""
     echo "✅ Build successful!"

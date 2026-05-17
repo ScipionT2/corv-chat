@@ -2,7 +2,7 @@
 Dock Glow Indicator — visual feedback bar above the macOS Dock.
 
 A thin, frameless, translucent window that sits at the very bottom of
-the screen and glows/pulses when EP Agent is actively listening or
+the screen and glows/pulses when Nova is actively listening or
 processing. Replaces the system microphone icon with a sleek visual cue.
 
 States:

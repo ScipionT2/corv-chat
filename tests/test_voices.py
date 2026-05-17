@@ -49,23 +49,25 @@ class TestGetAvailableVoices:
 
 
 class TestVoiceSelection:
-    """Tests for voice selection via --voice and JARVIS_VOICE."""
+    """Tests for voice selection via --voice and NOVA_VOICE."""
 
     def test_explicit_voice_param(self) -> None:
         tts = TextToSpeech(say_voice="Alex")
         assert tts.say_voice == "Alex"
 
-    def test_jarvis_voice_env(self, monkeypatch) -> None:
-        monkeypatch.setenv("JARVIS_VOICE", "Karen")
+    def test_nova_voice_env(self, monkeypatch) -> None:
+        monkeypatch.setenv("NOVA_VOICE", "Karen")
         tts = TextToSpeech()
         assert tts.say_voice == "Karen"
 
     def test_explicit_param_overrides_env(self, monkeypatch) -> None:
-        monkeypatch.setenv("JARVIS_VOICE", "Karen")
+        monkeypatch.setenv("NOVA_VOICE", "Karen")
         tts = TextToSpeech(say_voice="Alex")
         assert tts.say_voice == "Alex"
 
     def test_default_voice_is_daniel(self, monkeypatch) -> None:
+        monkeypatch.delenv("NOVA_VOICE", raising=False)
+        monkeypatch.delenv("EP_VOICE", raising=False)
         monkeypatch.delenv("JARVIS_VOICE", raising=False)
         # Config default is Daniel
         tts = TextToSpeech()

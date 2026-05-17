@@ -1,9 +1,9 @@
 """
 Conversation memory persistence.
 
-Stores conversation history to a JSON file so EP Agent remembers past
+Stores conversation history to a JSON file so Nova remembers past
 conversations across restarts.  The history file is stored at
-``~/.ep-agent/history.json`` by default (configurable).
+``~/.nova/history.json`` by default (configurable).
 """
 
 from __future__ import annotations

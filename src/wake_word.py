@@ -5,7 +5,7 @@ Continuously streams microphone audio and fires a callback when the
 configured wake word is detected with sufficient confidence.
 
 Note: Uses the "hey_jarvis" OpenWakeWord model as the trigger.
-The display name is EP Agent but the acoustic model remains jarvis-based.
+The display name is Nova but the acoustic model remains jarvis-based.
 """
 
 from __future__ import annotations
@@ -27,10 +27,13 @@ _WAKE_WORD_ALIASES: dict[str, str] = {
     "jarvis": "hey_jarvis_v0.1",
     "hey jarvis": "hey_jarvis_v0.1",
     "hey_jarvis": "hey_jarvis_v0.1",
-    "ep": "hey_jarvis_v0.1",
-    "hey ep": "hey_jarvis_v0.1",
-    "hey_ep": "hey_jarvis_v0.1",
-    "ep agent": "hey_jarvis_v0.1",
+    "nova": "hey_jarvis_v0.1",
+    "hey nova": "hey_jarvis_v0.1",
+    "hey_nova": "hey_jarvis_v0.1",
+    "ep": "hey_jarvis_v0.1",  # Legacy alias
+    "hey ep": "hey_jarvis_v0.1",  # Legacy alias
+    "hey_ep": "hey_jarvis_v0.1",  # Legacy alias
+    "ep agent": "hey_jarvis_v0.1",  # Legacy alias
     "rhasspy": "hey_rhasspy_v0.1",
     "hey rhasspy": "hey_rhasspy_v0.1",
     "timer": "timer_v0.1",
@@ -123,7 +126,7 @@ class WakeWordDetector:
         logger.info("Wake-word detector stopped")
 
     def pause(self) -> None:
-        """Temporarily ignore detections (e.g. while EP Agent is speaking)."""
+        """Temporarily ignore detections (e.g. while Nova is speaking)."""
         self._paused = True
 
     def resume(self) -> None:

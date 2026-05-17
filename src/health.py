@@ -1,5 +1,5 @@
 """
-Status and health HTTP server for EP Agent.
+Status and health HTTP server for Nova.
 
 Exposes ``/health`` and ``/status`` JSON endpoints on a configurable
 port (default 8765).  Designed to run in a background thread alongside
@@ -20,13 +20,13 @@ import config
 logger = logging.getLogger(__name__)
 
 
-class EPAgentStats:
-    """Thread-safe statistics collector for EP Agent.
+class NovaStats:
+    """Thread-safe statistics collector for Nova.
 
     Attributes
     ----------
     start_time:
-        Unix timestamp when EP Agent started.
+        Unix timestamp when Nova started.
     total_queries:
         Total number of user queries processed.
     last_query:
@@ -89,7 +89,7 @@ class HealthHandler(BaseHTTPRequestHandler):
     """HTTP request handler for /health and /status endpoints."""
 
     # Class-level reference to stats (set before server starts)
-    stats: Optional[EPAgentStats] = None
+    stats: Optional[NovaStats] = None
 
     def do_GET(self) -> None:  # noqa: N802
         """Handle GET requests."""
@@ -123,14 +123,14 @@ class HealthServer:
     Parameters
     ----------
     stats:
-        The :class:`EPAgentStats` instance to expose.
+        The :class:`NovaStats` instance to expose.
     port:
         TCP port to listen on.
     """
 
     def __init__(
         self,
-        stats: EPAgentStats,
+        stats: NovaStats,
         port: int = config.HEALTH_PORT,
     ) -> None:
         self.stats = stats
@@ -175,4 +175,5 @@ class HealthServer:
 
 
 # Backward compat aliases
-JarvisStats = EPAgentStats
+EPAgentStats = NovaStats  # Legacy alias
+JarvisStats = NovaStats  # Legacy alias

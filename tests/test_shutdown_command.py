@@ -11,8 +11,8 @@ from src.commands import CommandResult, parse_command
 
 
 class TestShutdownCommand:
-    def test_jarvis_off(self):
-        result = parse_command("Jarvis, off")
+    def test_nova_off(self):
+        result = parse_command("Nova, off")
         assert result.result == CommandResult.SHUTDOWN
 
     def test_just_off(self):
@@ -51,12 +51,12 @@ class TestShutdownCommand:
         result = parse_command("terminate")
         assert result.result == CommandResult.SHUTDOWN
 
-    def test_jarvis_prefix_off(self):
-        result = parse_command("Jarvis off")
+    def test_nova_prefix_off(self):
+        result = parse_command("Nova off")
         assert result.result == CommandResult.SHUTDOWN
 
     def test_has_goodbye_message(self):
-        result = parse_command("Jarvis, off")
+        result = parse_command("Nova, off")
         assert result.message is not None
         assert "goodbye" in result.message.lower() or "shutting" in result.message.lower()
 

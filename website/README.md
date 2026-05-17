@@ -1,6 +1,6 @@
-# EP Agent — Website
+# Nova — Website
 
-The marketing/landing page for [EP Agent](https://github.com/escipionpedroza147-commits/EP-Agent).
+The marketing/landing page for [Nova](https://github.com/escipionpedroza147-commits/Nova).
 
 ## Structure
 
@@ -19,7 +19,7 @@ Everything is self-contained in one HTML file — no build tools, no dependencie
 2. Go to **Settings → Pages** in your GitHub repo.
 3. Under **Source**, select the branch (e.g., `main`) and set the folder to `/website`.
 4. Click **Save**. Your site will be live at:  
-   `https://escipionpedroza147-commits.github.io/EP-Agent/`
+   `https://escipionpedroza147-commits.github.io/Nova/`
 
 > **Tip:** If you want the site at the root URL, move `index.html` to the repo root or use a custom `docs/` folder.
 
@@ -63,4 +63,4 @@ Everything is inline in `index.html`:
 
 ## License
 
-Same as EP Agent — see the main repo's LICENSE file.
+Same as Nova — see the main repo's LICENSE file.

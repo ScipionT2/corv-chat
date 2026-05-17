@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Install EP Agent LaunchAgent for auto-start on login.
+# Install Nova LaunchAgent for auto-start on login.
 #
 # Usage:
 #   bash scripts/install-launchagent.sh
 #
-# This creates ~/Library/LaunchAgents/com.ep-agent.plist
+# This creates ~/Library/LaunchAgents/com.nova.plist
 
 set -euo pipefail
 
-PLIST_LABEL="com.ep-agent"
+PLIST_LABEL="com.nova"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Determine the best program to launch
-APP_PATH="/Applications/EP Agent.app"
+APP_PATH="/Applications/Nova.app"
 if [ -d "$APP_PATH" ]; then
     PROGRAM_ARGS="<string>/usr/bin/open</string>
     <string>-a</string>
@@ -49,9 +49,9 @@ cat > "$PLIST_PATH" << EOF
     <key>WorkingDirectory</key>
     <string>${PROJECT_ROOT}</string>
     <key>StandardOutPath</key>
-    <string>${HOME}/.ep-agent/launcher.log</string>
+    <string>${HOME}/.nova/launcher.log</string>
     <key>StandardErrorPath</key>
-    <string>${HOME}/.ep-agent/launcher-error.log</string>
+    <string>${HOME}/.nova/launcher-error.log</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
@@ -66,7 +66,7 @@ launchctl unload "$PLIST_PATH" 2>/dev/null || true
 launchctl load "$PLIST_PATH"
 
 echo "✅ LaunchAgent installed: $PLIST_PATH"
-echo "   EP Agent will start automatically on login."
+echo "   Nova will start automatically on login."
 echo ""
 echo "   To unload: launchctl unload $PLIST_PATH"
 echo "   To remove: bash scripts/uninstall-launchagent.sh"

@@ -1,8 +1,8 @@
 """
-EP Agent Onboarding — First-run welcome screen.
+Nova Onboarding — First-run welcome screen.
 
 Shows a modern glassmorphism wizard for personality, voice, and theme selection.
-Saves choices to ~/.ep-agent/profile.json.
+Saves choices to ~/.nova/profile.json.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ PERSONALITIES = {
         "label": "Professional",
         "description": "Formal, precise, business-oriented responses.",
         "system_prompt": (
-            "You are EP Agent, a professional AI assistant. "
+            "You are Nova, a professional AI assistant. "
             "Be precise, formal, and efficient. Provide structured answers. "
             "Avoid casual language. Focus on accuracy and clarity."
         ),
@@ -34,7 +34,7 @@ PERSONALITIES = {
         "label": "Friendly",
         "description": "Warm, conversational, helpful companion.",
         "system_prompt": (
-            "You are EP Agent, a friendly AI companion. "
+            "You are Nova, a friendly AI companion. "
             "Be warm, conversational, and helpful. Use natural language. "
             "Feel free to be encouraging and personable while staying useful."
         ),
@@ -43,7 +43,7 @@ PERSONALITIES = {
         "label": "Casual",
         "description": "Relaxed, brief, straight to the point.",
         "system_prompt": (
-            "You are EP Agent. Keep it short and chill. "
+            "You are Nova. Keep it short and chill. "
             "No fluff, no formalities. Just answer the question. "
             "Use casual language, contractions, and be direct."
         ),
@@ -52,7 +52,7 @@ PERSONALITIES = {
         "label": "Minimal",
         "description": "Ultra-concise, just the facts.",
         "system_prompt": (
-            "You are EP Agent. Respond with the minimum necessary words. "
+            "You are Nova. Respond with the minimum necessary words. "
             "No greetings, no filler. Facts only. One sentence max when possible."
         ),
     },
@@ -147,7 +147,7 @@ if _PYQT6_OK:
             self._build_ui()
 
         def _setup_window(self):
-            self.setWindowTitle("EP Agent Setup")
+            self.setWindowTitle("Nova Setup")
             self.setFixedSize(520, 480)
             self.setWindowFlags(
                 Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
@@ -245,7 +245,7 @@ if _PYQT6_OK:
             lay.setContentsMargins(0, 20, 0, 0)
             lay.setSpacing(12)
 
-            title = QLabel("Welcome to EP Agent")
+            title = QLabel("Welcome to Nova")
             title.setFont(QFont(".AppleSystemUIFont", 22, QFont.Weight.Bold))
             title.setStyleSheet("color: white;")
             title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -416,7 +416,7 @@ if _PYQT6_OK:
             voice = self._voice_combo.currentText()
             try:
                 subprocess.Popen(
-                    ["say", "-v", voice, "Hi, I'm EP Agent. Nice to meet you."],
+                    ["say", "-v", voice, "Hi, I'm Nova. Nice to meet you."],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 )
             except Exception as exc:

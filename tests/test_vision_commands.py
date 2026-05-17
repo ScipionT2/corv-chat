@@ -14,7 +14,7 @@ class TestVisionAnalyzeCommand:
     """Test one-shot screen analysis voice triggers."""
 
     def test_what_do_you_see(self):
-        result = parse_command("Jarvis, what do you see?")
+        result = parse_command("Nova, what do you see?")
         assert result.result == CommandResult.VISION_ANALYZE
 
     def test_what_can_you_see(self):
@@ -22,7 +22,7 @@ class TestVisionAnalyzeCommand:
         assert result.result == CommandResult.VISION_ANALYZE
 
     def test_analyze_screen(self):
-        result = parse_command("Jarvis, analyze my screen")
+        result = parse_command("Nova, analyze my screen")
         assert result.result == CommandResult.VISION_ANALYZE
 
     def test_analyze_the_screen(self):
@@ -95,7 +95,7 @@ class TestVisionToggleCommand:
         assert result.result == CommandResult.VISION_TOGGLE
 
     def test_begin_screen_analysis(self):
-        result = parse_command("Jarvis, begin screen analysis")
+        result = parse_command("Nova, begin screen analysis")
         assert result.result == CommandResult.VISION_TOGGLE
 
     def test_end_screen_analysis(self):

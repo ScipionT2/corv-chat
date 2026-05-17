@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EP Agent Voice Bridge — Local AI Voice Assistant.
+Nova Voice Bridge — Local AI Voice Assistant.
 
 Entry point that configures logging, parses CLI arguments, and starts the
 voice-interaction pipeline. Ctrl+C shuts everything down gracefully.
@@ -14,11 +14,11 @@ import signal
 import sys
 
 import config
-from src.pipeline import EPAgentPipeline
+from src.pipeline import NovaPipeline
 
 BANNER = r"""
 ╔══════════════════════════════════════════════════╗
-║  ⚡ EP Agent — Local AI Voice Assistant          ║
+║  ⚡ Nova — Local AI Voice Assistant              ║
 ║  100%% local · zero cost · full privacy           ║
 ╚══════════════════════════════════════════════════╝
 """
@@ -27,7 +27,7 @@ BANNER = r"""
 def _parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="EP Agent — fully local voice assistant",
+        description="Nova — fully local voice assistant",
     )
     parser.add_argument(
         "--model",
@@ -133,7 +133,7 @@ def main() -> None:
     print(f"  Ollama URL   : {config.OLLAMA_BASE_URL}")
     print()
 
-    pipeline = EPAgentPipeline(
+    pipeline = NovaPipeline(
         wake_word=args.wake_word,
         ollama_model=args.model,
         whisper_model=args.whisper_model,
