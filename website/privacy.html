@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — Privacy Policy</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f;
+  --bg-surface: #1a1a2e;
+  --text: #e0e0e0;
+  --text-dim: #9ca3af;
+  --accent: #00c8ff;
+  --border: rgba(255,255,255,0.06);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+  color: #fff;
+}
+h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+  color: #fff;
+}
+p, li { color: var(--text-dim); margin-bottom: 0.75rem; }
+ul { padding-left: 1.25rem; }
+li { margin-bottom: 0.4rem; }
+.date { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 2rem; }
+.back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; }
+hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+th { color: #fff; font-weight: 600; }
+td { color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<a href="/" class="back">← Back to Nova</a>
+
+<h1>Privacy Policy</h1>
+<p class="date">Last updated: May 19, 2026</p>
+
+<p>Your privacy is the entire reason Nova exists. This policy explains what data Nova collects (spoiler: almost nothing) and how we handle what little we do.</p>
+
+<h2>1. Nova Software (Free — Local)</h2>
+
+<h3>What stays on your device (everything):</h3>
+<ul>
+  <li><strong>Voice recordings</strong> — captured, transcribed, and discarded locally. Never uploaded.</li>
+  <li><strong>Conversations</strong> — stored in local memory files on your Mac. Never transmitted.</li>
+  <li><strong>Screen captures</strong> — processed by the local vision model. Never leave your machine.</li>
+  <li><strong>Settings & preferences</strong> — stored in local config files.</li>
+</ul>
+
+<p><strong>We have zero access to any of this data.</strong> There is no telemetry, no analytics, no phone-home in the Nova software.</p>
+
+<h2>2. Nova Pro (Cloud Hybrid Mode)</h2>
+<p>If you choose to enable cloud hybrid mode, the following applies:</p>
+
+<table>
+  <tr><th>Data</th><th>Sent to</th><th>Why</th></tr>
+  <tr><td>Your text queries</td><td>OpenAI (GPT-4o)</td><td>To generate smarter responses</td></tr>
+  <tr><td>API key</td><td>OpenAI</td><td>Authentication</td></tr>
+</table>
+
+<p>Cloud mode is <strong>opt-in only</strong>. It is disabled by default. When enabled, OpenAI's <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener">privacy policy</a> applies to the data sent to them.</p>
+<p>Voice audio is <strong>never</strong> sent to the cloud — only the transcribed text.</p>
+
+<h2>3. Website (nov-assistant.com)</h2>
+<p>The website is a static site hosted on GitHub Pages. We may collect:</p>
+<ul>
+  <li><strong>Basic analytics:</strong> page views, referrer, country (via GitHub/Cloudflare — no personal data)</li>
+  <li><strong>No cookies</strong> from us (third-party embeds may set their own)</li>
+  <li><strong>No tracking pixels or ad networks</strong></li>
+</ul>
+
+<h2>4. Payments & Subscriptions</h2>
+<ul>
+  <li>Payments are processed by <strong>Ko-fi</strong> and <strong>PayPal</strong>.</li>
+  <li>We never see or store your credit card number, bank details, or full PayPal account info.</li>
+  <li>We may receive your name, email, and transaction amount from Ko-fi/PayPal for support purposes.</li>
+  <li>See: <a href="https://more.ko-fi.com/privacy" target="_blank" rel="noopener">Ko-fi Privacy Policy</a> | <a href="https://www.paypal.com/us/legalhub/privacy-full" target="_blank" rel="noopener">PayPal Privacy Policy</a></li>
+</ul>
+
+<h2>5. Data We Collect Directly</h2>
+<p>If you contact us via GitHub Issues, Ko-fi, or email, we may receive:</p>
+<ul>
+  <li>Your username or email address</li>
+  <li>The content of your message</li>
+</ul>
+<p>We use this only to respond to your request. We do not sell, share, or use it for marketing.</p>
+
+<h2>6. Children's Privacy</h2>
+<p>Nova does not knowingly collect personal information from children under 13. The software runs locally and collects no data from any user.</p>
+
+<h2>7. Your Rights</h2>
+<p>Since Nova stores all data locally on your device, you have full control:</p>
+<ul>
+  <li><strong>Delete your data:</strong> Remove Nova's files from your Mac at any time</li>
+  <li><strong>Export your data:</strong> All conversation history is in readable files</li>
+  <li><strong>Disable cloud mode:</strong> Toggle it off in settings — instant effect</li>
+  <li><strong>Cancel subscription:</strong> Through Ko-fi or PayPal at any time</li>
+</ul>
+
+<h2>8. Changes to This Policy</h2>
+<p>We may update this policy as Nova evolves. Changes will be posted on this page with an updated date. Significant changes will be announced on GitHub.</p>
+
+<h2>9. Contact</h2>
+<p>Privacy questions? Reach out:</p>
+<ul>
+  <li>GitHub: <a href="https://github.com/escipionpedroza147-commits/Nova/issues" target="_blank" rel="noopener">Open an issue</a></li>
+  <li>Ko-fi: <a href="https://ko-fi.com/escipion17" target="_blank" rel="noopener">ko-fi.com/escipion17</a></li>
+</ul>
+
+<hr>
+
+<p style="font-size:0.8rem;color:var(--text-dim);">© 2026 Nova. Built by Escipion.</p>
+
+</div>
+</body>
+</html>
