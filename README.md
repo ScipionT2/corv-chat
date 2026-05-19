@@ -1,4 +1,8 @@
-# ⚡ Nova (Voice Bridge)
+<p align="center">
+  <img src="website/nova-logo.jpg" alt="Nova" width="120" style="border-radius:20px">
+</p>
+
+# ⚡ Nova
 
 **A fully local, zero-cost multimodal voice assistant powered by open-source AI.**
 
