@@ -21,6 +21,8 @@ def start_web_server(
     host: str = "0.0.0.0",
     port: int = 8766,
     pipeline=None,
+    agent_registry=None,
+    skill_registry=None,
 ) -> None:
     """Start the FastAPI web hub in a background daemon thread.
 
@@ -32,6 +34,10 @@ def start_web_server(
         TCP port (default 8766).
     pipeline:
         Optional :class:`NovaPipeline` instance for live control.
+    agent_registry:
+        Optional :class:`AgentRegistry` instance.
+    skill_registry:
+        Optional :class:`SkillRegistry` instance.
     """
     global _server_thread
 
@@ -40,10 +46,11 @@ def start_web_server(
         return
 
     # Lazy import so the rest of the app doesn't need fastapi installed
-    from src.web.api import app, set_pipeline  # noqa: F811
+    from src.web.api import app, set_pipeline, set_registries  # noqa: F811
 
     if pipeline is not None:
         set_pipeline(pipeline)
+    set_registries(agent_registry=agent_registry, skill_registry=skill_registry)
 
     _shutdown_event.clear()
 

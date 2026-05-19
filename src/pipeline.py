@@ -11,7 +11,10 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections import deque
 from typing import Optional
+
+import requests
 
 import config
 from src.app_detector import get_active_app
@@ -108,6 +111,11 @@ class NovaPipeline:
         self._stop_event = threading.Event()
         self._interrupted = threading.Event()  # Set when wake word fires during TTS
 
+        # Watchdog / crash recovery state
+        self._ollama_healthy = True
+        self._restart_timestamps: deque[float] = deque()
+        self._watchdog_thread: Optional[threading.Thread] = None
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -140,6 +148,16 @@ class NovaPipeline:
 
         self._running = True
         self._stop_event.clear()
+
+        # Start watchdog thread
+        if config.WATCHDOG_ENABLED:
+            self._watchdog_thread = threading.Thread(
+                target=self._watchdog,
+                name="nova-watchdog",
+                daemon=True,
+            )
+            self._watchdog_thread.start()
+            logger.info("Watchdog thread started (interval=%ds)", config.WATCHDOG_INTERVAL)
 
         if self._menubar:
             self._menubar.set_pipeline_running(True)
@@ -210,8 +228,93 @@ class NovaPipeline:
             logger.info("Speech was interrupted by wake word")
         return not was_interrupted
 
+    def _speak_streamed_interruptible(self, token_generator) -> tuple[bool, str]:
+        """Speak streamed tokens while keeping wake word detection active.
+
+        Buffers tokens from *token_generator* into sentences and speaks
+        each sentence as it becomes ready, overlapping LLM inference with
+        TTS playback.
+
+        Parameters
+        ----------
+        token_generator:
+            An iterable that yields string tokens from the LLM.
+
+        Returns
+        -------
+        tuple[bool, str]
+            ``(completed, full_text)`` — *completed* is ``True`` if all
+            speech finished without interruption; *full_text* is the
+            accumulated reply for transcript/history purposes.
+        """
+        import re as _re
+
+        _SENTENCE_END = _re.compile(r'[.!?]\s|\n')
+
+        self._interrupted.clear()
+
+        # Re-enable wake word detection during speech, with interrupt callback
+        if self.detector is not None:
+            original_on_wake = self.detector.on_wake
+            self.detector.on_wake = self._on_interrupt
+            self.detector._paused = False
+
+        buffer = ""
+        full_text = ""
+        completed = True
+
+        try:
+            for token in token_generator:
+                full_text += token
+
+                if self._interrupted.is_set():
+                    # Stop speaking but keep draining tokens so the
+                    # generator can finalise history in the LLM client.
+                    completed = False
+                    continue
+
+                buffer += token
+
+                # Flush on sentence boundary or long buffer
+                if _SENTENCE_END.search(buffer) or len(buffer) > 200:
+                    chunk = buffer.strip()
+                    buffer = ""
+                    if chunk:
+                        self.tts.speak(chunk)
+                    if self._interrupted.is_set():
+                        completed = False
+                        continue
+
+            # Flush remaining buffer
+            if buffer.strip() and not self._interrupted.is_set():
+                self.tts.speak(buffer.strip())
+                if self._interrupted.is_set():
+                    completed = False
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Streamed speech error: %s", exc)
+            completed = False
+        finally:
+            # Restore original callback and pause state
+            if self.detector is not None:
+                self.detector._paused = True
+                self.detector.on_wake = original_on_wake
+
+        if not completed:
+            logger.info("Streamed speech was interrupted by wake word")
+
+        return completed, full_text
+
     def on_wake(self) -> None:
-        """Handle a single wake-word activation."""
+        """Handle a single wake-word activation (crash-safe wrapper)."""
+        try:
+            self._on_wake_inner()
+        except Exception as exc:
+            logger.error("on_wake failed: %s", exc, exc_info=True)
+            self._speak_error("Sorry, something went wrong. I'm still here though.")
+            self._set_idle()
+
+    def _on_wake_inner(self) -> None:
+        """Handle a single wake-word activation (actual logic)."""
         if not self._running:
             return
 
@@ -348,8 +451,49 @@ class NovaPipeline:
             self._handle_vision_contextual(text)
             return
 
-        # 5. Query LLM
+        # 5. Query LLM (streaming when available)
         self._kv_timer.mark_active()
+
+        if hasattr(self.llm, 'chat_stream'):
+            # --- Streaming path: overlap LLM inference with TTS ---
+            try:
+                token_gen = self.llm.chat_stream(text)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("chat_stream init failed, falling back: %s", exc)
+                token_gen = None
+
+            if token_gen is not None:
+                if self._dock_glow:
+                    self._dock_glow.set_state("speaking")
+                if self._overlay:
+                    self._overlay.set_status("speaking")
+                if self._menubar:
+                    self._menubar.set_state("speaking")
+
+                completed, reply = self._speak_streamed_interruptible(token_gen)
+                t_done = time.monotonic()
+                logger.info("[TIMING] LLM+TTS (streamed): %.0fms | Total: %.0fms",
+                            (t_done - t_stt) * 1000, (t_done - t_wake) * 1000)
+
+                if not reply:
+                    self._speak_error("Sorry, I'm having trouble thinking right now.")
+                    return
+
+                logger.info("Nova says: %s", reply[:120])
+
+                # Push agent reply to sidebar transcript
+                if self._overlay and hasattr(self._overlay, 'push_transcript'):
+                    self._overlay.push_transcript("agent", reply)
+
+                self._set_idle()
+
+                # If interrupted, immediately re-enter the listen flow
+                if not completed:
+                    logger.info("Re-entering listen mode after interrupt")
+                    self.on_wake()
+                return
+
+        # --- Fallback: non-streaming path (original behaviour) ---
         reply = self.llm.chat(text)
         t_llm = time.monotonic()
         logger.info("[TIMING] LLM: %.0fms", (t_llm - t_stt) * 1000)
@@ -629,6 +773,88 @@ class NovaPipeline:
         except Exception:
             pass
         self._set_idle()
+
+    # ------------------------------------------------------------------
+    # Watchdog / Crash Recovery
+    # ------------------------------------------------------------------
+
+    def _check_ollama_health(self) -> bool:
+        """Ping Ollama and update ``_ollama_healthy`` flag.
+
+        Returns ``True`` if Ollama responded successfully.
+        """
+        try:
+            resp = requests.get(
+                f"{config.OLLAMA_BASE_URL}/api/tags",
+                timeout=3,
+            )
+            healthy = resp.status_code == 200
+        except Exception:  # noqa: BLE001
+            healthy = False
+
+        was_healthy = self._ollama_healthy
+        self._ollama_healthy = healthy
+
+        if not healthy and was_healthy:
+            logger.warning("Ollama appears down")
+        elif healthy and not was_healthy:
+            logger.info("Ollama is back online")
+
+        return healthy
+
+    def _can_restart(self) -> bool:
+        """Check whether we're within the restart attempt budget.
+
+        Returns ``False`` (and logs a critical message) when
+        ``MAX_RESTART_ATTEMPTS`` have been exhausted within the
+        ``RESTART_COOLDOWN`` window.
+        """
+        now = time.monotonic()
+        # Purge timestamps older than the cooldown window
+        while self._restart_timestamps and (now - self._restart_timestamps[0]) > config.RESTART_COOLDOWN:
+            self._restart_timestamps.popleft()
+
+        if len(self._restart_timestamps) >= config.MAX_RESTART_ATTEMPTS:
+            logger.critical(
+                "Exceeded %d restart attempts within %ds — giving up",
+                config.MAX_RESTART_ATTEMPTS,
+                config.RESTART_COOLDOWN,
+            )
+            return False
+
+        self._restart_timestamps.append(now)
+        return True
+
+    def _watchdog(self) -> None:
+        """Monitor pipeline health and auto-restart on failure.
+
+        Runs as a daemon thread while ``_running`` is ``True``.
+        """
+        logger.info("Watchdog thread active")
+        while self._running:
+            time.sleep(config.WATCHDOG_INTERVAL)
+            if not self._running:
+                break
+
+            # --- Check wake-word detector health ---
+            if self.detector is not None and not self.detector._running:
+                logger.warning("Wake word detector died — attempting restart …")
+                if self._can_restart():
+                    try:
+                        self.detector.stop()
+                        self.detector = WakeWordDetector(
+                            on_wake=self.on_wake,
+                            wake_word=self._wake_word,
+                        )
+                        self.detector.start()
+                        logger.info("Wake word detector restarted successfully")
+                    except Exception as exc:  # noqa: BLE001
+                        logger.error("Failed to restart wake word detector: %s", exc)
+
+            # --- Check Ollama health ---
+            self._check_ollama_health()
+
+        logger.info("Watchdog thread exiting")
 
 
 # Backward compat aliases

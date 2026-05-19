@@ -70,6 +70,21 @@ def _get_env_float(key: str, default: float, legacy_key: str | None = None, lega
 WAKE_WORD: str = _get_env("NOVA_WAKE_WORD", "nova", "EP_WAKE_WORD", "JARVIS_WAKE_WORD")
 WAKE_WORD_CONFIDENCE: float = _get_env_float("NOVA_WAKE_CONFIDENCE", 0.5, "EP_WAKE_CONFIDENCE", "JARVIS_WAKE_CONFIDENCE")
 
+WAKE_WORD_BACKEND: str = _get_env("NOVA_WAKE_BACKEND", "auto")
+"""Wake word backend: 'auto', 'keyword', or 'openwakeword'.
+'auto' uses keyword detection for 'nova' and openwakeword for built-in words like 'jarvis'.
+'keyword' forces faster-whisper keyword spotting.
+'openwakeword' forces the OpenWakeWord model."""
+
+WAKE_KEYWORD_BUFFER_SEC: float = _get_env_float("NOVA_WAKE_KEYWORD_BUFFER", 1.5)
+"""Seconds of audio to buffer before running keyword STT detection."""
+
+WAKE_KEYWORD_ENERGY_THRESHOLD: float = _get_env_float("NOVA_WAKE_KEYWORD_ENERGY", 0.01)
+"""RMS energy threshold — only transcribe when someone is speaking."""
+
+WAKE_KEYWORD_WHISPER_MODEL: str = _get_env("NOVA_WAKE_KEYWORD_WHISPER", "tiny.en")
+"""Whisper model for keyword detection. 'tiny.en' for lowest latency."""
+
 # ---------------------------------------------------------------------------
 # Audio
 # ---------------------------------------------------------------------------
@@ -276,3 +291,18 @@ LOG_LEVEL: str = _get_env("NOVA_LOG_LEVEL", "INFO", "EP_LOG_LEVEL", "JARVIS_LOG_
 # Profile / Onboarding
 # ---------------------------------------------------------------------------
 PROFILE_PATH: str = os.path.expanduser("~/.nova/profile.json")
+
+# ---------------------------------------------------------------------------
+# Watchdog / Crash Recovery
+# ---------------------------------------------------------------------------
+WATCHDOG_ENABLED: bool = _get_env("NOVA_WATCHDOG", "true").lower() in ("true", "1", "yes")
+"""Enable the pipeline watchdog thread for auto-restart on component failure."""
+
+WATCHDOG_INTERVAL: int = _get_env_int("NOVA_WATCHDOG_INTERVAL", 5)
+"""Seconds between watchdog health checks."""
+
+MAX_RESTART_ATTEMPTS: int = _get_env_int("NOVA_MAX_RESTARTS", 5)
+"""Maximum component restart attempts within the cooldown window."""
+
+RESTART_COOLDOWN: int = _get_env_int("NOVA_RESTART_COOLDOWN", 30)
+"""Seconds cooldown window for restart attempt tracking."""

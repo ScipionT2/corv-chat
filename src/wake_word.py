@@ -1,60 +1,353 @@
 """
-Wake-word detection using OpenWakeWord.
+Wake-word detection with multiple backends.
 
-Continuously streams microphone audio and fires a callback when the
-configured wake word is detected with sufficient confidence.
+Supports two detection strategies:
 
-Note: Uses the "hey_jarvis" OpenWakeWord model as the trigger.
-The display name is Nova but the acoustic model remains jarvis-based.
+1. **KeywordDetector** (default for "nova") — buffers short audio windows,
+   runs faster-whisper STT on them, and checks for the keyword in the
+   transcription.  Actually responds to the word "Nova".
+
+2. **OpenWakeWordDetector** — uses OpenWakeWord ONNX models (e.g.
+   ``hey_jarvis_v0.1``).  Best for wake words that ship with a trained
+   model.
+
+The top-level ``WakeWordDetector`` factory automatically picks the right
+backend based on ``config.WAKE_WORD_BACKEND``.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 import threading
+import time
 from typing import Callable, Optional
 
 import numpy as np
 
 import config
-from src.audio import open_input_stream, play_audio
+from src.audio import open_input_stream
 
 logger = logging.getLogger(__name__)
 
-# Map friendly wake-word names to actual OpenWakeWord model names
-# "jarvis" is kept as the acoustic model — it's what OpenWakeWord ships.
-_WAKE_WORD_ALIASES: dict[str, str] = {
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# Wake words that have a trained OpenWakeWord model
+_OPENWAKEWORD_ALIASES: dict[str, str] = {
     "jarvis": "hey_jarvis_v0.1",
     "hey jarvis": "hey_jarvis_v0.1",
     "hey_jarvis": "hey_jarvis_v0.1",
-    "nova": "hey_jarvis_v0.1",
-    "hey nova": "hey_jarvis_v0.1",
-    "hey_nova": "hey_jarvis_v0.1",
-    "ep": "hey_jarvis_v0.1",  # Legacy alias
-    "hey ep": "hey_jarvis_v0.1",  # Legacy alias
-    "hey_ep": "hey_jarvis_v0.1",  # Legacy alias
-    "ep agent": "hey_jarvis_v0.1",  # Legacy alias
     "rhasspy": "hey_rhasspy_v0.1",
     "hey rhasspy": "hey_rhasspy_v0.1",
     "timer": "timer_v0.1",
     "weather": "weather_v0.1",
 }
 
+# Wake words that should use keyword (STT) detection
+_KEYWORD_WAKE_WORDS: set[str] = {
+    "nova", "hey nova", "hey_nova",
+    "ep", "hey ep", "hey_ep", "ep agent",
+}
+
+# Cooldown to avoid rapid re-triggers (seconds)
+_DETECTION_COOLDOWN = 2.0
+
 
 def resolve_wake_word(name: str) -> str:
-    """Resolve a friendly wake-word name to the actual OpenWakeWord model name."""
-    return _WAKE_WORD_ALIASES.get(name.lower().strip(), name)
+    """Resolve a friendly wake-word name to the actual OpenWakeWord model name.
+
+    Returns the original name unchanged if there is no OpenWakeWord mapping.
+    """
+    return _OPENWAKEWORD_ALIASES.get(name.lower().strip(), name)
 
 
-class WakeWordDetector:
-    """Listens for a wake word on the default microphone.
+def _select_backend(wake_word: str, backend_pref: str) -> str:
+    """Return 'keyword' or 'openwakeword' based on config + wake word."""
+    pref = backend_pref.lower().strip()
+    if pref == "keyword":
+        return "keyword"
+    if pref == "openwakeword":
+        return "openwakeword"
+    # auto — decide by wake word
+    if wake_word.lower().strip() in _KEYWORD_WAKE_WORDS:
+        return "keyword"
+    if wake_word.lower().strip() in _OPENWAKEWORD_ALIASES:
+        return "openwakeword"
+    # Unknown word — try keyword spotting as fallback
+    return "keyword"
+
+
+# =========================================================================
+# Keyword Detector  (faster-whisper STT)
+# =========================================================================
+
+class KeywordDetector:
+    """Listens for a keyword by running short STT windows on mic audio.
+
+    Parameters
+    ----------
+    keyword:
+        The word/phrase to detect (e.g. ``"nova"``).
+    on_wake:
+        Callback invoked (off the audio thread) when the keyword is heard.
+    buffer_seconds:
+        Length of each audio window fed to Whisper.
+    energy_threshold:
+        RMS energy below which audio is considered silence (skip STT).
+    whisper_model:
+        faster-whisper model size for detection (``"tiny.en"`` recommended).
+    """
+
+    def __init__(
+        self,
+        keyword: str,
+        on_wake: Callable[[], None],
+        buffer_seconds: float = config.WAKE_KEYWORD_BUFFER_SEC,
+        energy_threshold: float = config.WAKE_KEYWORD_ENERGY_THRESHOLD,
+        whisper_model: str = config.WAKE_KEYWORD_WHISPER_MODEL,
+    ) -> None:
+        self.keyword = keyword.lower().strip()
+        # Build match variants: "nova" matches "nova" and "hey nova"
+        self._match_tokens = self._build_match_tokens(self.keyword)
+        # Pre-compile word-boundary regexes for each token
+        self._match_patterns = [
+            re.compile(r'\b' + re.escape(tok) + r'\b')
+            for tok in self._match_tokens
+        ]
+        self.on_wake = on_wake
+        self.buffer_seconds = buffer_seconds
+        self.energy_threshold = energy_threshold
+        self.whisper_model_name = whisper_model
+
+        self._running = False
+        self._paused = False
+        self._stream = None
+        self._model = None  # lazy-loaded faster-whisper model
+        self._lock = threading.Lock()
+
+        # Ring buffer for audio samples (float32, mono, 16 kHz)
+        self._buf_size = int(config.SAMPLE_RATE * self.buffer_seconds)
+        self._audio_buf = np.zeros(self._buf_size, dtype=np.float32)
+        self._buf_pos = 0  # write cursor (wraps)
+        self._samples_since_last = 0  # samples accumulated since last STT run
+        self._last_detection_time: float = 0.0
+
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _build_match_tokens(keyword: str) -> list[str]:
+        """Return a list of lowercase phrases that count as a detection."""
+        tokens = [keyword]
+        # If keyword is a single word, also match "hey <word>"
+        if " " not in keyword:
+            tokens.append(f"hey {keyword}")
+        return tokens
+
+    def _matches(self, text: str) -> bool:
+        """Check whether *text* contains the wake keyword as a whole word."""
+        text_lower = text.lower()
+        return any(self._match_patterns[i].search(text_lower) is not None
+                   for i in range(len(self._match_tokens)))
+
+    # ------------------------------------------------------------------
+    # Lifecycle
+    # ------------------------------------------------------------------
+
+    def start(self) -> None:
+        """Load Whisper model and begin listening."""
+        self._load_model()
+        self._running = True
+        self._stream = open_input_stream(callback=self._audio_callback)
+        if self._stream is None:
+            raise RuntimeError("Cannot open microphone input stream")
+        self._stream.start()
+        logger.info(
+            "KeywordDetector started (keyword='%s', buffer=%.1fs, model=%s)",
+            self.keyword, self.buffer_seconds, self.whisper_model_name,
+        )
+
+    def stop(self) -> None:
+        self._running = False
+        if self._stream is not None:
+            try:
+                self._stream.stop()
+                self._stream.close()
+            except Exception:
+                pass
+            self._stream = None
+        logger.info("KeywordDetector stopped")
+
+    def pause(self) -> None:
+        self._paused = True
+
+    def resume(self) -> None:
+        self._paused = False
+
+    # ------------------------------------------------------------------
+    # Model loading
+    # ------------------------------------------------------------------
+
+    def _load_model(self) -> None:
+        if self._model is not None:
+            return
+        from faster_whisper import WhisperModel  # noqa: WPS433
+
+        device = "cpu"
+        # Apple Silicon: cpu + int8 is the fastest path
+        import platform
+        if platform.system() == "Darwin" and platform.machine() == "arm64":
+            device = "cpu"
+
+        logger.info(
+            "Loading keyword-detection Whisper model '%s' on %s …",
+            self.whisper_model_name, device,
+        )
+        self._model = WhisperModel(
+            self.whisper_model_name,
+            device=device,
+            compute_type="int8",
+        )
+        logger.info("Keyword Whisper model loaded")
+
+    # ------------------------------------------------------------------
+    # Audio callback
+    # ------------------------------------------------------------------
+
+    def _reopen_stream(self) -> None:
+        """Attempt to re-open the audio input stream after a device error.
+
+        Retries up to 3 times with a 2-second delay between attempts.
+        """
+        for attempt in range(1, 4):
+            logger.info("KeywordDetector audio stream recovery attempt %d/3 …", attempt)
+            time.sleep(2)
+            try:
+                if self._stream is not None:
+                    try:
+                        self._stream.stop()
+                        self._stream.close()
+                    except Exception:  # noqa: BLE001
+                        pass
+                self._stream = open_input_stream(callback=self._audio_callback)
+                if self._stream is not None:
+                    self._stream.start()
+                    logger.info("KeywordDetector audio stream recovered on attempt %d", attempt)
+                    return
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("KeywordDetector recovery attempt %d failed: %s", attempt, exc)
+        logger.error("KeywordDetector audio stream recovery failed after 3 attempts")
+
+    def _audio_callback(
+        self,
+        indata: np.ndarray,
+        frames: int,
+        time_info,  # noqa: ANN001
+        status,  # noqa: ANN001
+    ) -> None:
+        """Called on the sounddevice audio thread with each chunk."""
+        if not self._running or self._paused or self._model is None:
+            return
+
+        # Detect audio device errors and schedule recovery
+        if status:
+            logger.warning("KeywordDetector audio stream issue: %s", status)
+            if "input" in str(status).lower() or "overflow" in str(status).lower():
+                threading.Thread(target=self._reopen_stream, daemon=True).start()
+                return
+
+        # Write into ring buffer
+        samples = indata[:, 0].astype(np.float32)
+        n = len(samples)
+        end = self._buf_pos + n
+        if end <= self._buf_size:
+            self._audio_buf[self._buf_pos:end] = samples
+        else:
+            first = self._buf_size - self._buf_pos
+            self._audio_buf[self._buf_pos:] = samples[:first]
+            self._audio_buf[:n - first] = samples[first:]
+        self._buf_pos = end % self._buf_size
+        self._samples_since_last += n
+
+        # Only run STT once we've accumulated a full buffer window
+        if self._samples_since_last < self._buf_size:
+            return
+        self._samples_since_last = 0
+
+        # Energy gate — skip silent buffers
+        rms = float(np.sqrt(np.mean(self._audio_buf ** 2)))
+        if rms < self.energy_threshold:
+            return
+
+        # Cooldown — don't re-trigger too quickly
+        now = time.monotonic()
+        if now - self._last_detection_time < _DETECTION_COOLDOWN:
+            return
+
+        # Snapshot the buffer (avoid mutation while STT runs)
+        audio_snapshot = self._audio_buf.copy()
+
+        # Run STT off the audio thread to avoid blocking
+        threading.Thread(
+            target=self._run_stt, args=(audio_snapshot, now), daemon=True
+        ).start()
+
+    def _run_stt(self, audio: np.ndarray, timestamp: float) -> None:
+        """Transcribe *audio* and check for the keyword."""
+        if self._model is None or not self._running:
+            return
+        try:
+            segments, _info = self._model.transcribe(
+                audio,
+                beam_size=1,
+                best_of=1,
+                language="en",
+                without_timestamps=True,
+                vad_filter=False,  # we already did energy gating
+            )
+            text = " ".join(seg.text for seg in segments).strip()
+            if not text:
+                return
+            logger.debug("Keyword STT heard: '%s'", text)
+            if self._matches(text):
+                # Cooldown check again (thread-safe-ish)
+                now = time.monotonic()
+                if now - self._last_detection_time < _DETECTION_COOLDOWN:
+                    return
+                self._last_detection_time = now
+                logger.info(
+                    "Keyword '%s' detected in transcription: '%s'",
+                    self.keyword, text,
+                )
+                self._paused = True
+                self._handle_wake()
+        except Exception as exc:
+            logger.error("KeywordDetector STT error: %s", exc)
+
+    def _handle_wake(self) -> None:
+        """Invoke the user callback."""
+        try:
+            self.on_wake()
+        except Exception as exc:
+            logger.error("on_wake callback raised: %s", exc)
+        finally:
+            self._paused = False
+
+
+# =========================================================================
+# OpenWakeWord Detector  (original behaviour)
+# =========================================================================
+
+class OpenWakeWordDetector:
+    """Listens for a wake word using an OpenWakeWord ONNX model.
 
     Parameters
     ----------
     on_wake:
-        Callable invoked (in a worker thread) when the wake word is heard.
+        Callable invoked when the wake word is heard.
     wake_word:
-        Name of the wake word to detect (must be an OpenWakeWord model).
+        Friendly name resolved via ``_OPENWAKEWORD_ALIASES``.
     confidence_threshold:
         Minimum detection confidence (0.0–1.0).
     """
@@ -75,15 +368,10 @@ class WakeWordDetector:
         self._lock = threading.Lock()
         self._paused = False
 
-    # ------------------------------------------------------------------
-    # Lifecycle
-    # ------------------------------------------------------------------
-
     def start(self) -> None:
-        """Load the model and begin listening."""
         resolved = resolve_wake_word(self.wake_word)
         logger.info(
-            "Resolving wake word '%s' -> model '%s'",
+            "Resolving wake word '%s' -> OWW model '%s'",
             self.wake_word, resolved,
         )
         try:
@@ -93,9 +381,8 @@ class WakeWordDetector:
                 wakeword_models=[resolved],
                 inference_framework="onnx",
             )
-            # Store the resolved name for prediction lookups
             self._resolved_wake_word = resolved
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Failed to load OpenWakeWord model: %s", exc)
             raise RuntimeError(
                 f"Cannot initialise wake-word model '{self.wake_word}': {exc}"
@@ -108,59 +395,160 @@ class WakeWordDetector:
 
         self._stream.start()
         logger.info(
-            "Wake-word detector started (word=%s, threshold=%.2f)",
-            self.wake_word,
-            self.confidence_threshold,
+            "OpenWakeWordDetector started (word=%s, threshold=%.2f)",
+            self.wake_word, self.confidence_threshold,
         )
 
     def stop(self) -> None:
-        """Stop listening and release resources."""
         self._running = False
         if self._stream is not None:
             try:
                 self._stream.stop()
                 self._stream.close()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
             self._stream = None
-        logger.info("Wake-word detector stopped")
+        logger.info("OpenWakeWordDetector stopped")
 
     def pause(self) -> None:
-        """Temporarily ignore detections (e.g. while Nova is speaking)."""
         self._paused = True
 
     def resume(self) -> None:
-        """Resume detection after a pause."""
         self._paused = False
 
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
+    def _reopen_stream(self) -> None:
+        """Attempt to re-open the audio input stream after a device error.
 
-    def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:  # noqa: ANN001
-        """sounddevice input-stream callback — runs on the audio thread."""
+        Retries up to 3 times with a 2-second delay between attempts.
+        """
+        for attempt in range(1, 4):
+            logger.info("OpenWakeWordDetector audio stream recovery attempt %d/3 …", attempt)
+            time.sleep(2)
+            try:
+                if self._stream is not None:
+                    try:
+                        self._stream.stop()
+                        self._stream.close()
+                    except Exception:  # noqa: BLE001
+                        pass
+                self._stream = open_input_stream(callback=self._audio_callback)
+                if self._stream is not None:
+                    self._stream.start()
+                    logger.info("OpenWakeWordDetector audio stream recovered on attempt %d", attempt)
+                    return
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("OpenWakeWordDetector recovery attempt %d failed: %s", attempt, exc)
+        logger.error("OpenWakeWordDetector audio stream recovery failed after 3 attempts")
+
+    def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:
         if not self._running or self._paused or self._model is None:
             return
 
-        # OpenWakeWord expects int16 samples
+        # Detect audio device errors and schedule recovery
+        if status:
+            logger.warning("OpenWakeWordDetector audio stream issue: %s", status)
+            if "input" in str(status).lower() or "overflow" in str(status).lower():
+                threading.Thread(target=self._reopen_stream, daemon=True).start()
+                return
+
         audio_int16 = (indata[:, 0] * 32767).astype(np.int16)
         prediction = self._model.predict(audio_int16)
-
-        resolved = getattr(self, '_resolved_wake_word', self.wake_word)
+        resolved = getattr(self, "_resolved_wake_word", self.wake_word)
         score = prediction.get(resolved, 0.0)
         if score >= self.confidence_threshold:
             logger.info("Wake word detected (confidence=%.3f)", score)
-            # Reset so we don't re-trigger immediately
             self._model.reset()
-            self._paused = True  # pause while handling
-            # Play blip & fire callback off the audio thread
+            self._paused = True
             threading.Thread(target=self._handle_wake, daemon=True).start()
 
     def _handle_wake(self) -> None:
-        """Invoke the user callback (no activation sound)."""
         try:
             self.on_wake()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("on_wake callback raised: %s", exc)
         finally:
             self._paused = False
+
+
+# =========================================================================
+# Unified WakeWordDetector  (public API — backward compatible)
+# =========================================================================
+
+class WakeWordDetector:
+    """Facade that picks the right detection backend automatically.
+
+    Maintains the same public API as before (start / stop / pause / resume)
+    so existing callers (``NovaPipeline``) don't need changes.
+
+    Parameters
+    ----------
+    on_wake:
+        Callable invoked (in a worker thread) when the wake word is heard.
+    wake_word:
+        Name of the wake word to detect.
+    confidence_threshold:
+        Minimum detection confidence (for OpenWakeWord backend).
+    backend:
+        ``'auto'``, ``'keyword'``, or ``'openwakeword'``.  Default from
+        ``config.WAKE_WORD_BACKEND``.
+    """
+
+    def __init__(
+        self,
+        on_wake: Callable[[], None],
+        wake_word: str = config.WAKE_WORD,
+        confidence_threshold: float = config.WAKE_WORD_CONFIDENCE,
+        backend: str = config.WAKE_WORD_BACKEND,
+    ) -> None:
+        self.on_wake = on_wake
+        self.wake_word = wake_word
+        self.confidence_threshold = confidence_threshold
+        self._backend_name = _select_backend(wake_word, backend)
+        self._detector: OpenWakeWordDetector | KeywordDetector | None = None
+
+    @property
+    def backend_name(self) -> str:
+        return self._backend_name
+
+    @property
+    def _running(self) -> bool:
+        """Expose inner detector's running state for watchdog monitoring."""
+        if self._detector is not None:
+            return self._detector._running
+        return False
+
+    @_running.setter
+    def _running(self, value: bool) -> None:
+        if self._detector is not None:
+            self._detector._running = value
+
+    def start(self) -> None:
+        logger.info(
+            "WakeWordDetector routing '%s' to backend '%s'",
+            self.wake_word, self._backend_name,
+        )
+        if self._backend_name == "keyword":
+            self._detector = KeywordDetector(
+                keyword=self.wake_word,
+                on_wake=self.on_wake,
+            )
+        else:
+            self._detector = OpenWakeWordDetector(
+                on_wake=self.on_wake,
+                wake_word=self.wake_word,
+                confidence_threshold=self.confidence_threshold,
+            )
+        self._detector.start()
+
+    def stop(self) -> None:
+        if self._detector is not None:
+            self._detector.stop()
+            self._detector = None
+
+    def pause(self) -> None:
+        if self._detector is not None:
+            self._detector.pause()
+
+    def resume(self) -> None:
+        if self._detector is not None:
+            self._detector.resume()

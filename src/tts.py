@@ -215,6 +215,68 @@ class TextToSpeech:
         else:
             self._speak_say(text)
 
+    def speak_streamed(self, text_generator) -> bool:
+        """Speak text as it arrives from a generator, sentence by sentence.
+
+        Buffers tokens until a sentence boundary (``.``, ``!``, ``?``,
+        newline, or buffer > 200 chars), then speaks each sentence while
+        continuing to buffer the next one.
+
+        Parameters
+        ----------
+        text_generator:
+            An iterable/generator that yields string tokens.
+
+        Returns
+        -------
+        bool
+            ``True`` if all speech completed, ``False`` if interrupted.
+        """
+        import re as _re
+
+        _SENTENCE_END = _re.compile(r'[.!?]\s|\n')
+
+        self._interrupted = False
+        buffer = ""
+        full_text = ""
+
+        def _flush(chunk: str) -> bool:
+            """Speak a chunk. Returns False if interrupted."""
+            chunk = chunk.strip()
+            if not chunk:
+                return True
+            if self._interrupted:
+                return False
+            self.speak(chunk)
+            return not self._interrupted
+
+        try:
+            for token in text_generator:
+                if self._interrupted:
+                    # Drain remaining tokens to allow the generator to
+                    # record the full reply in history even on interrupt.
+                    full_text += token
+                    continue
+
+                buffer += token
+                full_text += token
+
+                # Check for sentence boundary or long buffer
+                if _SENTENCE_END.search(buffer) or len(buffer) > 200:
+                    if not _flush(buffer):
+                        # Interrupted — keep draining tokens but stop speaking
+                        buffer = ""
+                        continue
+                    buffer = ""
+        except Exception as exc:  # noqa: BLE001
+            logger.error("speak_streamed generator error: %s", exc)
+
+        # Flush any remaining text
+        if buffer and not self._interrupted:
+            _flush(buffer)
+
+        return not self._interrupted
+
     # ------------------------------------------------------------------
     # Backends
     # ------------------------------------------------------------------

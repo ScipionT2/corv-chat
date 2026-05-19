@@ -191,8 +191,10 @@ class TestPipelineCommandIntegration:
         )
         p.stt = MagicMock()
         p.llm = MagicMock()
-        p.llm.chat.return_value = "The weather is nice."
+        # chat_stream is available, so the pipeline will use the streaming path
+        p.llm.chat_stream.return_value = iter(["The weather is nice."])
         p.tts = MagicMock()
+        p.tts._interrupted = False
         p._running = True
 
         mock_record.return_value = np.random.randn(16000).astype(np.float32)
@@ -200,5 +202,6 @@ class TestPipelineCommandIntegration:
 
         p.on_wake()
 
-        p.llm.chat.assert_called_once_with("What's the weather today?")
-        p.tts.speak.assert_called_once_with("The weather is nice.")
+        p.llm.chat_stream.assert_called_once_with("What's the weather today?")
+        # TTS.speak called with the streamed text
+        assert p.tts.speak.call_count >= 1

@@ -107,3 +107,82 @@ class TestTextToSpeech:
             _ = tts.backend
             _ = tts.backend
             mock_sel.assert_called_once()
+
+
+class TestSpeakStreamed:
+    """Tests for the speak_streamed() method."""
+
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_streamed_buffers_sentences(self, mock_popen):
+        """Tokens are buffered until sentence boundary, then spoken."""
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_proc.poll.return_value = 0
+        mock_popen.return_value = mock_proc
+
+        tts = TextToSpeech(say_voice="Alex")
+        tts._backend = "say"
+
+        tokens = ["Hello ", "world. ", "How ", "are ", "you?"]
+        result = tts.speak_streamed(iter(tokens))
+
+        assert result is True
+        # Should have spoken at least 2 chunks (sentence boundary at ". ")
+        assert mock_popen.call_count >= 2
+
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_streamed_returns_true_on_completion(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_proc.poll.return_value = 0
+        mock_popen.return_value = mock_proc
+
+        tts = TextToSpeech(say_voice="Alex")
+        tts._backend = "say"
+
+        result = tts.speak_streamed(iter(["Hello."]))
+        assert result is True
+
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_streamed_returns_false_on_interrupt(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_proc.poll.return_value = 0
+        mock_popen.return_value = mock_proc
+
+        tts = TextToSpeech(say_voice="Alex")
+        tts._backend = "say"
+
+        def _interrupting_gen():
+            yield "Hello world. "
+            tts._interrupted = True
+            yield "This should not be spoken. "
+
+        result = tts.speak_streamed(_interrupting_gen())
+        assert result is False
+
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_streamed_empty_generator(self, mock_popen):
+        tts = TextToSpeech(say_voice="Alex")
+        tts._backend = "say"
+
+        result = tts.speak_streamed(iter([]))
+        assert result is True
+        mock_popen.assert_not_called()
+
+    @patch("src.tts.subprocess.Popen")
+    def test_speak_streamed_long_buffer_flushes(self, mock_popen):
+        """Buffers > 200 chars should flush even without sentence boundary."""
+        mock_proc = MagicMock()
+        mock_proc.wait.return_value = 0
+        mock_proc.poll.return_value = 0
+        mock_popen.return_value = mock_proc
+
+        tts = TextToSpeech(say_voice="Alex")
+        tts._backend = "say"
+
+        # Single long token with no sentence boundary
+        long_text = "a" * 250
+        result = tts.speak_streamed(iter([long_text]))
+        assert result is True
+        assert mock_popen.call_count >= 1

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,92 +8,319 @@
 /* ── Reset & Variables ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --bg:        #1e1e2e;
-  --bg-card:   rgba(30, 30, 50, 0.7);
-  --bg-input:  rgba(255, 255, 255, 0.06);
-  --border:    rgba(255, 255, 255, 0.08);
-  --text:      #e0e0e0;
-  --text-dim:  #888;
-  --accent:    #00BCD4;
-  --accent-bg: rgba(0, 188, 212, 0.12);
-  --green:     #4caf50;
-  --red:       #ef5350;
-  --orange:    #ffa726;
-  --radius:    12px;
-  --glass:     saturate(180%) blur(16px);
+:root,
+html[data-theme="dark"] {
+  --bg-sidebar: #0f1117;
+  --bg-main: #1a1b23;
+  --bg-right: #14151d;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-input: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e4e4e7;
+  --text-dim: #71717a;
+  --text-muted: #52525b;
+  --accent: #00BCD4;
+  --accent-bg: rgba(0, 188, 212, 0.1);
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --radius: 12px;
+  --glass: saturate(180%) blur(16px);
+  --sidebar-text: #a1a1aa;
+  --sidebar-hover: rgba(255,255,255,0.06);
+  --sidebar-active: rgba(0, 188, 212, 0.15);
+  --log-bg: #0d0d16;
 }
 
-html { font-size: 15px; }
+html[data-theme="light"] {
+  --bg-sidebar: #f5f5f7;
+  --bg-main: #ffffff;
+  --bg-right: #f9fafb;
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-card-hover: rgba(0, 0, 0, 0.05);
+  --bg-input: rgba(0, 0, 0, 0.04);
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #18181b;
+  --text-dim: #71717a;
+  --text-muted: #a1a1aa;
+  --accent: #0891b2;
+  --accent-bg: rgba(8, 145, 178, 0.1);
+  --green: #16a34a;
+  --red: #dc2626;
+  --orange: #d97706;
+  --sidebar-text: #52525b;
+  --sidebar-hover: rgba(0,0,0,0.05);
+  --sidebar-active: rgba(8, 145, 178, 0.12);
+  --log-bg: #f1f5f9;
+}
+
+html {
+  font-size: 15px;
+  height: 100%;
+}
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  background: var(--bg-main);
   color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
 }
 
-/* ── Layout ────────────────────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: var(--glass);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(30, 30, 46, 0.85);
+/* ── High Contrast Mode ────────────────────────────────────────── */
+html.high-contrast {
+  --border: rgba(255,255,255,0.25);
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
 }
-.header h1 { font-size: 1.3rem; font-weight: 600; }
-.header h1 span { color: var(--accent); }
-.header-status {
+html[data-theme="light"].high-contrast {
+  --border: rgba(0,0,0,0.25);
+  --text-dim: #3f3f46;
+  --text-muted: #52525b;
+}
+
+/* ── Large Text Mode ───────────────────────────────────────────── */
+html.large-text { font-size: 18px; }
+
+/* ── Layout: 3-Panel ───────────────────────────────────────────── */
+.layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ── LEFT SIDEBAR ──────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.2s ease, min-width 0.2s ease;
+  z-index: 10;
+}
+
+.sidebar-logo {
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-dim);
 }
-.dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--red);
-  transition: background 0.3s;
+.sidebar-logo .logo-icon { font-size: 1.3rem; }
+.sidebar-logo .logo-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
 }
-.dot.green { background: var(--green); }
-.dot.orange { background: var(--orange); }
+.sidebar-logo .logo-ver {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
 
-.nav {
-  display: flex;
-  gap: 0;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid var(--border);
-  background: rgba(30, 30, 46, 0.6);
-  overflow-x: auto;
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0;
 }
-.nav button {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  padding: 0.75rem 1.2rem;
+
+.nav-category {
+  padding: 0 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.nav-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.9rem;
-  border-bottom: 2px solid transparent;
+  user-select: none;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.nav-category-header:hover { background: var(--sidebar-hover); }
+.nav-category-header .chevron {
+  font-size: 0.6rem;
+  transition: transform 0.2s ease;
+}
+.nav-category.collapsed .chevron { transform: rotate(-90deg); }
+.nav-category.collapsed .nav-items { display: none; }
+
+.nav-items {
+  margin-top: 0.2rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  margin: 1px 0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
   white-space: nowrap;
+  overflow: hidden;
+}
+.nav-item:hover {
+  background: var(--sidebar-hover);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--accent);
+  font-weight: 500;
+}
+.nav-item .nav-icon {
+  font-size: 1rem;
+  width: 1.4rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.nav-item .nav-label { overflow: hidden; text-overflow: ellipsis; }
+
+/* Sidebar bottom: accessibility */
+.sidebar-bottom {
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.sidebar-bottom .section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.a11y-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--sidebar-text);
+}
+.a11y-toggle .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-dim);
   transition: all 0.2s;
 }
-.nav button:hover { color: var(--text); }
-.nav button.active {
+.a11y-toggle .pill.on {
+  background: var(--accent-bg);
   color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-color: var(--accent);
 }
 
-.main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+/* ── CENTER PANEL ──────────────────────────────────────────────── */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
 
-.panel { display: none; }
-.panel.active { display: block; }
+.panel { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.panel.active { display: flex; }
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* ── RIGHT PANEL ───────────────────────────────────────────────── */
+.right-panel {
+  width: 280px;
+  min-width: 280px;
+  background: var(--bg-right);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  padding: 0.75rem;
+  gap: 0.5rem;
+}
+.right-panel.visible {
+  display: flex;
+}
+
+.rp-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.rp-header:hover { background: var(--bg-card-hover); }
+.rp-header .rp-chevron {
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  color: var(--text-dim);
+}
+.rp-section.collapsed .rp-chevron { transform: rotate(-90deg); }
+.rp-section.collapsed .rp-body { display: none; }
+.rp-body {
+  padding: 0.5rem 0.75rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.rp-body .rp-item {
+  padding: 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.rp-body .rp-item:hover { color: var(--text); }
+.rp-body .rp-item.active-model { color: var(--accent); font-weight: 600; }
+.rp-body .rp-tag {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
 
 /* ── Cards (glassmorphism) ─────────────────────────────────────── */
 .card {
@@ -103,9 +330,11 @@ body {
   border-radius: var(--radius);
   padding: 1.25rem;
   margin-bottom: 1rem;
+  transition: background 0.2s;
 }
+.card:hover { background: var(--bg-card-hover); }
 .card h2 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
   color: var(--accent);
@@ -113,23 +342,25 @@ body {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.75rem;
 }
 .stat {
   background: var(--bg-input);
   border-radius: 8px;
   padding: 0.75rem 1rem;
+  transition: background 0.2s;
 }
+.stat:hover { background: var(--bg-card-hover); }
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: 0.25rem;
 }
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
 }
 
@@ -139,11 +370,14 @@ body {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 0.55rem 1.2rem;
+  padding: 0.5rem 1.1rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: opacity 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 .btn:hover { opacity: 0.85; }
 .btn:active { transform: scale(0.97); }
@@ -153,53 +387,118 @@ body {
   border: 1px solid var(--accent);
   color: var(--accent);
 }
+.btn.outline:hover { background: var(--accent-bg); }
 .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
 
-/* ── Chat ──────────────────────────────────────────────────────── */
-.chat-container {
-  display: flex;
+/* ── Chat Panel ────────────────────────────────────────────────── */
+.chat-panel {
+  display: none;
   flex-direction: column;
-  height: 55vh;
-  min-height: 300px;
+  height: 100%;
 }
+.chat-panel.active { display: flex; }
+
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+.chat-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.chat-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.chat-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.chat-breadcrumb {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.chat-breadcrumb span { color: var(--text-muted); }
+.chat-topbar-right {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 0.75rem 0;
+  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
+.chat-load-history {
+  align-self: center;
+  margin-bottom: 0.5rem;
+}
+
 .msg {
-  max-width: 85%;
-  padding: 0.6rem 0.9rem;
-  border-radius: 10px;
+  max-width: 80%;
+  padding: 0.65rem 0.95rem;
+  border-radius: 12px;
   font-size: 0.9rem;
-  line-height: 1.45;
+  line-height: 1.5;
   word-break: break-word;
+  position: relative;
 }
 .msg.user {
   align-self: flex-end;
   background: var(--accent-bg);
-  border: 1px solid rgba(0, 188, 212, 0.2);
+  border: 1px solid rgba(0, 188, 212, 0.15);
+  border-bottom-right-radius: 4px;
 }
 .msg.agent {
   align-self: flex-start;
   background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.msg.agent .msg-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
 }
 .msg.system {
   align-self: center;
   color: var(--text-dim);
   font-size: 0.8rem;
   font-style: italic;
+  background: none;
+  padding: 0.25rem;
 }
-.chat-input-row {
+
+.chat-input-bar {
   display: flex;
   gap: 0.5rem;
-  padding-top: 0.75rem;
+  padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  align-items: center;
+  flex-shrink: 0;
 }
-.chat-input-row input {
+.chat-input-bar input {
   flex: 1;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -208,8 +507,69 @@ body {
   color: var(--text);
   font-size: 0.9rem;
   outline: none;
+  transition: border-color 0.2s;
 }
-.chat-input-row input:focus { border-color: var(--accent); }
+.chat-input-bar input:focus { border-color: var(--accent); }
+
+.chat-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+.chat-send-btn:hover { opacity: 0.85; }
+
+.mic-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.mic-btn:hover { border-color: var(--accent); color: var(--accent); }
+.mic-btn.listening {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.chat-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.35rem 1.25rem 0.5rem;
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+.theme-toggle-btn {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Vision ────────────────────────────────────────────────────── */
 .vision-result {
@@ -220,19 +580,19 @@ body {
   white-space: pre-wrap;
   font-size: 0.9rem;
   line-height: 1.5;
-  max-height: 300px;
+  max-height: 350px;
   overflow-y: auto;
 }
 
 /* ── Settings ──────────────────────────────────────────────────── */
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.75rem;
 }
 .field label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-dim);
   margin-bottom: 0.3rem;
 }
@@ -245,18 +605,19 @@ body {
   color: var(--text);
   font-size: 0.9rem;
   outline: none;
+  transition: border-color 0.2s;
 }
 .field input:focus, .field select:focus { border-color: var(--accent); }
 
 /* ── Logs ──────────────────────────────────────────────────────── */
 .log-area {
-  background: #0d0d16;
+  background: var(--log-bg);
   border-radius: 8px;
   padding: 0.75rem;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  max-height: 60vh;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  max-height: calc(100vh - 220px);
   overflow-y: auto;
   color: var(--text-dim);
 }
@@ -264,163 +625,552 @@ body {
 .log-area .log-error { color: var(--red); }
 .log-area .log-warn { color: var(--orange); }
 
-/* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .header { padding: 0.75rem 1rem; }
-  .main { padding: 1rem; }
-  .stat-grid { grid-template-columns: 1fr 1fr; }
-  .chat-container { height: 45vh; }
-  .nav button { padding: 0.6rem 0.8rem; font-size: 0.82rem; }
+/* ── Skills ────────────────────────────────────────────────────── */
+.skill-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.skill-stats .skill-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.skill-stats .dot-indicator {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
 }
 
+.skill-toggle {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.skill-toggle.on { background: var(--green); }
+.skill-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.skill-toggle.on::after { transform: translateX(16px); }
+
 /* ── Scrollbar ─────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 56px;
+    min-width: 56px;
+  }
+  .sidebar .logo-text,
+  .sidebar .logo-ver,
+  .sidebar .nav-label,
+  .sidebar .nav-category-header span:first-child,
+  .sidebar .section-title,
+  .sidebar .a11y-toggle span:first-child,
+  .sidebar .a11y-toggle .pill-label {
+    display: none;
+  }
+  .sidebar .nav-category-header .chevron { display: none; }
+  .sidebar .nav-item { justify-content: center; padding: 0.5rem; }
+  .sidebar .nav-item .nav-icon { width: auto; }
+  .sidebar .a11y-toggle { justify-content: center; }
+  .sidebar .a11y-toggle .pill { font-size: 0.6rem; padding: 0.1rem 0.3rem; }
+  .right-panel { display: none !important; }
+}
+@media (max-width: 600px) {
+  .sidebar { width: 0; min-width: 0; border: none; }
+}
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <h1>⚡ <span>Nova</span> Control Hub</h1>
-  <div class="header-status">
-    <div class="dot" id="statusDot"></div>
-    <span id="statusLabel">Connecting…</span>
-  </div>
-</div>
+<div class="layout">
 
-<!-- Navigation tabs -->
-<div class="nav" id="nav">
-  <button class="active" data-panel="status">Status</button>
-  <button data-panel="chat">Chat</button>
-  <button data-panel="vision">Vision</button>
-  <button data-panel="settings">Settings</button>
-  <button data-panel="logs">Logs</button>
-</div>
+  <!-- ── LEFT SIDEBAR ────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Nova</span>
+      <span class="logo-ver">v1.0</span>
+    </div>
 
-<div class="main">
-
-  <!-- ── Status Panel ──────────────────────────────────────────── -->
-  <div class="panel active" id="panel-status">
-    <div class="card">
-      <h2>System Status</h2>
-      <div class="stat-grid" id="statusGrid">
-        <div class="stat">
-          <div class="stat-label">Pipeline</div>
-          <div class="stat-value" id="sPipeline">—</div>
+    <nav class="sidebar-nav">
+      <!-- GENERAL -->
+      <div class="nav-category" data-cat="general">
+        <div class="nav-category-header" onclick="toggleCategory(this)">
+          <span>General</span>
+          <span class="chevron">▾</span>
         </div>
-        <div class="stat">
-          <div class="stat-label">Ollama</div>
-          <div class="stat-value" id="sOllama">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Chat Model</div>
-          <div class="stat-value" id="sChatModel">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Vision</div>
-          <div class="stat-value" id="sVision">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">LLM Mode</div>
-          <div class="stat-value" id="sLLMMode">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Uptime</div>
-          <div class="stat-value" id="sUptime">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">RAM</div>
-          <div class="stat-value" id="sRAM">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">GPU</div>
-          <div class="stat-value" id="sGPU">—</div>
+        <div class="nav-items">
+          <div class="nav-item active" data-panel="status" onclick="switchPanel(this)">
+            <span class="nav-icon">🏠</span><span class="nav-label">Home / Status</span>
+          </div>
+          <div class="nav-item" data-panel="chat" onclick="switchPanel(this)">
+            <span class="nav-icon">💬</span><span class="nav-label">Chat</span>
+          </div>
+          <div class="nav-item" data-panel="scripts" onclick="switchPanel(this)">
+            <span class="nav-icon">📜</span><span class="nav-label">Scripts</span>
+          </div>
+          <div class="nav-item" data-panel="projects" onclick="switchPanel(this)">
+            <span class="nav-icon">📁</span><span class="nav-label">Projects</span>
+          </div>
         </div>
       </div>
-      <div class="btn-group">
-        <button class="btn" id="btnStart" onclick="startPipeline()">▶ Start Pipeline</button>
-        <button class="btn red" id="btnStop" onclick="stopPipeline()">■ Stop Pipeline</button>
+
+      <!-- AGENTS -->
+      <div class="nav-category" data-cat="agents">
+        <div class="nav-category-header" onclick="toggleCategory(this)">
+          <span>Agents</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="nav-items">
+          <div class="nav-item" data-panel="agents" onclick="switchPanel(this)">
+            <span class="nav-icon">🤖</span><span class="nav-label">Agents</span>
+          </div>
+          <div class="nav-item" data-panel="skills" onclick="switchPanel(this)">
+            <span class="nav-icon">✨</span><span class="nav-label">Skills</span>
+          </div>
+          <div class="nav-item" data-panel="memory" onclick="switchPanel(this)">
+            <span class="nav-icon">🧠</span><span class="nav-label">Memory</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM -->
+      <div class="nav-category" data-cat="system">
+        <div class="nav-category-header" onclick="toggleCategory(this)">
+          <span>System</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="nav-items">
+          <div class="nav-item" data-panel="settings" onclick="switchPanel(this)">
+            <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+          </div>
+          <div class="nav-item" data-panel="vision" onclick="switchPanel(this)">
+            <span class="nav-icon">👁️</span><span class="nav-label">Vision</span>
+          </div>
+          <div class="nav-item" data-panel="logs" onclick="switchPanel(this)">
+            <span class="nav-icon">📊</span><span class="nav-label">Logs</span>
+          </div>
+          <div class="nav-item" data-panel="help" onclick="switchPanel(this)">
+            <span class="nav-icon">❓</span><span class="nav-label">Help</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Accessibility -->
+    <div class="sidebar-bottom">
+      <div class="section-title">Accessibility</div>
+      <div class="a11y-toggle">
+        <span>High Contrast</span>
+        <span class="pill" id="a11yContrast" onclick="toggleA11y('contrast')"><span class="pill-label">off</span></span>
+      </div>
+      <div class="a11y-toggle">
+        <span>Large Text</span>
+        <span class="pill" id="a11yLargeText" onclick="toggleA11y('largeText')"><span class="pill-label">off</span></span>
+      </div>
+      <div class="a11y-toggle">
+        <span>TTS</span>
+        <span class="pill" id="a11yTTS" onclick="toggleA11y('tts')"><span class="pill-label">off</span></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── CENTER PANEL ────────────────────────────────────────────── -->
+  <main class="center">
+
+    <!-- STATUS / HOME -->
+    <div class="panel active" id="panel-status">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>🏠 System Status</h2>
+          <div class="stat-grid" id="statusGrid">
+            <div class="stat">
+              <div class="stat-label">Pipeline</div>
+              <div class="stat-value" id="sPipeline">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Ollama</div>
+              <div class="stat-value" id="sOllama">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Chat Model</div>
+              <div class="stat-value" id="sChatModel">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Vision</div>
+              <div class="stat-value" id="sVision">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Uptime</div>
+              <div class="stat-value" id="sUptime">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">RAM</div>
+              <div class="stat-value" id="sRAM">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">GPU</div>
+              <div class="stat-value" id="sGPU">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">LLM Mode</div>
+              <div class="stat-value" id="sLLMMode">—</div>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn" id="btnStart" onclick="startPipeline()">▶ Start Pipeline</button>
+            <button class="btn red" id="btnStop" onclick="stopPipeline()">■ Stop Pipeline</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📦 Models Loaded</h2>
+          <div id="modelsLoaded" style="font-size:0.9rem;color:var(--text-dim);">—</div>
+        </div>
+
+        <div class="card">
+          <h2>📈 Usage Metrics</h2>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="stat-label">Requests Today</div>
+              <div class="stat-value" id="sRequestsToday">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Total Uptime</div>
+              <div class="stat-value" id="sTotalUptime">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🔴 Live Context</h2>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="stat-label">Screen Monitor</div>
+              <div class="stat-value" id="sScreenMonitor">Passive</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Wake Word</div>
+              <div class="stat-value" id="sWakeWord">Active</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Models Loaded</h2>
-      <div id="modelsLoaded" style="font-size:0.9rem;color:var(--text-dim);">—</div>
-    </div>
-  </div>
+    <!-- CHAT -->
+    <div class="panel chat-panel" id="panel-chat">
+      <div class="chat-topbar">
+        <div class="chat-topbar-left">
+          <div class="chat-status-indicator">
+            <div class="chat-status-dot"></div>
+            <span>Voice Assistant Active</span>
+          </div>
+          <div class="chat-breadcrumb" id="chatBreadcrumb">
+            <span>Main</span>
+          </div>
+        </div>
+        <div class="chat-topbar-right">Nova v1.0</div>
+      </div>
 
-  <!-- ── Chat Panel ────────────────────────────────────────────── -->
-  <div class="panel" id="panel-chat">
-    <div class="card chat-container">
       <div class="chat-messages" id="chatMessages">
+        <button class="btn outline chat-load-history" onclick="loadHistory()">Load History</button>
         <div class="msg system">Send a message to Nova…</div>
       </div>
-      <div class="chat-input-row">
+
+      <div class="chat-input-bar">
         <input type="text" id="chatInput" placeholder="Type a message…"
                onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="btn" onclick="sendChat()">Send</button>
+        <button class="chat-send-btn" onclick="sendChat()" title="Send">➤</button>
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Microphone">🎤</button>
       </div>
-    </div>
-  </div>
 
-  <!-- ── Vision Panel ──────────────────────────────────────────── -->
-  <div class="panel" id="panel-vision">
-    <div class="card">
-      <h2>Screen Analysis</h2>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.75rem;">
-        Trigger a one-shot analysis of the current screen contents.
-      </p>
-      <button class="btn" onclick="analyzeScreen()">🔍 Analyze Screen</button>
-      <div class="vision-result" id="visionResult" style="display:none;"></div>
-    </div>
-  </div>
-
-  <!-- ── Settings Panel ────────────────────────────────────────── -->
-  <div class="panel" id="panel-settings">
-    <div class="card">
-      <h2>Configuration</h2>
-      <div class="settings-grid" id="settingsGrid">
-        <div class="field">
-          <label>Voice (macOS say)</label>
-          <input type="text" id="cfgVoice" placeholder="Daniel">
-        </div>
-        <div class="field">
-          <label>Chat Model</label>
-          <input type="text" id="cfgModel" placeholder="qwen2.5:3b">
-        </div>
-        <div class="field">
-          <label>Accent Color</label>
-          <select id="cfgAccent">
-            <option value="cyan">Cyan</option>
-            <option value="green">Green</option>
-            <option value="purple">Purple</option>
-            <option value="orange">Orange</option>
-            <option value="pink">Pink</option>
-          </select>
-        </div>
-      </div>
-      <div class="btn-group">
-        <button class="btn" onclick="saveSettings()">Save Changes</button>
+      <div class="chat-bottom-row">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙 Dark</button>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Read-Only</h2>
-      <div class="stat-grid" id="roConfig"></div>
+    <!-- SCRIPTS (placeholder) -->
+    <div class="panel" id="panel-scripts">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>📜 Scripts</h2>
+          <p style="color:var(--text-dim);font-size:0.9rem;">Script management coming soon. You'll be able to create, edit, and run automation scripts here.</p>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- ── Logs Panel ────────────────────────────────────────────── -->
-  <div class="panel" id="panel-logs">
-    <div class="card">
-      <h2>Logs</h2>
-      <button class="btn outline" onclick="refreshLogs()" style="margin-bottom:0.75rem;">Refresh</button>
-      <div class="log-area" id="logArea">Waiting for logs…</div>
+    <!-- PROJECTS (placeholder) -->
+    <div class="panel" id="panel-projects">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>📁 Projects</h2>
+          <p style="color:var(--text-dim);font-size:0.9rem;">Project management coming soon. Organize your work into projects with context and memory.</p>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <!-- AGENTS -->
+    <div class="panel" id="panel-agents">
+      <div class="panel-scroll">
+        <!-- Active Agent Card -->
+        <div class="card">
+          <h2>🤖 Active Agent</h2>
+          <div id="activeAgentCard" style="font-size:0.9rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+              <span id="activeAgentName" style="font-size:1.1rem;font-weight:600;">—</span>
+              <span id="activeAgentModel" style="font-size:0.78rem;color:var(--text-dim);background:var(--bg-input);padding:0.2rem 0.6rem;border-radius:6px;">—</span>
+            </div>
+            <div id="activeAgentHierarchy" style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.5rem;"></div>
+            <div id="activeAgentPrompt" style="font-size:0.82rem;color:var(--text-dim);background:var(--bg-input);padding:0.6rem;border-radius:8px;max-height:80px;overflow-y:auto;">—</div>
+          </div>
+        </div>
+
+        <!-- Agent List -->
+        <div class="card">
+          <h2>📋 Agent List</h2>
+          <div id="agentList" style="display:flex;flex-direction:column;gap:0.5rem;">Loading…</div>
+        </div>
+
+        <!-- Quick Add Agent -->
+        <div class="card">
+          <h2>➕ Quick Add Agent</h2>
+          <div class="settings-grid">
+            <div class="field">
+              <label>Name</label>
+              <input type="text" id="newAgentName" placeholder="e.g. Nova Coder">
+            </div>
+            <div class="field">
+              <label>Model</label>
+              <input type="text" id="newAgentModel" placeholder="qwen2.5:3b" value="qwen2.5:3b">
+            </div>
+          </div>
+          <div class="field" style="margin-top:0.75rem;">
+            <label>System Prompt</label>
+            <textarea id="newAgentPrompt" rows="3" placeholder="Custom system prompt…"
+              style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text);font-size:0.9rem;resize:vertical;font-family:inherit;outline:none;"></textarea>
+          </div>
+          <div class="btn-group">
+            <button class="btn" onclick="addAgent()">Create Agent</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="panel" id="panel-skills">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>✨ Skills</h2>
+          <div class="skill-stats" id="skillStatsBar">
+            <div class="skill-stat"><strong id="skillsLoadedCount">0</strong>&nbsp;Loaded</div>
+            <div class="skill-stat"><span class="dot-indicator" style="background:var(--green);"></span><strong id="skillsActiveCount">0</strong>&nbsp;Active</div>
+            <div class="skill-stat"><span class="dot-indicator" style="background:var(--red);"></span><strong id="skillsInactiveCount">0</strong>&nbsp;Inactive</div>
+          </div>
+          <button class="btn outline" onclick="reloadSkills()" style="margin-bottom:0.75rem;">🔄 Reload Skills</button>
+          <div id="skillsList" style="display:flex;flex-direction:column;gap:0.5rem;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMORY (placeholder) -->
+    <div class="panel" id="panel-memory">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>🧠 Memory</h2>
+          <p style="color:var(--text-dim);font-size:0.9rem;">Memory management coming soon. View and manage conversation memory, context, and knowledge base.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>⚙️ Configuration</h2>
+          <div class="settings-grid" id="settingsGrid">
+            <div class="field">
+              <label>Voice (macOS say)</label>
+              <input type="text" id="cfgVoice" placeholder="Daniel">
+            </div>
+            <div class="field">
+              <label>Chat Model</label>
+              <input type="text" id="cfgModel" placeholder="qwen2.5:3b">
+            </div>
+            <div class="field">
+              <label>Accent Color</label>
+              <select id="cfgAccent">
+                <option value="cyan">Cyan</option>
+                <option value="green">Green</option>
+                <option value="purple">Purple</option>
+                <option value="orange">Orange</option>
+                <option value="pink">Pink</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn" onclick="saveSettings()">💾 Save Changes</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📋 Read-Only Info</h2>
+          <div class="stat-grid" id="roConfig"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISION -->
+    <div class="panel" id="panel-vision">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>👁️ Screen Analysis</h2>
+          <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.75rem;">
+            Trigger a one-shot analysis of the current screen contents.
+          </p>
+          <button class="btn" onclick="analyzeScreen()">🔍 Analyze Screen</button>
+          <div class="vision-result" id="visionResult" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="panel" id="panel-logs">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>📊 Logs</h2>
+          <button class="btn outline" onclick="refreshLogs()" style="margin-bottom:0.75rem;">🔄 Refresh</button>
+          <div class="log-area" id="logArea">Waiting for logs…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP (placeholder) -->
+    <div class="panel" id="panel-help">
+      <div class="panel-scroll">
+        <div class="card">
+          <h2>❓ Help</h2>
+          <p style="color:var(--text-dim);font-size:0.9rem;line-height:1.6;">
+            <strong>Nova Web Control Hub</strong> — Your command center for the Nova AI assistant pipeline.<br><br>
+            <strong>Keyboard Shortcuts:</strong><br>
+            • <code>Enter</code> — Send chat message<br><br>
+            <strong>Panels:</strong><br>
+            • <strong>Home/Status</strong> — System overview, pipeline control<br>
+            • <strong>Chat</strong> — Conversation with Nova<br>
+            • <strong>Agents</strong> — Manage agent profiles<br>
+            • <strong>Skills</strong> — View and toggle loaded skills<br>
+            • <strong>Settings</strong> — Configuration options<br>
+            • <strong>Vision</strong> — Screen analysis<br>
+            • <strong>Logs</strong> — System log viewer
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── RIGHT PANEL ─────────────────────────────────────────────── -->
+  <aside class="right-panel" id="rightPanel">
+
+    <!-- Model -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Model</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body" id="rpModelBody">
+        <div class="rp-item" onclick="selectModelProvider('openrouter')">OpenRouter</div>
+        <div class="rp-item" onclick="selectModelProvider('lmstudio')">LMStudio</div>
+        <div class="rp-item active-model" onclick="selectModelProvider('local')">Local (Ollama)</div>
+        <div class="rp-item" onclick="selectModelProvider('custom')">Custom</div>
+        <div style="margin-top:0.4rem;font-size:0.75rem;color:var(--text-muted);">Current: <span id="rpCurrentModel">—</span></div>
+      </div>
+    </div>
+
+    <!-- Knowledge Base -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Knowledge Base</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body">
+        <div class="rp-item">📚 Default</div>
+        <div class="rp-item">📖 Docs Repository</div>
+        <div class="rp-item">🌐 Web Search</div>
+        <div class="rp-item">📝 User Notes</div>
+      </div>
+    </div>
+
+    <!-- Agent Profile -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Agent Profile</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body" id="rpAgentProfiles">
+        <div class="rp-item">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Skills Overview -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Skills Overview</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body" id="rpSkillsOverview">
+        <div>Skills Loaded: <strong id="rpSkillsCount">0</strong></div>
+        <div>Active: <span style="color:var(--green);">🟢</span> <strong id="rpSkillsActive">0</strong></div>
+        <div id="rpSkillsList" style="margin-top:0.35rem;"></div>
+      </div>
+    </div>
+
+    <!-- Live Context -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Live Context</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body" id="rpLiveContext">
+        <div>Screen Monitor: <strong id="rpScreenStatus">Passive</strong></div>
+        <div>Wake Word: <strong id="rpWakeStatus">Active</strong></div>
+        <div>Clipboard: <strong>Active</strong></div>
+      </div>
+    </div>
+
+    <!-- Usage Metrics -->
+    <div class="rp-section">
+      <div class="rp-header" onclick="toggleRPSection(this)">
+        <span>Usage Metrics</span>
+        <span class="rp-chevron">▾</span>
+      </div>
+      <div class="rp-body">
+        <div>Requests Today: <strong id="rpRequestsToday">0</strong></div>
+        <div>Total Uptime: <strong id="rpUptime">—</strong></div>
+      </div>
+    </div>
+
+  </aside>
 
 </div>
 
@@ -429,16 +1179,92 @@ body {
 const API = window.location.origin;
 let ws = null;
 let reconnectTimer = null;
+let requestCount = 0;
+let currentPanel = 'status';
 
 /* ── Navigation ────────────────────────────────────────────────── */
-document.querySelectorAll('.nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
-  });
-});
+function switchPanel(el) {
+  const panel = el.dataset.panel;
+  if (!panel) return;
+  currentPanel = panel;
+
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+
+  // Update panels
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('panel-' + panel);
+  if (target) target.classList.add('active');
+
+  // Right panel: only visible for chat
+  const rp = document.getElementById('rightPanel');
+  if (panel === 'chat') {
+    rp.classList.add('visible');
+  } else {
+    rp.classList.remove('visible');
+  }
+}
+
+function toggleCategory(header) {
+  const cat = header.closest('.nav-category');
+  cat.classList.toggle('collapsed');
+}
+
+/* ── Right Panel Sections ──────────────────────────────────────── */
+function toggleRPSection(header) {
+  const section = header.closest('.rp-section');
+  section.classList.toggle('collapsed');
+}
+
+/* ── Theme ─────────────────────────────────────────────────────── */
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('nova-theme', next);
+  updateThemeButton(next);
+}
+
+function updateThemeButton(theme) {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) {
+    btn.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+  }
+}
+
+// Restore theme
+(function() {
+  const saved = localStorage.getItem('nova-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeButton(saved);
+  }
+})();
+
+/* ── Accessibility ─────────────────────────────────────────────── */
+function toggleA11y(type) {
+  const html = document.documentElement;
+  if (type === 'contrast') {
+    html.classList.toggle('high-contrast');
+    const on = html.classList.contains('high-contrast');
+    const pill = document.getElementById('a11yContrast');
+    pill.classList.toggle('on', on);
+    pill.querySelector('.pill-label').textContent = on ? 'on' : 'off';
+  } else if (type === 'largeText') {
+    html.classList.toggle('large-text');
+    const on = html.classList.contains('large-text');
+    const pill = document.getElementById('a11yLargeText');
+    pill.classList.toggle('on', on);
+    pill.querySelector('.pill-label').textContent = on ? 'on' : 'off';
+  } else if (type === 'tts') {
+    const pill = document.getElementById('a11yTTS');
+    const on = !pill.classList.contains('on');
+    pill.classList.toggle('on', on);
+    pill.querySelector('.pill-label').textContent = on ? 'on' : 'off';
+  }
+}
 
 /* ── WebSocket ─────────────────────────────────────────────────── */
 function connectWS() {
@@ -479,9 +1305,24 @@ function handleWSMessage(msg) {
 }
 
 function setHeaderStatus(label, color) {
-  document.getElementById('statusLabel').textContent = label;
-  const dot = document.getElementById('statusDot');
-  dot.className = 'dot' + (color ? ' ' + color : '');
+  // Update the chat status dot
+  const dot = document.querySelector('.chat-status-dot');
+  if (dot) {
+    if (color === 'green') {
+      dot.style.background = 'var(--green)';
+    } else if (color === 'orange') {
+      dot.style.background = 'var(--orange)';
+    } else {
+      dot.style.background = 'var(--red)';
+    }
+  }
+  // Update chat status text
+  const indicator = document.querySelector('.chat-status-indicator span');
+  if (indicator) {
+    if (color === 'green') indicator.textContent = 'Voice Assistant Active';
+    else if (color === 'orange') indicator.textContent = 'Idle';
+    else indicator.textContent = 'Disconnected';
+  }
 }
 
 /* ── Status ────────────────────────────────────────────────────── */
@@ -501,7 +1342,12 @@ function updateStatusFromData(d) {
   set('sChatModel', d.chat_model_ready ? '✅ Ready' : '⚠️ Not loaded');
   set('sVision', d.vision || d.vision_model_ready ? '✅' : '—');
   set('sLLMMode', d.llm_mode || '—');
-  set('sUptime', d.uptime_seconds ? formatUptime(d.uptime_seconds) : '—');
+
+  const uptime = d.uptime_seconds ? formatUptime(d.uptime_seconds) : '—';
+  set('sUptime', uptime);
+  set('sTotalUptime', uptime);
+  set('rpUptime', uptime);
+
   set('sRAM', d.ram_available_gb ? d.ram_available_gb + ' / ' + d.ram_total_gb + ' GB' : '—');
   set('sGPU', d.gpu_available ? '✅ Available' : '❌ None');
 
@@ -512,6 +1358,14 @@ function updateStatusFromData(d) {
   } else {
     ml.textContent = 'None loaded';
   }
+
+  // Right panel current model
+  set('rpCurrentModel', d.chat_model || d.llm_mode || '—');
+
+  // Vision state for live context
+  const visionState = d.vision || 'Passive';
+  set('sScreenMonitor', visionState === 'active' ? 'Active' : 'Passive');
+  set('rpScreenStatus', visionState === 'active' ? 'Active' : 'Passive');
 
   // Header dot
   if (d.pipeline === 'running') setHeaderStatus('Running', 'green');
@@ -555,6 +1409,8 @@ async function sendChat() {
   inp.value = '';
 
   appendChat('user', text);
+  requestCount++;
+  updateRequestCount();
 
   // Create a placeholder for streaming
   const agentEl = appendChat('agent', '');
@@ -579,16 +1435,19 @@ async function sendChat() {
       for (const line of chunk.split('\n')) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
-          // Check for event type from preceding "event:" line
           accumulated += data;
-          agentEl.textContent = accumulated;
+          // Update message content (skip the label div)
+          const contentEl = agentEl.querySelector('.msg-content');
+          if (contentEl) contentEl.textContent = accumulated;
+          else agentEl.textContent = accumulated;
         }
         if (line.startsWith('event: done')) {
-          // Reset — the next data line is the full message
           accumulated = '';
         }
         if (line.startsWith('event: error')) {
-          agentEl.textContent = '❌ ' + data;
+          const contentEl = agentEl.querySelector('.msg-content');
+          if (contentEl) contentEl.textContent = '❌ Error';
+          else agentEl.textContent = '❌ Error';
         }
       }
     }
@@ -598,7 +1457,9 @@ async function sendChat() {
     container.scrollTop = container.scrollHeight;
 
   } catch (e) {
-    agentEl.textContent = '❌ Error: ' + e;
+    const contentEl = agentEl.querySelector('.msg-content');
+    if (contentEl) contentEl.textContent = '❌ Error: ' + e;
+    else agentEl.textContent = '❌ Error: ' + e;
   }
 }
 
@@ -610,7 +1471,14 @@ function appendChat(role, content) {
 
   const el = document.createElement('div');
   el.className = 'msg ' + role;
-  el.textContent = content;
+
+  if (role === 'agent') {
+    el.innerHTML = '<div class="msg-label">Nova</div><div class="msg-content"></div>';
+    el.querySelector('.msg-content').textContent = content;
+  } else {
+    el.textContent = content;
+  }
+
   container.appendChild(el);
   container.scrollTop = container.scrollHeight;
   return el;
@@ -627,6 +1495,12 @@ async function loadHistory() {
       });
     }
   } catch {}
+}
+
+/* ── Microphone ────────────────────────────────────────────────── */
+function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  btn.classList.toggle('listening');
 }
 
 /* ── Vision ────────────────────────────────────────────────────── */
@@ -658,6 +1532,10 @@ async function loadConfig() {
     document.getElementById('cfgModel').value = d.model || '';
     if (d.accent) document.getElementById('cfgAccent').value = d.accent;
 
+    // Right panel model
+    const rpModel = document.getElementById('rpCurrentModel');
+    if (rpModel) rpModel.textContent = d.model || '—';
+
     // Read-only fields
     const ro = document.getElementById('roConfig');
     ro.innerHTML = '';
@@ -670,7 +1548,7 @@ async function loadConfig() {
       ['Vision Enabled', d.vision_enabled ? 'Yes' : 'No'],
     ];
     fields.forEach(([label, val]) => {
-      ro.innerHTML += `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${val || '—'}</div></div>`;
+      ro.innerHTML += '<div class="stat"><div class="stat-label">' + label + '</div><div class="stat-value">' + (val || '—') + '</div></div>';
     });
   } catch {}
 }
@@ -718,11 +1596,223 @@ function appendLog(entry) {
   area.scrollTop = area.scrollHeight;
 }
 
+/* ── Agents & Skills ────────────────────────────────────────────── */
+async function loadAgents() {
+  try {
+    const r = await fetch(API + '/api/agents');
+    const d = await r.json();
+    if (d.error) return;
+
+    const activeId = d.active_id;
+    const agents = d.agents || [];
+
+    // Active agent card
+    const active = agents.find(a => a.id === activeId);
+    if (active) {
+      document.getElementById('activeAgentName').textContent = active.name;
+      document.getElementById('activeAgentModel').textContent = active.model;
+      document.getElementById('activeAgentPrompt').textContent =
+        active.system_prompt.length > 200
+          ? active.system_prompt.slice(0, 200) + '…'
+          : active.system_prompt;
+
+      // Hierarchy breadcrumb
+      const parents = [];
+      let cur = active;
+      while (cur && cur.parent_id) {
+        const parent = agents.find(a => a.id === cur.parent_id);
+        if (parent) { parents.unshift(parent.name); cur = parent; }
+        else break;
+      }
+      parents.push(active.name);
+      document.getElementById('activeAgentHierarchy').textContent =
+        parents.length > 1 ? parents.join(' → ') : '';
+
+      // Update chat breadcrumb
+      const bc = document.getElementById('chatBreadcrumb');
+      if (bc) {
+        bc.innerHTML = parents.map((p, i) =>
+          i < parents.length - 1
+            ? '<span>' + p + ' &gt; </span>'
+            : '<span style="color:var(--accent);">' + p + '</span>'
+        ).join('');
+      }
+    }
+
+    // Agent list
+    const listEl = document.getElementById('agentList');
+    listEl.innerHTML = '';
+    agents.forEach(a => {
+      const isActive = a.id === activeId;
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg-input);border-radius:8px;padding:0.6rem 0.9rem;' + (a.parent_id ? 'margin-left:1.5rem;' : '');
+      if (isActive) el.style.borderLeft = '3px solid var(--accent)';
+      el.innerHTML =
+        '<div>' +
+          '<span style="font-weight:' + (isActive ? '600' : '400') + ';">' + a.name + '</span>' +
+          '<span style="font-size:0.75rem;color:var(--text-dim);margin-left:0.5rem;">' + a.model + '</span>' +
+          (isActive ? '<span style="font-size:0.7rem;color:var(--accent);margin-left:0.5rem;">ACTIVE</span>' : '') +
+          (!a.enabled ? '<span style="font-size:0.7rem;color:var(--red);margin-left:0.5rem;">DISABLED</span>' : '') +
+        '</div>' +
+        (!isActive ? '<button class="btn" style="padding:0.3rem 0.8rem;font-size:0.78rem;" onclick="switchAgent(\'' + a.id + '\')">Switch</button>' : '');
+      listEl.appendChild(el);
+    });
+
+    // Right panel agent profiles
+    const rpProfiles = document.getElementById('rpAgentProfiles');
+    if (rpProfiles) {
+      rpProfiles.innerHTML = '';
+      agents.forEach(a => {
+        const isActive = a.id === activeId;
+        const item = document.createElement('div');
+        item.className = 'rp-item' + (isActive ? ' active-model' : '');
+        item.textContent = a.name;
+        item.onclick = () => { if (!isActive) switchAgent(a.id); };
+        rpProfiles.appendChild(item);
+      });
+      const custom = document.createElement('div');
+      custom.className = 'rp-item';
+      custom.textContent = '+ Custom';
+      custom.style.color = 'var(--text-muted)';
+      rpProfiles.appendChild(custom);
+    }
+  } catch {}
+}
+
+async function switchAgent(id) {
+  try {
+    const r = await fetch(API + '/api/agents/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent_id: id }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      appendLog({ level: 'info', message: 'Switched to: ' + d.active.name });
+      loadAgents();
+    } else {
+      appendLog({ level: 'error', message: 'Switch failed: ' + (d.error || 'unknown') });
+    }
+  } catch (e) {
+    appendLog({ level: 'error', message: 'Switch failed: ' + e });
+  }
+}
+
+async function addAgent() {
+  const name = document.getElementById('newAgentName').value.trim();
+  const model = document.getElementById('newAgentModel').value.trim() || 'qwen2.5:3b';
+  const prompt = document.getElementById('newAgentPrompt').value.trim();
+  if (!name) return;
+
+  try {
+    const r = await fetch(API + '/api/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, model, system_prompt: prompt }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('newAgentName').value = '';
+      document.getElementById('newAgentPrompt').value = '';
+      appendLog({ level: 'info', message: 'Agent created: ' + d.agent.name });
+      loadAgents();
+    } else {
+      appendLog({ level: 'error', message: 'Create failed: ' + (d.error || 'unknown') });
+    }
+  } catch (e) {
+    appendLog({ level: 'error', message: 'Create failed: ' + e });
+  }
+}
+
+async function loadSkills() {
+  try {
+    const r = await fetch(API + '/api/skills');
+    const d = await r.json();
+    if (d.error) return;
+
+    const skills = d.skills || [];
+    const activeSkills = skills.filter(s => s.enabled);
+    const inactiveSkills = skills.filter(s => !s.enabled);
+
+    // Update stats
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('skillsLoadedCount', skills.length);
+    set('skillsActiveCount', activeSkills.length);
+    set('skillsInactiveCount', inactiveSkills.length);
+
+    // Right panel
+    set('rpSkillsCount', skills.length);
+    set('rpSkillsActive', activeSkills.length);
+    const rpList = document.getElementById('rpSkillsList');
+    if (rpList) {
+      rpList.innerHTML = '';
+      activeSkills.slice(0, 10).forEach(s => {
+        const tag = s.skill_type === 'python' ? 'Tool' : 'Agent';
+        rpList.innerHTML += '<div style="font-size:0.75rem;padding:0.15rem 0;"><span class="rp-tag">[' + tag + ']</span> ' + s.name + '</div>';
+      });
+    }
+
+    // Skill list
+    const listEl = document.getElementById('skillsList');
+    listEl.innerHTML = '';
+    if (skills.length === 0) {
+      listEl.textContent = 'No skills loaded. Add .py or .md files to ~/.nova/skills/';
+      return;
+    }
+    skills.forEach(s => {
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg-input);border-radius:8px;padding:0.65rem 0.9rem;';
+      const typeIcon = s.skill_type === 'python' ? '🐍' : '📝';
+      el.innerHTML =
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:0.4rem;">' +
+            '<span style="font-weight:500;">' + typeIcon + ' ' + s.name + '</span>' +
+            '<span style="font-size:0.7rem;color:var(--text-dim);background:var(--bg-card);padding:0.1rem 0.4rem;border-radius:4px;">' + s.skill_type + '</span>' +
+          '</div>' +
+          '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.description || 'No description') + '</div>' +
+        '</div>' +
+        '<div class="skill-toggle ' + (s.enabled ? 'on' : '') + '" title="' + (s.enabled ? 'Enabled' : 'Disabled') + '"></div>';
+      listEl.appendChild(el);
+    });
+  } catch {}
+}
+
+async function reloadSkills() {
+  try {
+    const r = await fetch(API + '/api/skills/reload', { method: 'POST' });
+    const d = await r.json();
+    appendLog({ level: 'info', message: 'Skills reloaded: ' + d.count + ' found' });
+    loadSkills();
+  } catch (e) {
+    appendLog({ level: 'error', message: 'Reload failed: ' + e });
+  }
+}
+
+/* ── Right Panel: Model Provider ───────────────────────────────── */
+function selectModelProvider(provider) {
+  const body = document.getElementById('rpModelBody');
+  if (!body) return;
+  body.querySelectorAll('.rp-item').forEach(item => {
+    item.classList.remove('active-model');
+    if (item.textContent.toLowerCase().includes(provider)) {
+      item.classList.add('active-model');
+    }
+  });
+}
+
+/* ── Request Count ─────────────────────────────────────────────── */
+function updateRequestCount() {
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('sRequestsToday', requestCount);
+  set('rpRequestsToday', requestCount);
+}
+
 /* ── Init ──────────────────────────────────────────────────────── */
 connectWS();
 refreshStatus();
 loadConfig();
-loadHistory();
+loadAgents();
+loadSkills();
 setInterval(refreshStatus, 10000);
 </script>
 </body>

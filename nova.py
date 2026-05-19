@@ -388,10 +388,24 @@ def _run_multimodal_inner(no_overlay: bool, vision_only: bool, logger):
         sidebar.voice_changed.connect(_handle_voice_change)
 
 
+    # ── Initialize Agent & Skill Registries ─────────────────────────
+    from src.agents.registry import AgentRegistry
+    from src.skills.registry import SkillRegistry
+
+    agent_registry = AgentRegistry()
+    skill_registry = SkillRegistry()
+    skill_registry.scan_and_load()
+    logger.info("Agent registry: %d agent(s), active=%s",
+                len(agent_registry.list_agents()), agent_registry.get_active().name)
+    logger.info("Skill registry: %d skill(s) loaded", len(skill_registry.list_skills()))
+
     # ── Start Web Control Hub ─────────────────────────────────────────
     try:
         from src.web import start_web_server
-        start_web_server(host="0.0.0.0", port=8766, pipeline=pipeline)
+        start_web_server(
+            host="0.0.0.0", port=8766, pipeline=pipeline,
+            agent_registry=agent_registry, skill_registry=skill_registry,
+        )
     except Exception as exc:
         logger.warning("Web Control Hub failed to start: %s", exc)
 

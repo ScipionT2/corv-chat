@@ -56,6 +56,24 @@ class CommandResult(Enum):
     SIDEBAR_HIDE = auto()
     """Hide the sidebar panel."""
 
+    SKILLS_LIST = auto()
+    """List all loaded skills."""
+
+    SKILLS_RELOAD = auto()
+    """Reload skills from disk."""
+
+    AGENTS_LIST = auto()
+    """List all registered agents."""
+
+    AGENTS_SWITCH = auto()
+    """Switch active agent."""
+
+    AGENTS_ADD = auto()
+    """Add a new agent."""
+
+    SETTINGS_SHOW = auto()
+    """Show current settings."""
+
 
 class CommandResponse:
     """Response from the command parser.
@@ -66,11 +84,19 @@ class CommandResponse:
         The command outcome.
     message:
         An optional spoken response to the user.
+    data:
+        Optional extra data (e.g. agent id for switch commands).
     """
 
-    def __init__(self, result: CommandResult, message: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        result: CommandResult,
+        message: Optional[str] = None,
+        data: Optional[str] = None,
+    ) -> None:
         self.result = result
         self.message = message
+        self.data = data
 
     def __repr__(self) -> str:
         return f"CommandResponse(result={self.result!r}, message={self.message!r})"
@@ -167,6 +193,17 @@ _SIDEBAR_HIDE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# ---------------------------------------------------------------------------
+# Slash command patterns
+# ---------------------------------------------------------------------------
+
+_SLASH_SKILLS_RE = re.compile(r"^/skills$", re.IGNORECASE)
+_SLASH_SKILLS_RELOAD_RE = re.compile(r"^/skills\s+reload$", re.IGNORECASE)
+_SLASH_AGENTS_RE = re.compile(r"^/agents$", re.IGNORECASE)
+_SLASH_AGENTS_SWITCH_RE = re.compile(r"^/agents\s+switch\s+(\S+)$", re.IGNORECASE)
+_SLASH_AGENTS_ADD_RE = re.compile(r"^/agents\s+add\s+(.+)$", re.IGNORECASE)
+_SLASH_SETTINGS_RE = re.compile(r"^/settings$", re.IGNORECASE)
+
 
 def parse_command(text: str) -> CommandResponse:
     """Parse user text for built-in voice commands.
@@ -261,5 +298,36 @@ def parse_command(text: str) -> CommandResponse:
             CommandResult.SIDEBAR_HIDE,
             message="Closing the side panel.",
         )
+
+    # ── Slash commands ────────────────────────────────────────────
+    raw = text.strip()
+
+    if _SLASH_SKILLS_RELOAD_RE.match(raw):
+        logger.info("Command: /skills reload")
+        return CommandResponse(CommandResult.SKILLS_RELOAD)
+
+    if _SLASH_SKILLS_RE.match(raw):
+        logger.info("Command: /skills")
+        return CommandResponse(CommandResult.SKILLS_LIST)
+
+    m = _SLASH_AGENTS_SWITCH_RE.match(raw)
+    if m:
+        agent_id = m.group(1)
+        logger.info("Command: /agents switch %s", agent_id)
+        return CommandResponse(CommandResult.AGENTS_SWITCH, data=agent_id)
+
+    m = _SLASH_AGENTS_ADD_RE.match(raw)
+    if m:
+        agent_name = m.group(1).strip()
+        logger.info("Command: /agents add %s", agent_name)
+        return CommandResponse(CommandResult.AGENTS_ADD, data=agent_name)
+
+    if _SLASH_AGENTS_RE.match(raw):
+        logger.info("Command: /agents")
+        return CommandResponse(CommandResult.AGENTS_LIST)
+
+    if _SLASH_SETTINGS_RE.match(raw):
+        logger.info("Command: /settings")
+        return CommandResponse(CommandResult.SETTINGS_SHOW)
 
     return CommandResponse(CommandResult.NOT_A_COMMAND)

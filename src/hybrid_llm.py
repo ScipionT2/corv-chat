@@ -140,6 +140,117 @@ class HybridLLMClient:
         self._trim_history()
         return reply
 
+    def chat_stream(self, user_message: str):
+        """Generator that yields tokens as they stream in.
+
+        Routes to cloud (OpenAI) or local (Ollama) based on current mode.
+        Records the full reply in history when the generator is exhausted.
+
+        Yields
+        ------
+        str
+            Individual tokens as they arrive from the LLM.
+        """
+        self._history.append({"role": "user", "content": user_message})
+
+        parts: list[str] = []
+        try:
+            if self._mode == "cloud" and self._openai_client:
+                gen = self._chat_stream_cloud(user_message)
+            else:
+                gen = self._chat_stream_local(user_message)
+
+            for token in gen:
+                parts.append(token)
+                yield token
+        except Exception as exc:  # noqa: BLE001
+            logger.error("chat_stream failed: %s", exc)
+
+        full_reply = "".join(parts)
+        if full_reply:
+            self._history.append({"role": "assistant", "content": full_reply})
+        else:
+            # Remove unanswered user message
+            if self._history and self._history[-1]["role"] == "user":
+                self._history.pop()
+        self._trim_history()
+
+    # ------------------------------------------------------------------
+    # Cloud streaming (OpenAI)
+    # ------------------------------------------------------------------
+
+    def _chat_stream_cloud(self, user_message: str):
+        """Stream tokens from the OpenAI API."""
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            *self._history,
+        ]
+
+        try:
+            response = self._openai_client.chat.completions.create(
+                model=self.openai_model,
+                messages=messages,
+                timeout=30,
+                stream=True,
+            )
+
+            for chunk in response:
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.content:
+                    yield delta.content
+
+        except Exception as exc:
+            logger.warning("[CLOUD] Stream failed, falling back to local: %s", exc)
+            self._set_mode("local")
+            yield from self._chat_stream_local(user_message)
+
+    # ------------------------------------------------------------------
+    # Local streaming (Ollama)
+    # ------------------------------------------------------------------
+
+    def _chat_stream_local(self, user_message: str):
+        """Stream tokens from the local Ollama instance."""
+        import json as _json
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            *self._history,
+        ]
+
+        url = f"{self.ollama_base_url}/api/chat"
+        payload = {
+            "model": self.ollama_model,
+            "messages": messages,
+            "stream": True,
+            "options": {
+                "num_gpu": getattr(config, "OLLAMA_NUM_GPU", -1),
+            },
+        }
+
+        try:
+            response = self._session.post(
+                url, json=payload, timeout=config.OLLAMA_TIMEOUT, stream=True,
+            )
+            response.raise_for_status()
+
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = _json.loads(line)
+                    token = chunk.get("message", {}).get("content", "")
+                    if token:
+                        yield token
+                    if chunk.get("done"):
+                        break
+                except _json.JSONDecodeError:
+                    continue
+
+        except requests.ConnectionError:
+            logger.error("Cannot connect to Ollama at %s", self.ollama_base_url)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("[LOCAL] Stream request failed: %s", exc)
+
     def inject_context(self, role: str, content: str) -> None:
         """Inject a message into history without triggering an LLM call.
 

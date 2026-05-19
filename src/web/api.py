@@ -51,12 +51,25 @@ _MAX_LOGS = 200
 # Connected WebSocket clients
 _ws_clients: set[WebSocket] = set()
 
+# Agent / Skill registries (set via set_registries)
+_agent_registry = None
+_skill_registry = None
+
 
 def set_pipeline(pipeline) -> None:
     """Attach a live pipeline instance for control endpoints."""
     global _pipeline, _pipeline_running
     _pipeline = pipeline
     _pipeline_running = pipeline is not None
+
+
+def set_registries(agent_registry=None, skill_registry=None) -> None:
+    """Attach agent and skill registry instances."""
+    global _agent_registry, _skill_registry
+    if agent_registry is not None:
+        _agent_registry = agent_registry
+    if skill_registry is not None:
+        _skill_registry = skill_registry
 
 
 def _add_log(level: str, message: str) -> None:
@@ -99,6 +112,21 @@ class ChatMessage(BaseModel):
     """Body for POST /api/chat."""
 
     message: str
+
+
+class CreateAgent(BaseModel):
+    """Body for POST /api/agents."""
+
+    name: str
+    model: str = "qwen2.5:3b"
+    system_prompt: str = ""
+    parent_id: Optional[str] = None
+
+
+class SwitchAgent(BaseModel):
+    """Body for POST /api/agents/switch."""
+
+    agent_id: str
 
 
 # ── Routes ────────────────────────────────────────────────────────────
@@ -380,6 +408,88 @@ async def vision_analyze():
 async def get_logs():
     """Return recent log entries."""
     return {"logs": _logs[-100:]}
+
+
+# ── Agents & Skills ──────────────────────────────────────────────────
+
+@app.get("/api/agents")
+async def list_agents():
+    """List all registered agents."""
+    if _agent_registry is None:
+        return JSONResponse(status_code=400, content={"error": "Agent registry not initialized"})
+
+    agents = _agent_registry.list_agents()
+    active = _agent_registry.get_active()
+    return {
+        "agents": [a.model_dump(mode="json") for a in agents],
+        "active_id": active.id if active else None,
+    }
+
+
+@app.post("/api/agents")
+async def create_agent(body: CreateAgent):
+    """Create a new agent."""
+    if _agent_registry is None:
+        return JSONResponse(status_code=400, content={"error": "Agent registry not initialized"})
+
+    from datetime import datetime
+    from src.agents.models import AgentConfig
+
+    slug = body.name.lower().replace(" ", "-")
+    agent = AgentConfig(
+        id=slug,
+        name=body.name,
+        system_prompt=body.system_prompt or config.LLM_SYSTEM_PROMPT,
+        model=body.model,
+        parent_id=body.parent_id,
+        created_at=datetime.now(),
+    )
+    _agent_registry.register(agent)
+    _add_log("info", f"Agent created: {agent.name} ({agent.id})")
+    return {"status": "ok", "agent": agent.model_dump(mode="json")}
+
+
+@app.post("/api/agents/switch")
+async def switch_agent(body: SwitchAgent):
+    """Switch the active agent."""
+    if _agent_registry is None:
+        return JSONResponse(status_code=400, content={"error": "Agent registry not initialized"})
+
+    try:
+        _agent_registry.set_active(body.agent_id)
+        active = _agent_registry.get_active()
+
+        # Update pipeline LLM if available
+        if _pipeline and hasattr(_pipeline, "llm"):
+            _pipeline.llm.system_prompt = active.system_prompt
+
+        _add_log("info", f"Switched to agent: {active.name}")
+        _broadcast({"type": "agent_switch", "data": {"agent_id": active.id, "name": active.name}})
+        return {"status": "ok", "active": active.model_dump(mode="json")}
+    except ValueError as exc:
+        return JSONResponse(status_code=404, content={"error": str(exc)})
+
+
+@app.get("/api/skills")
+async def list_skills():
+    """List all loaded skills."""
+    if _skill_registry is None:
+        return JSONResponse(status_code=400, content={"error": "Skill registry not initialized"})
+
+    skills = _skill_registry.list_skills()
+    return {"skills": [s.model_dump(mode="json") for s in skills]}
+
+
+@app.post("/api/skills/reload")
+async def reload_skills():
+    """Re-scan and reload all skills."""
+    if _skill_registry is None:
+        return JSONResponse(status_code=400, content={"error": "Skill registry not initialized"})
+
+    _skill_registry.reload()
+    skills = _skill_registry.list_skills()
+    _add_log("info", f"Skills reloaded: {len(skills)} found")
+    return {"status": "ok", "count": len(skills)}
 
 
 # ── WebSocket ─────────────────────────────────────────────────────────
