@@ -806,6 +806,7 @@ footer {
         <li><a href="#features">Features</a></li>
         <li><a href="#how-it-works">How It Works</a></li>
         <li><a href="#tech">Tech</a></li>
+        <li><a href="#pricing">Pricing</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="https://github.com/escipionpedroza147-commits/Nova/releases" class="nav-cta" target="_blank" rel="noopener">Download</a></li>
       </ul>
@@ -984,7 +985,7 @@ footer {
             <span class="icon">+</span>
           </button>
           <div class="faq-a">
-            <div class="faq-a-inner">Yes, completely free. Nova is open source and always will be. No subscriptions, no premium tiers, no hidden costs. The AI runs locally on your hardware — there are no server costs to pass on.</div>
+            <div class="faq-a-inner">The core of Nova is free, open source, and always will be. The local AI runs on your hardware at zero cost. We're building an optional Nova Pro tier with cloud features and premium voices for those who want more power — but the free version is a complete product, not a demo.</div>
           </div>
         </div>
         <div class="faq-item reveal reveal-delay-2">
@@ -1036,6 +1037,68 @@ footer {
     </div>
   </section>
 
+  <!-- ─── Pricing ─── -->
+  <section id="pricing" class="steps-section">
+    <div class="container">
+      <h2 class="section-title reveal">Simple Pricing</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Nova is free and open source. Support the project or unlock more power.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:2.5rem;">
+
+        <!-- Free Tier -->
+        <div class="card reveal" style="border:1px solid var(--border-subtle);border-radius:16px;padding:2rem;background:var(--bg-card);position:relative;">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;margin-bottom:0.5rem;">Free</div>
+          <div style="font-size:2.5rem;font-weight:800;color:var(--text-primary);">$0</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;">forever</div>
+          <ul style="list-style:none;font-size:0.9rem;color:var(--text-secondary);line-height:2;">
+            <li>✅ Full voice pipeline</li>
+            <li>✅ Local LLM (Ollama)</li>
+            <li>✅ Wake word detection</li>
+            <li>✅ Screen analysis</li>
+            <li>✅ Web control hub</li>
+            <li>✅ 100% private</li>
+            <li>✅ Open source</li>
+          </ul>
+          <a href="https://github.com/escipionpedroza147-commits/Nova/releases" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:1.5rem;" target="_blank" rel="noopener">Download Free</a>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="card reveal reveal-delay-1" style="border:2px solid var(--accent);border-radius:16px;padding:2rem;background:var(--bg-card);position:relative;">
+          <div style="position:absolute;top:-12px;right:20px;background:var(--accent);color:#000;font-size:0.7rem;font-weight:700;padding:0.25rem 0.75rem;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;">Coming Soon</div>
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;margin-bottom:0.5rem;">Nova Pro</div>
+          <div style="font-size:2.5rem;font-weight:800;color:var(--text-primary);">$9<span style="font-size:1rem;font-weight:400;color:var(--text-muted);">/mo</span></div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;">everything in Free, plus:</div>
+          <ul style="list-style:none;font-size:0.9rem;color:var(--text-secondary);line-height:2;">
+            <li>⚡ Cloud hybrid mode (GPT-4o)</li>
+            <li>🎙️ Premium voices (ElevenLabs)</li>
+            <li>🤖 Multi-agent delegation</li>
+            <li>🔌 Premium skill marketplace</li>
+            <li>📧 Priority support</li>
+            <li>🔄 Auto-updates</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1.5rem;opacity:0.5;cursor:not-allowed;" disabled>Coming Soon</button>
+        </div>
+
+        <!-- Support -->
+        <div id="support" class="card reveal reveal-delay-2" style="border:1px solid var(--border-subtle);border-radius:16px;padding:2rem;background:var(--bg-card);">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;margin-bottom:0.5rem;">Support Nova</div>
+          <div style="font-size:2.5rem;font-weight:800;color:var(--text-primary);">💛</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;">help keep Nova alive</div>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem;">Nova is built by a solo developer. Your support helps fund development, hosting, and new features.</p>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <a href="https://paypal.me/escipionpedroza" class="btn btn-primary" style="width:100%;justify-content:center;" target="_blank" rel="noopener">
+              💰 Donate via PayPal
+            </a>
+            <a href="https://github.com/sponsors/escipionpedroza147-commits" class="btn btn-secondary" style="width:100%;justify-content:center;" target="_blank" rel="noopener">
+              ❤️ Sponsor on GitHub
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ─── CTA ─── -->
   <section class="cta-section">
     <div class="container">
@@ -1060,7 +1123,7 @@ footer {
     <div class="container">
       <div class="footer-inner">
         <div class="footer-left">
-          <span>© 2025 Nova.</span>
+          <span>© 2026 Nova.</span>
           <span>Built by <strong style="color:var(--text-secondary)">Escipion</strong></span>
         </div>
         <div class="footer-links">
