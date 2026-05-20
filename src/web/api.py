@@ -410,6 +410,47 @@ async def get_logs():
     return {"logs": _logs[-100:]}
 
 
+# ── LLM Providers ─────────────────────────────────────────────────────
+
+
+@app.get("/api/providers")
+async def get_providers():
+    """Return status of all LLM providers."""
+    if _pipeline and hasattr(_pipeline, "llm"):
+        llm = _pipeline.llm
+        if hasattr(llm, "get_providers_status"):
+            return JSONResponse({
+                "providers": llm.get_providers_status(),
+                "active": llm.get_active_provider(),
+            })
+    return JSONResponse({"providers": [], "active": "none"})
+
+
+class SetProviderModel(BaseModel):
+    """Body for POST /api/providers/{provider_name}/model."""
+    model: str
+
+
+@app.post("/api/providers/{provider_name}/model")
+async def set_provider_model(provider_name: str, body: SetProviderModel):
+    """Change model for a provider at runtime."""
+    if _pipeline is None or not hasattr(_pipeline, "llm"):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No pipeline attached"},
+        )
+    llm = _pipeline.llm
+    if not hasattr(llm, "set_model"):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "LLM does not support set_model"},
+        )
+    llm.set_model(provider_name, body.model)
+    _add_log("info", f"Model for {provider_name} changed to {body.model}")
+    _broadcast({"type": "provider_model", "data": {"provider": provider_name, "model": body.model}})
+    return {"status": "ok", "provider": provider_name, "model": body.model}
+
+
 # ── Agents & Skills ──────────────────────────────────────────────────
 
 @app.get("/api/agents")

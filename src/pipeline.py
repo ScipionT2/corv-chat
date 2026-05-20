@@ -19,8 +19,8 @@ import requests
 import config
 from src.app_detector import get_active_app
 from src.commands import CommandResult, parse_command
-from src.hybrid_llm import HybridLLMClient
 from src.llm import OllamaClient
+from src.providers import MultiProviderLLM
 from src.memory.router import MemoryRouter
 from src.ollama_manager import get_manager
 from src.recorder import record_until_silence
@@ -64,11 +64,10 @@ class NovaPipeline:
     ) -> None:
         self.stt = SpeechToText(model_name=whisper_model)
 
-        # Hybrid LLM: auto-switch between cloud (OpenAI) and local (Ollama)
-        if hybrid_mode and not config.OFFLINE_MODE:
-            self.llm = HybridLLMClient(
-                ollama_model=ollama_model,
-                on_mode_change=self._on_llm_mode_change,
+        # Multi-provider LLM: prioritised cloud providers with Ollama fallback
+        if not config.OFFLINE_MODE:
+            self.llm = MultiProviderLLM(
+                on_provider_change=self._on_llm_mode_change,
             )
         else:
             self.llm = OllamaClient(model=ollama_model)

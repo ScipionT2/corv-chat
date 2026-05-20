@@ -199,9 +199,21 @@ ACCENT_COLOR: str = _get_env("NOVA_ACCENT_COLOR", "cyan", "EP_ACCENT_COLOR")
 # ---------------------------------------------------------------------------
 OPENROUTER_API_KEY: str = _get_env("NOVA_OPENROUTER_API_KEY", "", "OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL: str = _get_env("NOVA_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+OPENROUTER_MODEL: str = _get_env("NOVA_OPENROUTER_MODEL", "anthropic/claude-sonnet-4")
+"""Default model for OpenRouter as main LLM provider."""
+
 ARCHITECT_MODEL: str = _get_env("NOVA_ARCHITECT_MODEL", "anthropic/claude-3.5-sonnet")
 CONTEXT_PROCESSOR_MODEL: str = _get_env("NOVA_CONTEXT_PROCESSOR_MODEL", "google/gemini-flash-1.5")
 EXECUTION_MODEL: str = _get_env("NOVA_EXECUTION_MODEL", "openai/gpt-4o-mini")
+
+# ---------------------------------------------------------------------------
+# Multi-Provider LLM
+# ---------------------------------------------------------------------------
+LLM_PROVIDER_PRIORITY: str = _get_env("NOVA_PROVIDER_PRIORITY", "openrouter,openai,ollama")
+"""Comma-separated provider priority order. Lower index = higher priority."""
+
+PROVIDER_HEARTBEAT_INTERVAL: float = _get_env_float("NOVA_PROVIDER_HEARTBEAT_SEC", 30.0)
+"""Seconds between provider connectivity heartbeat checks."""
 
 # ---------------------------------------------------------------------------
 # 3-Tier Memory System
