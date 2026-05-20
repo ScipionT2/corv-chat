@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -121,6 +122,35 @@ def get_macos_voices() -> list[str]:
 
 # ── PyQt6 Onboarding Dialog ──────────────────────────────────────────────
 
+# ── .env file helpers ─────────────────────────────────────────────
+
+_env_lock = threading.Lock()
+
+
+def _get_env_path() -> Path:
+    """Return the .env path used by config.py."""
+    return Path(config._PROJECT_ROOT) / ".env"
+
+
+def update_env_file(key: str, value: str) -> None:
+    """Thread-safe upsert of KEY=value in the project .env file."""
+    env_path = _get_env_path()
+    with _env_lock:
+        lines: list[str] = []
+        found = False
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                stripped = line.strip()
+                if stripped.startswith(f"{key}=") or stripped.startswith(f"{key} ="):
+                    lines.append(f"{key}={value}")
+                    found = True
+                else:
+                    lines.append(line)
+        if not found:
+            lines.append(f"{key}={value}")
+        env_path.write_text("\n".join(lines) + "\n")
+
+
 try:
     from PyQt6.QtCore import Qt, QSize, pyqtSignal
     from PyQt6.QtGui import QColor, QFont, QPainter, QPaintEvent, QPainterPath
@@ -128,7 +158,7 @@ try:
         QApplication, QDialog, QVBoxLayout, QHBoxLayout, QLabel,
         QPushButton, QWidget, QStackedWidget, QButtonGroup,
         QRadioButton, QComboBox, QFrame, QGraphicsDropShadowEffect,
-        QSizePolicy,
+        QSizePolicy, QLineEdit,
     )
     _PYQT6_OK = True
 except ImportError:
@@ -184,6 +214,7 @@ if _PYQT6_OK:
             layout.addWidget(self._stack)
 
             self._build_welcome_page()
+            self._build_api_key_page()
             self._build_personality_page()
             self._build_voice_page()
             self._build_theme_page()
@@ -275,6 +306,88 @@ if _PYQT6_OK:
 
             lay.addStretch()
             self._stack.addWidget(page)
+
+        def _build_api_key_page(self):
+            page = QWidget()
+            lay = QVBoxLayout(page)
+            lay.setContentsMargins(0, 10, 0, 0)
+            lay.setSpacing(8)
+
+            lay.addWidget(self._section_label("CLOUD SETUP"))
+
+            title = QLabel("Connect to the cloud (optional)")
+            title.setFont(QFont(".AppleSystemUIFont", 18, QFont.Weight.Bold))
+            title.setStyleSheet("color: white;")
+            lay.addWidget(title)
+
+            desc = QLabel(
+                "Nova works 100% offline with Ollama. Add an OpenRouter API key "
+                "to unlock cloud models like Claude, GPT-4o, Gemini, and more.\n"
+                "You can skip this and add it later."
+            )
+            desc.setFont(QFont(".AppleSystemUIFont", 12))
+            desc.setStyleSheet("color: rgba(255,255,255,0.6);")
+            desc.setWordWrap(True)
+            lay.addWidget(desc)
+
+            lay.addSpacing(8)
+
+            # API key input row with eye toggle
+            key_row = QHBoxLayout()
+            self._api_key_input = QLineEdit()
+            self._api_key_input.setPlaceholderText("sk-or-...")
+            self._api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
+            self._api_key_input.setStyleSheet("""
+                QLineEdit {
+                    background: rgba(255,255,255,0.06);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 8px;
+                    color: white;
+                    padding: 10px 12px;
+                    font-size: 13px;
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                }
+                QLineEdit:focus { border-color: rgba(0,200,255,0.5); }
+            """)
+            key_row.addWidget(self._api_key_input)
+
+            self._eye_btn = QPushButton("👁")
+            self._eye_btn.setFixedSize(36, 36)
+            self._eye_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255,255,255,0.06);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 8px;
+                    color: rgba(255,255,255,0.6);
+                    font-size: 14px;
+                }
+                QPushButton:hover { background: rgba(255,255,255,0.1); }
+            """)
+            self._eye_btn.clicked.connect(self._toggle_key_visibility)
+            key_row.addWidget(self._eye_btn)
+            lay.addLayout(key_row)
+
+            link_label = QLabel('Get a free key at <a href="https://openrouter.ai/keys" style="color: rgba(0,200,255,0.8);">openrouter.ai/keys</a>')
+            link_label.setFont(QFont(".AppleSystemUIFont", 11))
+            link_label.setStyleSheet("color: rgba(255,255,255,0.5);")
+            link_label.setOpenExternalLinks(True)
+            lay.addWidget(link_label)
+
+            skip_label = QLabel("Leave empty to use local-only mode")
+            skip_label.setFont(QFont(".AppleSystemUIFont", 11))
+            skip_label.setStyleSheet("color: rgba(255,255,255,0.4); font-style: italic;")
+            lay.addWidget(skip_label)
+
+            lay.addStretch()
+            self._stack.addWidget(page)
+
+        def _toggle_key_visibility(self):
+            if self._api_key_input.echoMode() == QLineEdit.EchoMode.Password:
+                self._api_key_input.setEchoMode(QLineEdit.EchoMode.Normal)
+                self._eye_btn.setText("🙈")
+            else:
+                self._api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
+                self._eye_btn.setText("👁")
 
         def _build_personality_page(self):
             page = QWidget()
@@ -435,6 +548,16 @@ if _PYQT6_OK:
                 if btn.isChecked():
                     self._profile["accent_color"] = btn.property("color_key")
                     break
+
+            # Save OpenRouter API key if provided
+            api_key = self._api_key_input.text().strip()
+            if api_key:
+                update_env_file("NOVA_OPENROUTER_API_KEY", api_key)
+                config.OPENROUTER_API_KEY = api_key
+                self._profile["openrouter_api_key_set"] = True
+                logger.info("OpenRouter API key saved to .env")
+            else:
+                self._profile["openrouter_api_key_set"] = False
 
             self._profile["onboarding_complete"] = True
             save_profile(self._profile)

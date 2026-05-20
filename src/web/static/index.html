@@ -1006,6 +1006,44 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,
     <!-- SETTINGS -->
     <div class="panel" id="panel-settings">
       <div class="panel-scroll">
+
+        <!-- API Keys -->
+        <div class="card">
+          <h2>🔑 API Keys</h2>
+          <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:1rem;">
+            Cloud models require an OpenRouter API key.
+            <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent);">Get a free key →</a>
+          </p>
+
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+            <span style="font-size:0.85rem;font-weight:500;">OpenRouter</span>
+            <span id="keyStatusBadge" style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:999px;font-weight:600;">—</span>
+          </div>
+
+          <div id="keyMaskedDisplay" style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.75rem;font-family:'SF Mono','Fira Code',monospace;"></div>
+
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <input type="password" id="settingsApiKey" placeholder="sk-or-..."
+              style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text);font-size:0.9rem;font-family:'SF Mono','Fira Code',monospace;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button class="btn" style="padding:0.55rem 0.75rem;font-size:0.85rem;flex-shrink:0;" onclick="toggleKeyVisibility()" title="Show/hide key" id="keyEyeBtn">👁</button>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn" onclick="saveApiKey()">💾 Save Key</button>
+            <button class="btn red" onclick="removeApiKey()">🗑 Remove Key</button>
+          </div>
+        </div>
+
+        <!-- Provider Status -->
+        <div class="card">
+          <h2>🌐 Provider Status</h2>
+          <div id="providerStatusGrid" class="stat-grid" style="margin-bottom:0.5rem;">
+            <div class="stat"><div class="stat-label">Loading…</div><div class="stat-value">—</div></div>
+          </div>
+        </div>
+
+        <!-- General Config -->
         <div class="card">
           <h2>⚙️ Configuration</h2>
           <div class="settings-grid" id="settingsGrid">
@@ -1807,12 +1845,116 @@ function updateRequestCount() {
   set('rpRequestsToday', requestCount);
 }
 
+/* ── API Key Settings ───────────────────────────────────────────── */
+async function loadSettingsApiKey() {
+  try {
+    const r = await fetch(API + '/api/settings');
+    const d = await r.json();
+
+    const badge = document.getElementById('keyStatusBadge');
+    const masked = document.getElementById('keyMaskedDisplay');
+
+    if (d.openrouter_key_set) {
+      badge.textContent = '✓ Connected';
+      badge.style.background = 'rgba(34,197,94,0.15)';
+      badge.style.color = 'var(--green)';
+      masked.textContent = d.openrouter_key_masked || '';
+    } else {
+      badge.textContent = 'Not set';
+      badge.style.background = 'rgba(239,68,68,0.15)';
+      badge.style.color = 'var(--red)';
+      masked.textContent = 'No API key configured — using local-only mode';
+    }
+
+    // Provider status
+    const grid = document.getElementById('providerStatusGrid');
+    grid.innerHTML = '';
+    const providers = [
+      ['OpenRouter', d.openrouter_key_set, d.openrouter_model || '—'],
+      ['Ollama (Local)', true, d.ollama_model || '—'],
+    ];
+    providers.forEach(([name, ok, model]) => {
+      grid.innerHTML +=
+        '<div class="stat">' +
+          '<div class="stat-label">' + name + '</div>' +
+          '<div class="stat-value" style="font-size:0.9rem;">' +
+            (ok ? '<span style="color:var(--green);">✓</span> ' : '<span style="color:var(--red);">✗</span> ') +
+            model +
+          '</div>' +
+        '</div>';
+    });
+  } catch {}
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById('settingsApiKey');
+  const btn = document.getElementById('keyEyeBtn');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+async function saveApiKey() {
+  const key = document.getElementById('settingsApiKey').value.trim();
+  if (!key) {
+    appendLog({ level: 'error', message: 'Enter an API key first' });
+    return;
+  }
+  if (!key.startsWith('sk-or-')) {
+    appendLog({ level: 'error', message: 'Invalid key format — should start with sk-or-' });
+    return;
+  }
+
+  try {
+    const r = await fetch(API + '/api/settings/openrouter-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      appendLog({ level: 'info', message: 'OpenRouter API key saved successfully' });
+      document.getElementById('settingsApiKey').value = '';
+      loadSettingsApiKey();
+    } else {
+      appendLog({ level: 'error', message: 'Save failed: ' + (d.error || 'unknown') });
+    }
+  } catch (e) {
+    appendLog({ level: 'error', message: 'Save failed: ' + e });
+  }
+}
+
+async function removeApiKey() {
+  try {
+    const r = await fetch(API + '/api/settings/openrouter-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: '' }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      appendLog({ level: 'info', message: 'OpenRouter API key removed' });
+      document.getElementById('settingsApiKey').value = '';
+      loadSettingsApiKey();
+    } else {
+      appendLog({ level: 'error', message: 'Remove failed: ' + (d.error || 'unknown') });
+    }
+  } catch (e) {
+    appendLog({ level: 'error', message: 'Remove failed: ' + e });
+  }
+}
+
 /* ── Init ──────────────────────────────────────────────────────── */
 connectWS();
 refreshStatus();
 loadConfig();
 loadAgents();
 loadSkills();
+loadSettingsApiKey();
 setInterval(refreshStatus, 10000);
 </script>
 </body>

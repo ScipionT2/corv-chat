@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import config
+from src.onboarding import update_env_file
 
 logger = logging.getLogger(__name__)
 
@@ -449,6 +450,63 @@ async def set_provider_model(provider_name: str, body: SetProviderModel):
     _add_log("info", f"Model for {provider_name} changed to {body.model}")
     _broadcast({"type": "provider_model", "data": {"provider": provider_name, "model": body.model}})
     return {"status": "ok", "provider": provider_name, "model": body.model}
+
+
+# ── Settings / API Keys ───────────────────────────────────────────────
+
+
+def mask_key(key: str) -> str:
+    """Mask an API key for safe display. Never expose full keys."""
+    if not key or len(key) < 8:
+        return ""
+    return key[:5] + "..." + key[-4:]
+
+
+@app.get("/api/settings")
+async def get_settings():
+    """Return current settings with masked secrets."""
+    return {
+        "openrouter_key_set": bool(config.OPENROUTER_API_KEY),
+        "openrouter_key_masked": mask_key(config.OPENROUTER_API_KEY),
+        "openrouter_model": config.OPENROUTER_MODEL,
+        "provider_priority": config.LLM_PROVIDER_PRIORITY,
+        "ollama_model": config.OLLAMA_MODEL,
+    }
+
+
+@app.post("/api/settings/openrouter-key")
+async def set_openrouter_key(body: dict):
+    """Set or update the OpenRouter API key. Writes to .env and reloads in memory."""
+    key = body.get("key", "").strip()
+
+    # Validate format if non-empty
+    if key and not key.startswith("sk-or-"):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Invalid key format — should start with 'sk-or-'"},
+        )
+
+    # Write to .env file (thread-safe)
+    update_env_file("NOVA_OPENROUTER_API_KEY", key)
+
+    # Update in-memory config
+    config.OPENROUTER_API_KEY = key
+
+    # Reinitialize providers if pipeline is available
+    if _pipeline and hasattr(_pipeline, "llm"):
+        llm = _pipeline.llm
+        if hasattr(llm, "_init_providers"):
+            try:
+                llm._init_providers()
+                _add_log("info", "LLM providers reinitialized after API key update")
+            except Exception as exc:
+                _add_log("warning", f"Provider reinit failed: {exc}")
+
+    action = "set" if key else "removed"
+    _add_log("info", f"OpenRouter API key {action} via web hub")
+    _broadcast({"type": "settings", "data": {"openrouter_key_set": bool(key)}})
+
+    return {"status": "ok", "key_set": bool(key)}
 
 
 # ── Agents & Skills ──────────────────────────────────────────────────
