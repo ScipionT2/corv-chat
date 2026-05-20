@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from src.memory import ConversationMemory
+from src.memory_legacy import ConversationMemory
 
 
 @pytest.fixture

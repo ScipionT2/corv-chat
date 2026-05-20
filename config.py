@@ -194,6 +194,25 @@ ACCENT_COLOR: str = _get_env("NOVA_ACCENT_COLOR", "cyan", "EP_ACCENT_COLOR")
 # ---------------------------------------------------------------------------
 # Conversation Memory
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# OpenRouter (multi-model memory agents)
+# ---------------------------------------------------------------------------
+OPENROUTER_API_KEY: str = _get_env("NOVA_OPENROUTER_API_KEY", "", "OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL: str = _get_env("NOVA_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+ARCHITECT_MODEL: str = _get_env("NOVA_ARCHITECT_MODEL", "anthropic/claude-3.5-sonnet")
+CONTEXT_PROCESSOR_MODEL: str = _get_env("NOVA_CONTEXT_PROCESSOR_MODEL", "google/gemini-flash-1.5")
+EXECUTION_MODEL: str = _get_env("NOVA_EXECUTION_MODEL", "openai/gpt-4o-mini")
+
+# ---------------------------------------------------------------------------
+# 3-Tier Memory System
+# ---------------------------------------------------------------------------
+MEMORY_DIR: str = _get_env("NOVA_MEMORY_DIR", "~/.nova/memory/")
+MEMORY_MAX_BLOCKS: int = _get_env_int("NOVA_MEMORY_MAX_BLOCKS", 100)
+MEMORY_RELEVANCE_TOP_K: int = _get_env_int("NOVA_MEMORY_RELEVANCE_TOP_K", 5)
+
+# ---------------------------------------------------------------------------
+# Conversation Memory (legacy)
+# ---------------------------------------------------------------------------
 HISTORY_FILE: str = _get_env("NOVA_HISTORY_FILE", "~/.nova/history.json", "EP_HISTORY_FILE", "JARVIS_HISTORY_FILE")
 """Path to the persistent conversation history JSON file."""
 

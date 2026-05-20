@@ -300,7 +300,7 @@ async def get_history():
     # Also try persistent memory
     if not history:
         try:
-            from src.memory import ConversationMemory
+            from src.memory_legacy import ConversationMemory
 
             mem = ConversationMemory()
             history = mem.load()

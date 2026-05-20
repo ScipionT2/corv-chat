@@ -21,6 +21,7 @@ from src.app_detector import get_active_app
 from src.commands import CommandResult, parse_command
 from src.hybrid_llm import HybridLLMClient
 from src.llm import OllamaClient
+from src.memory.router import MemoryRouter
 from src.ollama_manager import get_manager
 from src.recorder import record_until_silence
 from src.resource_manager import KVCacheTimer
@@ -71,6 +72,9 @@ class NovaPipeline:
             )
         else:
             self.llm = OllamaClient(model=ollama_model)
+
+        # Wrap LLM with 3-tier memory system (graceful fallback to self.llm)
+        self.memory_router = MemoryRouter(fallback_llm=self.llm)
 
         self.tts = TextToSpeech(backend=tts_backend, say_voice=voice)
         self.detector: Optional[WakeWordDetector] = None
@@ -146,6 +150,9 @@ class NovaPipeline:
         if hasattr(self.llm, 'start'):
             self.llm.start()
 
+        # Start memory router
+        self.memory_router.start()
+
         self._running = True
         self._stop_event.clear()
 
@@ -174,6 +181,9 @@ class NovaPipeline:
         if self.analysis_mode is not None:
             self.analysis_mode.stop()
         self._kv_timer.stop()
+
+        # Stop memory router (triggers final digestion)
+        self.memory_router.stop()
 
         # Stop hybrid LLM heartbeat
         if hasattr(self.llm, 'stop'):
@@ -371,7 +381,7 @@ class NovaPipeline:
         # 3. Check for built-in commands
         cmd = parse_command(text)
         if cmd.result == CommandResult.CLEAR_HISTORY:
-            self.llm.clear_history()
+            self.memory_router.clear_history()
             if cmd.message:
                 self.tts.speak(cmd.message)
             self._set_idle()
@@ -457,7 +467,7 @@ class NovaPipeline:
         if hasattr(self.llm, 'chat_stream'):
             # --- Streaming path: overlap LLM inference with TTS ---
             try:
-                token_gen = self.llm.chat_stream(text)
+                token_gen = self.memory_router.chat_stream(text)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("chat_stream init failed, falling back: %s", exc)
                 token_gen = None
@@ -494,7 +504,7 @@ class NovaPipeline:
                 return
 
         # --- Fallback: non-streaming path (original behaviour) ---
-        reply = self.llm.chat(text)
+        reply = self.memory_router.chat(text)
         t_llm = time.monotonic()
         logger.info("[TIMING] LLM: %.0fms", (t_llm - t_stt) * 1000)
 
@@ -591,11 +601,10 @@ class NovaPipeline:
             )
 
             # Inject vision result into LLM history for follow-up questions
-            if hasattr(self.llm, 'inject_context'):
-                self.llm.inject_context(
-                    "assistant",
-                    f"[Screen Analysis] {tagged_analysis}",
-                )
+            self.memory_router.inject_context(
+                "assistant",
+                f"[Screen Analysis] {tagged_analysis}",
+            )
             self.tts.speak(result.analysis)
             if self._overlay:
                 self._overlay.push_analysis(tagged_analysis, result.elapsed_ms)
@@ -640,12 +649,11 @@ class NovaPipeline:
             )
 
             # Inject both user question and vision answer into LLM history
-            if hasattr(self.llm, 'inject_context'):
-                self.llm.inject_context("user", user_text)
-                self.llm.inject_context(
-                    "assistant",
-                    f"[Screen Analysis] {tagged_analysis}",
-                )
+            self.memory_router.inject_context("user", user_text)
+            self.memory_router.inject_context(
+                "assistant",
+                f"[Screen Analysis] {tagged_analysis}",
+            )
 
             # Push to sidebar transcript
             if self._overlay and hasattr(self._overlay, 'push_transcript'):

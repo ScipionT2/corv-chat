@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Download Nova — Get Started with Your Local AI Assistant</title>
+<meta name="description" content="Download and install Nova, the 100% local AI voice assistant for Mac. Free, private, and open source. Get started in minutes.">
+<meta name="keywords" content="download Nova, install AI assistant, local AI, Mac, Apple Silicon, privacy, Ollama, open source">
+<meta name="author" content="Escipion">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Download Nova — Get Started">
+<meta property="og:description" content="Download and install Nova, the 100% local AI voice assistant for Mac. Free, private, and open source.">
+<meta property="og:url" content="https://escipionpedroza147-commits.github.io/Nova/download.html">
+<meta property="og:site_name" content="Nova">
+<meta property="og:image" content="https://nov-assistant.com/nova-logo.jpg">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Download Nova — Get Started">
+<meta name="twitter:description" content="Download and install Nova, the 100% local AI voice assistant for Mac. Free, private, and open source.">
+
+<link rel="icon" type="image/jpeg" href="nova-logo.jpg">
+<link rel="canonical" href="https://escipionpedroza147-commits.github.io/Nova/download.html">
+
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-mid: #0f0f1a;
+  --bg-surface: #1a1a2e;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(0, 200, 255, 0.15);
+  --accent: #00c8ff;
+  --accent-dim: #00BCD4;
+  --accent-glow: rgba(0, 200, 255, 0.25);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8aa0;
+  --text-muted: #5a5a70;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --max-w: 1140px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Ambient Background ─── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(0, 200, 255, 0.06) 0%, transparent 70%);
+  animation: drift 20s ease-in-out infinite;
+}
+.ambient::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: -20%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(0, 188, 212, 0.04) 0%, transparent 70%);
+  animation: drift 25s ease-in-out infinite reverse;
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(3%, -3%); }
+  66% { transform: translate(-2%, 2%); }
+}
+
+/* ─── Noise Overlay ─── */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ─── Layout ─── */
+.wrapper {
+  position: relative;
+  z-index: 2;
+}
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── Nav ─── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 24px;
+  transition: var(--transition);
+}
+nav.scrolled {
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--transition);
+  letter-spacing: 0.01em;
+}
+.nav-links a:hover { color: var(--text-primary); }
+.nav-cta {
+  padding: 8px 20px;
+  background: rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 8px;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+  transition: all var(--transition) !important;
+}
+.nav-cta:hover {
+  background: rgba(0, 200, 255, 0.18) !important;
+  border-color: rgba(0, 200, 255, 0.4) !important;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.nav-mobile-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+}
+.nav-mobile-btn svg { width: 24px; height: 24px; }
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+  letter-spacing: -0.01em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+  color: #000;
+  box-shadow: 0 0 30px var(--accent-glow), 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(0, 200, 255, 0.35), 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+.btn-secondary:hover {
+  border-color: var(--border-glow);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+.btn-sm {
+  padding: 10px 22px;
+  font-size: 0.875rem;
+}
+
+/* ─── Section Shared ─── */
+section {
+  padding: 120px 0;
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--accent);
+}
+.section-title {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.section-desc {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  max-width: 540px;
+  line-height: 1.7;
+}
+
+/* ─── Hero (Download) ─── */
+.dl-hero {
+  padding: 140px 24px 80px;
+  text-align: center;
+}
+.dl-hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dl-hero h1 span {
+  background: linear-gradient(135deg, var(--accent) 0%, #00e5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dl-hero .tagline {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ─── Download Cards ─── */
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 64px;
+}
+.dl-card {
+  padding: 40px 32px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.dl-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.dl-card:hover {
+  border-color: var(--border-glow);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+.dl-card:hover::before { opacity: 1; }
+.dl-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(0, 200, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  border: 1px solid rgba(0, 200, 255, 0.1);
+}
+.dl-card h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.dl-card .card-desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Requirements */
+.requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.req-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(0, 200, 255, 0.06);
+  border: 1px solid rgba(0, 200, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* ─── Install Steps ─── */
+.install-steps {
+  counter-reset: step;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.install-step {
+  counter-increment: step;
+  position: relative;
+  padding-left: 40px;
+}
+.install-step::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.install-step .step-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.install-step .step-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Code Blocks ─── */
+.code-block {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 8px;
+  overflow-x: auto;
+  position: relative;
+}
+.code-block code {
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  line-height: 1.7;
+  white-space: pre;
+  display: block;
+}
+.code-block .copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all var(--transition);
+  opacity: 0;
+}
+.code-block:hover .copy-btn { opacity: 1; }
+.copy-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-glow);
+}
+.copy-btn.copied {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ─── Note callout ─── */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: rgba(0, 200, 255, 0.04);
+  border: 1px solid rgba(0, 200, 255, 0.1);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.note .note-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  margin-top: 1px;
+}
+
+/* ─── Card actions ─── */
+.card-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* ─── Pro Upsell ─── */
+.pro-upsell {
+  margin-top: 64px;
+  padding: 48px 40px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(0, 200, 255, 0.06), rgba(0, 188, 212, 0.03));
+  border: 1px solid var(--border-glow);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.pro-upsell::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  background: rgba(0, 200, 255, 0.1);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.pro-upsell h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.pro-upsell p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 500px;
+  margin: 0 auto 24px;
+  line-height: 1.7;
+}
+.pro-features {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.pro-features span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ─── FAQ ─── */
+.faq-list {
+  max-width: 680px;
+  margin: 64px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.faq-item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.faq-item:hover,
+.faq-item.open {
+  border-color: var(--border-glow);
+}
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+  transition: color var(--transition);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+}
+.faq-q:hover { color: var(--accent); }
+.faq-q .icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.faq-item.open .faq-q .icon {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: rotate(45deg);
+}
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s;
+}
+.faq-item.open .faq-a {
+  max-height: 300px;
+}
+.faq-a-inner {
+  padding: 0 24px 20px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.faq-a-inner code {
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* ─── Footer ─── */
+footer {
+  padding: 48px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+.footer-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color var(--transition);
+}
+.footer-links a:hover { color: var(--text-primary); }
+
+/* ─── Animations ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ─── Mobile ─── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 15, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 32px 24px;
+    gap: 24px;
+    align-items: flex-start;
+    z-index: 99;
+  }
+  .nav-links.open a { font-size: 1.1rem; }
+  .nav-mobile-btn { display: block; }
+
+  .dl-hero { padding: 120px 24px 60px; }
+
+  .dl-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .dl-card { padding: 32px 24px; }
+
+  .pro-upsell { padding: 36px 24px; }
+  .pro-features { gap: 12px; }
+
+  section { padding: 80px 0; }
+
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dl-hero h1 { font-size: 2.2rem; }
+  .card-actions { flex-direction: column; }
+  .card-actions .btn { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="ambient"></div>
+<div class="noise"></div>
+
+<div class="wrapper">
+  <!-- ─── Navigation ─── -->
+  <nav id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="nova-logo.jpg" alt="Nova" style="width:32px;height:32px;border-radius:8px;object-fit:cover;">
+        Nova
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#how-it-works">How It Works</a></li>
+        <li><a href="index.html#tech">Tech</a></li>
+        <li><a href="index.html#pricing">Pricing</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+        <li><a href="download.html" class="nav-cta">Download</a></li>
+      </ul>
+      <button class="nav-mobile-btn" id="mobileBtn" aria-label="Toggle menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── Hero ─── -->
+  <section class="dl-hero">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label" style="justify-content:center">Get Started</div>
+      </div>
+      <h1 class="reveal reveal-delay-1">Download <span>Nova</span></h1>
+      <p class="tagline reveal reveal-delay-2">Everything you need to run your own local AI assistant. Free, private, and ready in under 5 minutes.</p>
+    </div>
+  </section>
+
+  <!-- ─── Download Cards ─── -->
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="dl-grid">
+
+        <!-- Card 1: Nova (Free) -->
+        <div class="dl-card reveal">
+          <div class="dl-card-icon">🚀</div>
+          <h2>Nova <span style="color:var(--accent);font-weight:400;font-size:0.85em;">(Free)</span></h2>
+          <p class="card-desc">The full local AI assistant. Voice control, screen analysis, and a beautiful UI — all running on your Mac, all offline.</p>
+
+          <div class="requirements">
+            <span class="req-tag">🍎 macOS</span>
+            <span class="req-tag">⚡ Apple Silicon recommended</span>
+            <span class="req-tag">💾 8GB+ RAM</span>
+            <span class="req-tag">📦 ~4GB disk space</span>
+          </div>
+
+          <ol class="install-steps">
+            <li class="install-step">
+              <div class="step-label">Install prerequisites</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="brew install python3 ollama">Copy</button>
+                <code>brew install python3 ollama</code>
+              </div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">Clone Nova</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="git clone https://github.com/escipionpedroza147-commits/Nova.git
+cd Nova">Copy</button>
+                <code>git clone https://github.com/escipionpedroza147-commits/Nova.git
+cd Nova</code>
+              </div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">Set up environment</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt">Copy</button>
+                <code>python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt</code>
+              </div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">Download the AI model</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="ollama pull qwen2.5:3b">Copy</button>
+                <code>ollama pull qwen2.5:3b</code>
+              </div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">Launch Nova</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="python3 ep_agent.py">Copy</button>
+                <code>python3 ep_agent.py</code>
+              </div>
+            </li>
+          </ol>
+
+          <div class="note">
+            <span class="note-icon">💡</span>
+            <span>Say <strong>"Nova"</strong> to start talking! The sidebar appears on the right side of your screen.</span>
+          </div>
+
+          <div class="card-actions">
+            <a href="https://github.com/escipionpedroza147-commits/Nova" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 2: Nova Control Hub -->
+        <div class="dl-card reveal reveal-delay-1">
+          <div class="dl-card-icon">🌐</div>
+          <h2>Nova Control Hub</h2>
+          <p class="card-desc">Web dashboard to monitor and control Nova. View conversations, adjust settings, and manage your assistant from any browser.</p>
+
+          <div class="note" style="margin-top:0;margin-bottom:24px;">
+            <span class="note-icon">✅</span>
+            <span><strong>Included with Nova</strong> — starts automatically when you launch the app!</span>
+          </div>
+
+          <ol class="install-steps">
+            <li class="install-step">
+              <div class="step-label">Make sure Nova is running</div>
+              <div class="step-desc">Launch Nova with <code style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:0.82rem;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;color:var(--accent);">python3 ep_agent.py</code> — the Control Hub starts with it.</div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">Open your browser</div>
+              <div class="code-block">
+                <button class="copy-btn" data-code="http://localhost:8766">Copy</button>
+                <code>http://localhost:8766</code>
+              </div>
+            </li>
+            <li class="install-step">
+              <div class="step-label">That's it!</div>
+              <div class="step-desc">The dashboard loads automatically. Monitor conversations, tweak settings, and control Nova from any device on your network.</div>
+            </li>
+          </ol>
+
+          <div class="note">
+            <span class="note-icon">⚙️</span>
+            <span>Use <code style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:0.82rem;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;color:var(--accent);">--no-web</code> to disable the dashboard, or <code style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:0.82rem;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:4px;color:var(--accent);">--web-port 9000</code> to use a custom port.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ─── Nova Pro Upsell ─── -->
+      <div class="pro-upsell reveal">
+        <div class="pro-badge">⚡ Nova Pro</div>
+        <h3>Want even more power?</h3>
+        <p>Nova Pro adds cloud hybrid mode, premium ElevenLabs voices, multi-agent delegation, and access to the premium skill marketplace.</p>
+        <div class="pro-features">
+          <span>⚡ Cloud hybrid (GPT-4o)</span>
+          <span>🎙️ Premium voices</span>
+          <span>🤖 Multi-agent</span>
+          <span>🔌 Skill marketplace</span>
+        </div>
+        <a href="index.html#pricing" class="btn btn-primary btn-sm">
+          View Pricing
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Troubleshooting ─── -->
+  <section id="troubleshooting">
+    <div class="container">
+      <div class="reveal" style="text-align:center">
+        <div class="section-label" style="justify-content:center">Troubleshooting</div>
+        <h2 class="section-title">Having issues?</h2>
+        <p class="section-desc" style="margin:0 auto">Most problems have quick fixes. Check below or <a href="https://github.com/escipionpedroza147-commits/Nova/issues" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">open an issue on GitHub</a>.</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item reveal reveal-delay-1">
+          <button class="faq-q" aria-expanded="false">
+            Ollama won't start
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Run <code>ollama serve</code> in a separate terminal window. This starts the Ollama server manually. If it says the port is already in use, Ollama is likely already running in the background — you're good to go.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-2">
+          <button class="faq-q" aria-expanded="false">
+            Model download is slow
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">The first model download (~2GB for qwen2.5:3b) can take a few minutes depending on your connection. This is a one-time download. Subsequent launches are instant since the model is cached locally.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-3">
+          <button class="faq-q" aria-expanded="false">
+            "Nova" wake word doesn't respond
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Make sure your microphone permissions are granted. Go to <strong>System Preferences → Privacy & Security → Microphone</strong> and ensure your terminal app (or Python) has access. You may need to restart Nova after granting permissions.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-4">
+          <button class="faq-q" aria-expanded="false">
+            Python version issues
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Nova requires Python 3.10 or later. Check your version with <code>python3 --version</code>. If you're on an older version, update via Homebrew: <code>brew upgrade python3</code>. Make sure you're using the correct Python when creating the virtual environment.</div>
+          </div>
+        </div>
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-q" aria-expanded="false">
+            Something else not working?
+            <span class="icon">+</span>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">Check the <a href="https://github.com/escipionpedroza147-commits/Nova/issues" target="_blank" rel="noopener" style="color:var(--accent);">GitHub Issues</a> page for known bugs and solutions. If your problem isn't listed, open a new issue with your system info and error message — we'll help you out.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span>© 2026 Nova.</span>
+          <span>Built by <strong style="color:var(--text-secondary)">Escipion</strong></span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/escipionpedroza147-commits/Nova" target="_blank" rel="noopener">GitHub</a>
+          <a href="download.html">Download</a>
+          <a href="https://github.com/escipionpedroza147-commits/Nova/issues" target="_blank" rel="noopener">Report a Bug</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/privacy.html">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* ─── Nav Scroll ─── */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+}, { passive: true });
+
+/* ─── Mobile Menu ─── */
+const mobileBtn = document.getElementById('mobileBtn');
+const navLinks = document.getElementById('navLinks');
+mobileBtn.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
+  const isOpen = navLinks.classList.contains('open');
+  mobileBtn.innerHTML = isOpen
+    ? '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    : '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+});
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    mobileBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  });
+});
+
+/* ─── Intersection Observer (Scroll Reveal) ─── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, {
+  threshold: 0.1,
+  rootMargin: '0px 0px -60px 0px'
+});
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* ─── FAQ Accordion ─── */
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ─── Copy Buttons ─── */
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.getAttribute('data-code');
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
