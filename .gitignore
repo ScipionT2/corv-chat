@@ -45,3 +45,5 @@ coverage.xml
 .jarvis/
 web/.venv/
 web/.env
+web/nova.db*
+web/.venv/

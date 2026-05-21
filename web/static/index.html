@@ -144,29 +144,82 @@ html, body {
   stroke-linecap: round;
 }
 
-/* Chat history list */
-.chat-history {
+/* Chat history list — real persistent chats */
+.chat-list {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 8px;
+  padding: 8px;
+}
+
+.chat-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 2px;
+  transition: background 0.15s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-item:hover { background: rgba(124, 92, 255, 0.08); }
+.chat-item.active { background: rgba(124, 92, 255, 0.12); }
+
+.chat-item-left {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.chat-history-item {
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+.chat-title {
   font-size: 13px;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: background 0.15s;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.chat-history-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-.chat-history-item.active { background: rgba(124, 92, 255, 0.1); color: var(--text); }
+
+.chat-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-agent-tag {
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.chat-delete {
+  opacity: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.chat-delete:hover { color: var(--error); background: rgba(248, 113, 113, 0.1); }
+.chat-item:hover .chat-delete { opacity: 1; }
+
+.chat-list-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
 
 /* Sidebar bottom controls */
 .sidebar-bottom {
@@ -202,6 +255,88 @@ html, body {
 .sidebar-actions {
   display: flex;
   gap: 6px;
+}
+
+/* User area — auth */
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-sidebar);
+  margin-top: 4px;
+}
+
+.google-login-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.google-login-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--border-hover);
+}
+.google-login-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-user.logged-in {
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.logout-btn:hover {
+  color: var(--error);
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.15);
 }
 
 /* Icon buttons */
@@ -740,6 +875,34 @@ textarea.form-input {
   background: var(--border);
 }
 
+/* Setup wizard Google login button */
+.setup-google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #333;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.setup-google-btn:hover { background: #f0f0f0; transform: scale(1.01); }
+.setup-google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+.setup-google-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.4;
+}
+
 /* ===== Mobile / Responsive ===== */
 .sidebar-backdrop {
   display: none;
@@ -793,14 +956,12 @@ textarea.form-input {
       New Chat
     </button>
 
-    <!-- Chat history placeholder -->
-    <div class="chat-history" id="chatHistory">
-      <div class="chat-history-item active">Today's conversation</div>
-      <div class="chat-history-item">Previous session</div>
-      <div class="chat-history-item">Getting started with Nova</div>
+    <!-- Chat history — real persistent list -->
+    <div class="chat-list" id="chatList">
+      <div class="chat-list-empty">No chats yet.<br>Start a conversation!</div>
     </div>
 
-    <!-- Sidebar bottom: agent selector + icons -->
+    <!-- Sidebar bottom: agent selector + icons + user area -->
     <div class="sidebar-bottom">
       <select class="agent-select" id="agentSelect" title="Switch agent">
         <option value="Nova">Nova</option>
@@ -808,6 +969,13 @@ textarea.form-input {
       <div class="sidebar-actions">
         <button class="icon-btn" id="btnNewAgent" title="New agent">＋</button>
         <button class="icon-btn" id="btnSettings" title="Settings">⚙</button>
+      </div>
+      <!-- User auth area -->
+      <div class="sidebar-user" id="userArea">
+        <button class="google-login-btn" id="googleLoginBtn" onclick="location.href='/auth/login'">
+          <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 000 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
+          Sign in with Google
+        </button>
       </div>
     </div>
   </aside>
@@ -939,8 +1107,17 @@ textarea.form-input {
   <div class="setup-card">
     <div class="orb-large"></div>
     <h2>Welcome to Nova</h2>
-    <p>To get started, add at least one API key. Nova uses OpenRouter or OpenAI to power conversations.</p>
+    <p>Sign in to save your chats and agents across devices, or add an API key to get started anonymously.</p>
     <div class="setup-form">
+      <!-- Google Sign-In prominent option -->
+      <button class="setup-google-btn" onclick="location.href='/auth/login'">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 000 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+      <span class="setup-google-hint">Sign in to save your chats and agents across devices</span>
+
+      <div class="setup-divider">or continue without account</div>
+
       <div class="form-group">
         <label>OpenRouter API Key</label>
         <input type="password" class="form-input" id="setupOpenrouterKey" placeholder="sk-or-…">
@@ -970,6 +1147,9 @@ const API = '';  // same origin
 // ---------------------------------------------------------------------------
 let streaming = false;
 let currentEventSource = null;
+let currentChatId = null;
+let currentUser = null;  // null = anonymous, object = logged in
+let chatsList = [];      // cached chat list from server
 
 // ---------------------------------------------------------------------------
 // DOM refs
@@ -995,6 +1175,10 @@ const setupOverlay = $('#setupOverlay');
 const sidebar = $('#sidebar');
 const sidebarBackdrop = $('#sidebarBackdrop');
 const hamburgerBtn = $('#hamburgerBtn');
+
+// Chat list & user area
+const chatListEl = $('#chatList');
+const userArea = $('#userArea');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1035,6 +1219,198 @@ function renderMarkdown(text) {
   return html;
 }
 
+// Relative time helper
+function timeAgo(dateStr) {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffSec = Math.floor((now - then) / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+async function checkAuth() {
+  try {
+    const res = await fetch(API + '/auth/me', { credentials: 'same-origin' });
+    if (res.status === 401) {
+      currentUser = null;
+      renderUserArea();
+      return;
+    }
+    const data = await res.json();
+    if (data.anonymous) {
+      currentUser = null;
+    } else {
+      currentUser = data;
+    }
+    renderUserArea();
+  } catch {
+    currentUser = null;
+    renderUserArea();
+  }
+}
+
+function renderUserArea() {
+  if (currentUser) {
+    const avatar = currentUser.picture || currentUser.avatar || '';
+    const name = currentUser.name || currentUser.email || 'User';
+    userArea.className = 'sidebar-user logged-in';
+    userArea.innerHTML = `
+      <div class="user-info">
+        ${avatar ? `<img class="user-avatar" src="${escapeHtml(avatar)}" alt="">` : ''}
+        <span class="user-name">${escapeHtml(name)}</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn" title="Logout">↪</button>`;
+    // Bind logout
+    $('#logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch(API + '/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch {}
+      location.reload();
+    });
+  } else {
+    userArea.className = 'sidebar-user';
+    userArea.innerHTML = `
+      <button class="google-login-btn" onclick="location.href='/auth/login'">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 000 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chat List (persistent sidebar)
+// ---------------------------------------------------------------------------
+async function loadChatList() {
+  try {
+    const data = await api('/api/chats');
+    chatsList = Array.isArray(data) ? data : (data.chats || []);
+    renderChatList();
+  } catch {
+    chatsList = [];
+    renderChatList();
+  }
+}
+
+function renderChatList() {
+  if (chatsList.length === 0) {
+    chatListEl.innerHTML = '<div class="chat-list-empty">No chats yet.<br>Start a conversation!</div>';
+    return;
+  }
+
+  chatListEl.innerHTML = '';
+  chatsList.forEach(chat => {
+    const item = document.createElement('div');
+    item.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
+    item.dataset.chatId = chat.id;
+
+    const title = chat.title || 'New Chat';
+    const agentName = chat.agent_name || chat.agent || '';
+    const time = chat.updated_at || chat.created_at || '';
+
+    item.innerHTML = `
+      <div class="chat-item-left">
+        <div class="chat-title">${escapeHtml(title)}</div>
+        <div class="chat-meta">
+          ${agentName ? `<span class="chat-agent-tag">${escapeHtml(agentName)}</span>` : ''}
+          ${time ? `<span>${timeAgo(time)}</span>` : ''}
+        </div>
+      </div>
+      <button class="chat-delete" title="Delete chat" data-chat-id="${chat.id}">✕</button>`;
+
+    // Click to load chat
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.chat-delete')) return;
+      loadChat(chat.id);
+    });
+
+    // Delete button
+    item.querySelector('.chat-delete').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this chat?')) return;
+      try {
+        await api(`/api/chats/${chat.id}`, { method: 'DELETE' });
+        if (currentChatId === chat.id) {
+          currentChatId = null;
+          showWelcome();
+        }
+        await loadChatList();
+      } catch (err) {
+        console.error('Failed to delete chat:', err);
+      }
+    });
+
+    chatListEl.appendChild(item);
+  });
+}
+
+async function loadChat(chatId) {
+  try {
+    const data = await api(`/api/chats/${chatId}/messages`);
+    const messages = Array.isArray(data) ? data : (data.messages || []);
+
+    currentChatId = chatId;
+    messagesEl.innerHTML = '';
+
+    if (messages.length > 0) {
+      messages.forEach(msg => {
+        appendMessage(msg.role, msg.content, false);
+      });
+      scrollToBottom();
+    } else {
+      showWelcome();
+    }
+
+    // Update active state in sidebar
+    renderChatList();
+    closeSidebar(); // close on mobile after selection
+  } catch (err) {
+    console.error('Failed to load chat:', err);
+    appendMessage('error', 'Failed to load chat history');
+  }
+}
+
+function showWelcome() {
+  const name = agentSelect.value || 'Nova';
+  messagesEl.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="orb-large"></div>
+      <h2>${escapeHtml(name)}</h2>
+      <p>How can I help you today?</p>
+      <div class="suggestion-chips">
+        <button class="suggestion-chip" data-prompt="Explain quantum computing simply">Explain quantum computing</button>
+        <button class="suggestion-chip" data-prompt="Write a Python script to scrape a website">Write a Python scraper</button>
+        <button class="suggestion-chip" data-prompt="Help me brainstorm a business idea">Brainstorm a business idea</button>
+        <button class="suggestion-chip" data-prompt="What can you do?">What can you do?</button>
+      </div>
+    </div>`;
+  // Re-bind suggestion chips
+  messagesEl.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chatInput.value = chip.dataset.prompt;
+      autoResize(chatInput);
+      sendMessage();
+    });
+  });
+}
+
+// Update sidebar chat title for a specific chat
+function updateChatTitle(chatId, title) {
+  const chat = chatsList.find(c => c.id === chatId);
+  if (chat) {
+    chat.title = title;
+    renderChatList();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Sidebar toggle (mobile)
 // ---------------------------------------------------------------------------
@@ -1073,7 +1449,7 @@ function closeAllPanels() {
 panelOverlay.addEventListener('click', closeAllPanels);
 
 // ---------------------------------------------------------------------------
-// Suggestion chips
+// Suggestion chips (initial page)
 // ---------------------------------------------------------------------------
 document.querySelectorAll('.suggestion-chip').forEach(chip => {
   chip.addEventListener('click', () => {
@@ -1120,8 +1496,8 @@ async function refreshStatus() {
     const m = Math.floor((s % 3600) / 60);
     uptimeEl.textContent = `up ${h}h ${m}m`;
 
-    // Show setup overlay if no key
-    if (!data.has_api_key) {
+    // Show setup overlay if no key and not logged in
+    if (!data.has_api_key && !currentUser) {
       setupOverlay.classList.add('active');
     } else {
       setupOverlay.classList.remove('active');
@@ -1199,21 +1575,31 @@ $('#setupSave').addEventListener('click', async () => {
 async function refreshAgents() {
   const data = await api('/api/agents');
   agentSelect.innerHTML = '';
-  data.agents.forEach(name => {
+
+  // Agents can be strings or objects {name, system_prompt, model}
+  const agents = data.agents || [];
+  agents.forEach(agent => {
     const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    if (name === data.active) opt.selected = true;
+    if (typeof agent === 'string') {
+      opt.value = agent;
+      opt.textContent = agent;
+      if (agent === data.active) opt.selected = true;
+    } else {
+      opt.value = agent.name;
+      opt.textContent = agent.name;
+      if (agent.name === data.active) opt.selected = true;
+    }
     agentSelect.appendChild(opt);
   });
 
   // Show/hide delete button
+  const active = data.active || agentSelect.value;
   const delBtn = $('#deleteAgent');
-  if (data.active === 'Nova') {
+  if (active === 'Nova') {
     delBtn.style.display = 'none';
   } else {
     delBtn.style.display = 'block';
-    delBtn.textContent = `Delete "${data.active}"`;
+    delBtn.textContent = `Delete "${active}"`;
   }
 }
 
@@ -1224,28 +1610,22 @@ agentSelect.addEventListener('change', async () => {
     body: JSON.stringify({ name }),
   });
 
+  // Reset current chat when switching agents
+  currentChatId = null;
+
   // Rebuild messages from returned history
   messagesEl.innerHTML = '';
   if (data.history && data.history.length > 0) {
-    welcomeEl && welcomeEl.remove();
     data.history.forEach(msg => {
       appendMessage(msg.role, msg.content, false);
     });
     scrollToBottom();
   } else {
-    // Show welcome
-    messagesEl.innerHTML = `
-      <div class="welcome" id="welcome">
-        <div class="orb-large"></div>
-        <h2>${escapeHtml(name)}</h2>
-        <p>How can I help you today?</p>
-        <div class="suggestion-chips">
-          <button class="suggestion-chip" onclick="document.getElementById('chatInput').value='What can you do?';document.getElementById('chatInput').focus();">What can you do?</button>
-        </div>
-      </div>`;
+    showWelcome();
   }
 
   refreshAgents();
+  loadChatList();
   chatInput.placeholder = `Message ${name}…`;
 });
 
@@ -1257,6 +1637,7 @@ $('#createAgent').addEventListener('click', async () => {
     method: 'POST',
     body: JSON.stringify({
       name,
+      system_prompt: $('#agentSystemPrompt').value.trim(),
       system: $('#agentSystemPrompt').value.trim(),
       model: $('#agentModel').value.trim(),
     }),
@@ -1344,6 +1725,10 @@ async function sendMessage() {
   chatInput.value = '';
   autoResize(chatInput);
 
+  // Track if this is a new chat (no currentChatId)
+  const isNewChat = !currentChatId;
+  const firstMsgTitle = text.slice(0, 30) + (text.length > 30 ? '…' : '');
+
   appendMessage('user', text);
 
   // Show typing indicator briefly
@@ -1354,11 +1739,17 @@ async function sendMessage() {
   let fullText = '';
 
   try {
+    // Build request body — include chat_id if we have one
+    const reqBody = { message: text };
+    if (currentChatId) {
+      reqBody.chat_id = currentChatId;
+    }
+
     const response = await fetch(API + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify(reqBody),
     });
 
     if (!response.ok) {
@@ -1394,6 +1785,26 @@ async function sendMessage() {
             if (parsed.error) {
               appendMessage('error', parsed.error);
             }
+            // Handle done event with chat_id
+            if (parsed.done || parsed.model) {
+              if (parsed.chat_id && !currentChatId) {
+                currentChatId = parsed.chat_id;
+                // Refresh chat list to show new chat
+                await loadChatList();
+                if (isNewChat) {
+                  updateChatTitle(currentChatId, firstMsgTitle);
+                }
+              } else if (parsed.chat_id) {
+                currentChatId = parsed.chat_id;
+              }
+              // Update status bar with model/provider info
+              if (parsed.model) {
+                $('#statusModel').textContent = parsed.model;
+              }
+              if (parsed.provider) {
+                $('#statusProvider').textContent = parsed.provider;
+              }
+            }
           } catch {}
         }
       }
@@ -1403,6 +1814,9 @@ async function sendMessage() {
     if (fullText) {
       streamText.innerHTML = renderMarkdown(fullText);
     }
+
+    // Refresh chat list after message completes
+    loadChatList();
 
   } catch (err) {
     typingIndicator.classList.remove('active');
@@ -1450,26 +1864,40 @@ btnNewAgent.addEventListener('click', () => {
 });
 $('#closeAgent').addEventListener('click', closeAllPanels);
 
+// New Chat button — create a new chat via API
 btnClear.addEventListener('click', async () => {
-  await api('/api/chat/clear', { method: 'POST' });
-  const name = agentSelect.value;
-  messagesEl.innerHTML = `
-    <div class="welcome" id="welcome">
-      <div class="orb-large"></div>
-      <h2>${escapeHtml(name)}</h2>
-      <p>How can I help you today?</p>
-      <div class="suggestion-chips">
-        <button class="suggestion-chip" onclick="document.getElementById('chatInput').value='What can you do?';document.getElementById('chatInput').focus();">What can you do?</button>
-      </div>
-    </div>`;
+  try {
+    const activeAgent = agentSelect.value || 'Nova';
+    const data = await api('/api/chats', {
+      method: 'POST',
+      body: JSON.stringify({ agent: activeAgent }),
+    });
+    // If the backend returns a chat object with id, use it
+    if (data && data.id) {
+      currentChatId = data.id;
+    } else {
+      currentChatId = null;
+    }
+  } catch {
+    // Fallback: just clear locally and let backend auto-create on first message
+    currentChatId = null;
+  }
+
+  showWelcome();
+  await loadChatList();
+  chatInput.focus();
 });
 
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
 (async function init() {
+  // Check auth first
+  await checkAuth();
+
   await refreshStatus();
   await refreshAgents();
+  await loadChatList();
 
   // Poll status every 30s
   setInterval(refreshStatus, 30000);
