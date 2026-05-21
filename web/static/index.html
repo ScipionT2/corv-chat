@@ -971,6 +971,194 @@ textarea.form-input {
   .side-panel { width: 100%; }
 }
 
+/* ===== Apps View ===== */
+.apps-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--bg);
+  display: none;
+  overflow-y: auto;
+}
+.apps-overlay.active { display: block; }
+
+.apps-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+.apps-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.apps-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.apps-header p {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.apps-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.apps-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  min-width: 200px;
+}
+
+.apps-search input {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+}
+.apps-search input::placeholder { color: var(--text-muted); }
+.apps-search svg { color: var(--text-muted); flex-shrink: 0; }
+
+.apps-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+.apps-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+/* Featured app card */
+.apps-featured {
+  margin-bottom: 32px;
+}
+
+.apps-featured-card {
+  border-radius: 16px;
+  padding: 28px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.apps-featured-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 14px;
+}
+
+.apps-featured-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.apps-featured-card p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 16px;
+}
+
+.apps-featured-btn {
+  padding: 8px 20px;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.apps-featured-btn:hover { background: rgba(0,0,0,0.7); }
+
+/* App grid */
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+@media (max-width: 600px) {
+  .apps-grid { grid-template-columns: 1fr; }
+  .apps-header { flex-direction: column; }
+  .apps-search { min-width: unset; width: 100%; }
+}
+
+.app-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.app-item:hover { background: rgba(255,255,255,0.05); }
+
+.app-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.app-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.app-info span {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.app-arrow {
+  color: var(--text-muted);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
 /* Sidebar collapsed state (desktop) */
 .sidebar.collapsed {
   width: 0;
@@ -1013,6 +1201,10 @@ textarea.form-input {
       <button class="sidebar-nav-item" id="btnNewAgent" title="New agent">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         Agents
+      </button>
+      <button class="sidebar-nav-item" id="btnApps" title="Apps">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Apps
       </button>
     </nav>
 
@@ -1160,6 +1352,89 @@ textarea.form-input {
     <button class="btn btn-primary" id="createAgent" style="width:100%">Create Agent</button>
     <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
     <button class="btn btn-danger" id="deleteAgent" style="width:100%;display:none;">Delete Current Agent</button>
+  </div>
+</div>
+
+<!-- ===== Apps View ===== -->
+<div class="apps-overlay" id="appsOverlay">
+  <div class="apps-container">
+    <div class="apps-header">
+      <div class="apps-header-left">
+        <h2>Apps</h2>
+        <p>Chat with your favorite apps in Nova</p>
+      </div>
+      <div class="apps-header-right">
+        <div class="apps-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="appsSearchInput" placeholder="Search apps">
+        </div>
+        <button class="apps-close" id="closeApps">✕</button>
+      </div>
+    </div>
+
+    <!-- Featured App -->
+    <div class="apps-featured">
+      <div class="apps-featured-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+        <div class="apps-featured-icon" style="background:#7c5cff;">🔍</div>
+        <h3>Search the Web</h3>
+        <p>Browse and find information online</p>
+        <button class="apps-featured-btn" data-app="web-search">View</button>
+      </div>
+    </div>
+
+    <!-- Apps Grid -->
+    <div class="apps-grid" id="appsGrid">
+      <div class="app-item" data-app="web-search">
+        <div class="app-icon" style="background:#4285F4;">🌐</div>
+        <div class="app-info"><strong>Web Search</strong><span>Search and browse the web</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="image-gen">
+        <div class="app-icon" style="background:#E91E63;">🎨</div>
+        <div class="app-info"><strong>Image Generator</strong><span>Create images from text</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="code-assist">
+        <div class="app-icon" style="background:#FF6D00;">💻</div>
+        <div class="app-info"><strong>Code Assistant</strong><span>Write and debug code</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="writer">
+        <div class="app-icon" style="background:#00BCD4;">✍️</div>
+        <div class="app-info"><strong>Writer</strong><span>Draft emails, essays, and more</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="translator">
+        <div class="app-icon" style="background:#9C27B0;">🌍</div>
+        <div class="app-info"><strong>Translator</strong><span>Translate between languages</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="math">
+        <div class="app-icon" style="background:#4CAF50;">📐</div>
+        <div class="app-info"><strong>Math Solver</strong><span>Solve equations and problems</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="summarizer">
+        <div class="app-icon" style="background:#FF9800;">📄</div>
+        <div class="app-info"><strong>Summarizer</strong><span>Condense long text into key points</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="tutor">
+        <div class="app-icon" style="background:#3F51B5;">📚</div>
+        <div class="app-info"><strong>Tutor</strong><span>Learn any subject step by step</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="brainstorm">
+        <div class="app-icon" style="background:#F44336;">💡</div>
+        <div class="app-info"><strong>Brainstorm</strong><span>Generate creative ideas</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+      <div class="app-item" data-app="data-analyst">
+        <div class="app-icon" style="background:#607D8B;">📊</div>
+        <div class="app-info"><strong>Data Analyst</strong><span>Analyze data and create charts</span></div>
+        <span class="app-arrow">›</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1932,6 +2207,45 @@ btnNewAgent.addEventListener('click', () => {
   }
 });
 $('#closeAgent').addEventListener('click', closeAllPanels);
+
+// Apps view
+const appsOverlay = $('#appsOverlay');
+const appsSearchInput = $('#appsSearchInput');
+
+$('#btnApps').addEventListener('click', () => {
+  appsOverlay.classList.add('active');
+});
+
+$('#closeApps').addEventListener('click', () => {
+  appsOverlay.classList.remove('active');
+});
+
+// Apps search filter
+if (appsSearchInput) {
+  appsSearchInput.addEventListener('input', () => {
+    const q = appsSearchInput.value.toLowerCase();
+    document.querySelectorAll('.app-item').forEach(item => {
+      const name = item.querySelector('strong').textContent.toLowerCase();
+      const desc = item.querySelector('.app-info span').textContent.toLowerCase();
+      item.style.display = (name.includes(q) || desc.includes(q)) ? '' : 'none';
+    });
+  });
+}
+
+// App click → create agent with system prompt and start chat
+document.querySelectorAll('.app-item, .apps-featured-btn').forEach(el => {
+  el.addEventListener('click', async () => {
+    const appId = el.dataset.app || el.closest('[data-app]')?.dataset.app;
+    if (!appId) return;
+    const appEl = document.querySelector(`.app-item[data-app="${appId}"]`);
+    const name = appEl?.querySelector('strong')?.textContent || appId;
+    const desc = appEl?.querySelector('.app-info span')?.textContent || '';
+    // Set the input with an @mention and close apps
+    appsOverlay.classList.remove('active');
+    chatInput.value = `@${name} `;
+    chatInput.focus();
+  });
+});
 
 // New Chat button — create a new chat via API
 btnClear.addEventListener('click', async () => {
