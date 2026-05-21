@@ -93,9 +93,16 @@ html, body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
+  overflow: hidden;
   box-shadow: 0 0 20px var(--accent-glow), 0 0 60px rgba(124, 92, 255, 0.15);
   animation: orbPulse 3s ease-in-out infinite;
+}
+
+.orb img, .orb-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 @keyframes orbPulse {
@@ -411,11 +418,11 @@ html, body {
 }
 
 .welcome .orb-large {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
-  box-shadow: 0 0 40px var(--accent-glow), 0 0 100px rgba(124, 92, 255, 0.15);
+  overflow: hidden;
+  box-shadow: 0 0 40px var(--accent-glow), 0 0 100px rgba(124, 92, 255, 0.2);
   animation: orbPulse 3s ease-in-out infinite;
 }
 
@@ -832,10 +839,10 @@ textarea.form-input {
 }
 
 .setup-card .orb-large {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
+  overflow: hidden;
   box-shadow: 0 0 40px var(--accent-glow);
   animation: orbPulse 3s ease-in-out infinite;
 }
@@ -947,7 +954,7 @@ textarea.form-input {
   <!-- ===== Left Sidebar ===== -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="orb-container"><div class="orb" id="headerOrb"></div></div>
+      <div class="orb-container"><div class="orb" id="headerOrb"><img src="/static/nova-logo.jpg" alt="Nova"></div></div>
       <span class="brand-text">NOVA</span>
     </div>
 
@@ -995,7 +1002,7 @@ textarea.form-input {
     <!-- Messages -->
     <div class="messages" id="messages">
       <div class="welcome" id="welcome">
-        <div class="orb-large"></div>
+        <div class="orb-large"><img src="/static/nova-logo.jpg" alt="Nova"></div>
         <h2>Nova</h2>
         <p>How can I help you today?</p>
         <div class="suggestion-chips" id="suggestionChips">
@@ -1105,7 +1112,7 @@ textarea.form-input {
 <!-- ===== Setup Wizard Overlay ===== -->
 <div class="setup-overlay" id="setupOverlay">
   <div class="setup-card">
-    <div class="orb-large"></div>
+    <div class="orb-large"><img src="/static/nova-logo.jpg" alt="Nova"></div>
     <h2>Welcome to Nova</h2>
     <p>Sign in to save your chats and agents across devices, or add an API key to get started anonymously.</p>
     <div class="setup-form">
@@ -1382,7 +1389,7 @@ function showWelcome() {
   const name = agentSelect.value || 'Nova';
   messagesEl.innerHTML = `
     <div class="welcome" id="welcome">
-      <div class="orb-large"></div>
+      <div class="orb-large"><img src="/static/nova-logo.jpg" alt="Nova"></div>
       <h2>${escapeHtml(name)}</h2>
       <p>How can I help you today?</p>
       <div class="suggestion-chips">
