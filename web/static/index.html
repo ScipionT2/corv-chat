@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova</title>
+<style>
+/* ========================================================================
+   Nova Web — Dark Glassmorphism Dashboard
+   ======================================================================== */
+
+:root {
+  --bg: #0a0a0f;
+  --bg-card: rgba(20, 20, 35, 0.7);
+  --bg-card-solid: #141423;
+  --border: rgba(124, 92, 255, 0.15);
+  --border-hover: rgba(124, 92, 255, 0.35);
+  --accent: #7c5cff;
+  --accent-glow: rgba(124, 92, 255, 0.4);
+  --accent-dim: rgba(124, 92, 255, 0.12);
+  --text: #e4e4ed;
+  --text-dim: #8888a4;
+  --text-muted: #555570;
+  --success: #34d399;
+  --error: #f87171;
+  --warning: #fbbf24;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ===== Layout ===== */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+/* --- Header --- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Animated orb */
+.orb-container {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.orb {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
+  box-shadow: 0 0 20px var(--accent-glow), 0 0 60px rgba(124, 92, 255, 0.15);
+  animation: orbPulse 3s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow), 0 0 60px rgba(124, 92, 255, 0.15); }
+  50% { transform: scale(1.08); box-shadow: 0 0 30px var(--accent-glow), 0 0 80px rgba(124, 92, 255, 0.25); }
+}
+
+.brand-text {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, #e4e4ed, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Agent selector */
+.agent-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238888a4' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6 6.5-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.agent-select:focus { border-color: var(--accent); }
+
+/* Icon buttons */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* --- Main content --- */
+.main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --- Chat panel --- */
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Welcome state */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  opacity: 0.8;
+}
+
+.welcome .orb-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
+  box-shadow: 0 0 40px var(--accent-glow), 0 0 100px rgba(124, 92, 255, 0.15);
+  animation: orbPulse 3s ease-in-out infinite;
+}
+
+.welcome h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.welcome p {
+  color: var(--text-dim);
+  font-size: 14px;
+  max-width: 380px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Message bubbles */
+.msg {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.65;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.msg-user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-assistant {
+  align-self: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  border-bottom-left-radius: 4px;
+}
+
+.msg-assistant pre {
+  background: rgba(0,0,0,0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.msg-assistant code {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: rgba(124, 92, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.msg-assistant pre code {
+  background: none;
+  padding: 0;
+}
+
+.msg-error {
+  align-self: center;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--error);
+  font-size: 13px;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  display: none;
+  align-self: flex-start;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-bottom-left-radius: 4px;
+}
+
+.typing-indicator.active { display: flex; gap: 5px; align-items: center; }
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingBounce 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Input area */
+.input-area {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.input-row textarea {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 12px 16px;
+  font-family: var(--font);
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  min-height: 46px;
+  max-height: 160px;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+.input-row textarea:focus { border-color: var(--accent); }
+.input-row textarea::placeholder { color: var(--text-muted); }
+
+.send-btn {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.send-btn:hover { background: #6a4ae0; transform: translateY(-1px); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.send-btn svg { width: 20px; height: 20px; }
+
+/* --- Side panels (Settings / Agent Creator) --- */
+.side-panel {
+  width: 380px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: rgba(14, 14, 24, 0.9);
+  backdrop-filter: blur(24px);
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+}
+.side-panel.open { display: flex; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.panel-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px;
+  line-height: 1;
+}
+.panel-close:hover { color: var(--text); }
+
+.panel-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+/* Form elements */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+
+.form-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-muted); }
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: #6a4ae0; }
+.btn-secondary {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: rgba(124, 92, 255, 0.2); border-color: var(--accent); }
+.btn-danger {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+.btn-danger:hover { background: rgba(248, 113, 113, 0.2); }
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(10, 10, 15, 0.9);
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.status-left, .status-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+}
+.status-dot.offline {
+  background: var(--error);
+  box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+}
+.status-dot.no-key {
+  background: var(--warning);
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+
+/* Setup wizard overlay */
+.setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.setup-overlay.active { display: flex; }
+
+.setup-card {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 460px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.setup-card .orb-large {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #a78bfa, var(--accent), #4c1d95);
+  box-shadow: 0 0 40px var(--accent-glow);
+  animation: orbPulse 3s ease-in-out infinite;
+}
+
+.setup-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.setup-card p {
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.setup-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.setup-divider::before, .setup-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .side-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    z-index: 50;
+    border-left: none;
+  }
+  .msg { max-width: 90%; }
+  .brand-text { font-size: 18px; }
+  .header { padding: 10px 14px; }
+  .messages { padding: 14px; }
+  .input-area { padding: 10px 14px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <div class="header-left">
+      <div class="orb-container"><div class="orb" id="headerOrb"></div></div>
+      <span class="brand-text">NOVA</span>
+    </div>
+    <div class="header-right">
+      <select class="agent-select" id="agentSelect" title="Switch agent">
+        <option value="Nova">Nova</option>
+      </select>
+      <button class="icon-btn" id="btnNewAgent" title="New agent">＋</button>
+      <button class="icon-btn" id="btnClear" title="Clear chat">🗑</button>
+      <button class="icon-btn" id="btnSettings" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <div class="main">
+
+    <!-- Chat -->
+    <div class="chat-panel">
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="orb-large"></div>
+          <h2>Hey, I'm Nova</h2>
+          <p>Your AI assistant — fast, direct, and ready to help. Ask me anything.</p>
+        </div>
+      </div>
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+      <div class="input-area">
+        <div class="input-row">
+          <textarea id="chatInput" rows="1" placeholder="Message Nova…" autofocus></textarea>
+          <button class="send-btn" id="sendBtn" title="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="side-panel" id="settingsPanel">
+      <div class="panel-header">
+        <h3>⚙ Settings</h3>
+        <button class="panel-close" id="closeSettings">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label>OpenRouter API Key</label>
+          <input type="password" class="form-input" id="setOpenrouterKey" placeholder="sk-or-…">
+          <span class="hint">Get one at <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent)">openrouter.ai/keys</a></span>
+        </div>
+        <div class="form-group">
+          <label>OpenAI API Key</label>
+          <input type="password" class="form-input" id="setOpenaiKey" placeholder="sk-…">
+        </div>
+        <div class="form-group">
+          <label>Default Model</label>
+          <input type="text" class="form-input" id="setModel" placeholder="e.g. gpt-4o-mini, anthropic/claude-sonnet-4">
+          <span class="hint">Leave blank for auto-detect</span>
+        </div>
+        <div class="form-group">
+          <label>System Prompt</label>
+          <textarea class="form-input" id="setSystemPrompt" rows="4" placeholder="Custom Nova personality…"></textarea>
+        </div>
+        <button class="btn btn-primary" id="saveSettings" style="width:100%">Save Settings</button>
+        <div id="settingsStatus" style="font-size:12px;text-align:center;min-height:18px;"></div>
+      </div>
+    </div>
+
+    <!-- New Agent Panel -->
+    <div class="side-panel" id="agentPanel">
+      <div class="panel-header">
+        <h3>＋ New Agent</h3>
+        <button class="panel-close" id="closeAgent">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label>Agent Name</label>
+          <input type="text" class="form-input" id="agentName" placeholder="e.g. CodeBot, Writer">
+        </div>
+        <div class="form-group">
+          <label>System Prompt</label>
+          <textarea class="form-input" id="agentSystemPrompt" rows="4" placeholder="What does this agent do?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Model Override</label>
+          <input type="text" class="form-input" id="agentModel" placeholder="Leave blank for default">
+        </div>
+        <button class="btn btn-primary" id="createAgent" style="width:100%">Create Agent</button>
+        <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
+        <button class="btn btn-danger" id="deleteAgent" style="width:100%;display:none;">Delete Current Agent</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Status Bar ===== -->
+  <div class="status-bar">
+    <div class="status-left">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusProvider">Connecting…</span>
+    </div>
+    <div class="status-right">
+      <span id="statusModel">—</span>
+      <span id="statusUptime">—</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Setup Wizard Overlay ===== -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-card">
+    <div class="orb-large"></div>
+    <h2>Welcome to Nova</h2>
+    <p>To get started, add at least one API key. Nova uses OpenRouter or OpenAI to power conversations.</p>
+    <div class="setup-form">
+      <div class="form-group">
+        <label>OpenRouter API Key</label>
+        <input type="password" class="form-input" id="setupOpenrouterKey" placeholder="sk-or-…">
+        <span class="hint">Recommended — access 200+ models via <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent)">openrouter.ai</a></span>
+      </div>
+      <div class="setup-divider">or</div>
+      <div class="form-group">
+        <label>OpenAI API Key</label>
+        <input type="password" class="form-input" id="setupOpenaiKey" placeholder="sk-…">
+      </div>
+      <button class="btn btn-primary" id="setupSave" style="width:100%;margin-top:8px;padding:12px">Get Started →</button>
+      <div id="setupError" style="color:var(--error);font-size:12px;text-align:center;min-height:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========================================================================
+   Nova Web — Client Logic
+   ======================================================================== */
+
+const $ = (s) => document.querySelector(s);
+const API = '';  // same origin
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+let streaming = false;
+let currentEventSource = null;
+
+// ---------------------------------------------------------------------------
+// DOM refs
+// ---------------------------------------------------------------------------
+const messagesEl = $('#messages');
+const welcomeEl = $('#welcome');
+const chatInput = $('#chatInput');
+const sendBtn = $('#sendBtn');
+const typingIndicator = $('#typingIndicator');
+
+const agentSelect = $('#agentSelect');
+const btnNewAgent = $('#btnNewAgent');
+const btnClear = $('#btnClear');
+const btnSettings = $('#btnSettings');
+
+const settingsPanel = $('#settingsPanel');
+const agentPanel = $('#agentPanel');
+
+const setupOverlay = $('#setupOverlay');
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function scrollToBottom() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Very lightweight markdown: **bold**, `code`, ```blocks```, newlines
+function renderMarkdown(text) {
+  // Code blocks first
+  let html = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+  });
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Line breaks (outside of pre)
+  html = html.replace(/\n/g, '<br>');
+  // Fix brs inside pre
+  html = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, inner) => {
+    return '<pre><code>' + inner.replace(/<br>/g, '\n') + '</code></pre>';
+  });
+  return html;
+}
+
+// ---------------------------------------------------------------------------
+// API calls
+// ---------------------------------------------------------------------------
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    ...opts,
+  });
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Status / Health
+// ---------------------------------------------------------------------------
+async function refreshStatus() {
+  try {
+    const data = await api('/api/health');
+    const dot = $('#statusDot');
+    const provEl = $('#statusProvider');
+    const modelEl = $('#statusModel');
+    const uptimeEl = $('#statusUptime');
+
+    if (!data.has_api_key) {
+      dot.className = 'status-dot no-key';
+      provEl.textContent = 'No API key';
+    } else {
+      dot.className = 'status-dot';
+      provEl.textContent = data.provider;
+    }
+    modelEl.textContent = data.model || '—';
+
+    const s = Math.floor(data.uptime_seconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    uptimeEl.textContent = `up ${h}h ${m}m`;
+
+    // Show setup overlay if no key
+    if (!data.has_api_key) {
+      setupOverlay.classList.add('active');
+    } else {
+      setupOverlay.classList.remove('active');
+    }
+
+    return data;
+  } catch {
+    $('#statusDot').className = 'status-dot offline';
+    $('#statusProvider').textContent = 'Offline';
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+async function loadSettings() {
+  const data = await api('/api/settings');
+  // Only show masked keys — never pre-fill with masked values
+  $('#setOpenrouterKey').placeholder = data.openrouter_api_key || 'sk-or-…';
+  $('#setOpenaiKey').placeholder = data.openai_api_key || 'sk-…';
+  $('#setModel').value = data.default_model || '';
+  $('#setSystemPrompt').value = data.system_prompt || '';
+}
+
+$('#saveSettings').addEventListener('click', async () => {
+  const body = {};
+  const orKey = $('#setOpenrouterKey').value.trim();
+  const oaiKey = $('#setOpenaiKey').value.trim();
+  const model = $('#setModel').value.trim();
+  const prompt = $('#setSystemPrompt').value.trim();
+
+  if (orKey) body.openrouter_api_key = orKey;
+  if (oaiKey) body.openai_api_key = oaiKey;
+  if (model !== undefined) body.default_model = model;
+  if (prompt !== undefined) body.system_prompt = prompt;
+
+  await api('/api/settings', { method: 'POST', body: JSON.stringify(body) });
+  $('#settingsStatus').textContent = '✓ Saved';
+  $('#settingsStatus').style.color = 'var(--success)';
+  setTimeout(() => { $('#settingsStatus').textContent = ''; }, 2000);
+
+  // Clear input fields
+  $('#setOpenrouterKey').value = '';
+  $('#setOpenaiKey').value = '';
+
+  refreshStatus();
+  loadSettings();
+});
+
+// Setup wizard save
+$('#setupSave').addEventListener('click', async () => {
+  const orKey = $('#setupOpenrouterKey').value.trim();
+  const oaiKey = $('#setupOpenaiKey').value.trim();
+
+  if (!orKey && !oaiKey) {
+    $('#setupError').textContent = 'Please enter at least one API key.';
+    return;
+  }
+
+  const body = {};
+  if (orKey) body.openrouter_api_key = orKey;
+  if (oaiKey) body.openai_api_key = oaiKey;
+
+  await api('/api/settings', { method: 'POST', body: JSON.stringify(body) });
+  setupOverlay.classList.remove('active');
+  refreshStatus();
+  loadSettings();
+  chatInput.focus();
+});
+
+// ---------------------------------------------------------------------------
+// Agents
+// ---------------------------------------------------------------------------
+async function refreshAgents() {
+  const data = await api('/api/agents');
+  agentSelect.innerHTML = '';
+  data.agents.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === data.active) opt.selected = true;
+    agentSelect.appendChild(opt);
+  });
+
+  // Show/hide delete button
+  const delBtn = $('#deleteAgent');
+  if (data.active === 'Nova') {
+    delBtn.style.display = 'none';
+  } else {
+    delBtn.style.display = 'block';
+    delBtn.textContent = `Delete "${data.active}"`;
+  }
+}
+
+agentSelect.addEventListener('change', async () => {
+  const name = agentSelect.value;
+  const data = await api('/api/agents/switch', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+
+  // Rebuild messages from returned history
+  messagesEl.innerHTML = '';
+  if (data.history && data.history.length > 0) {
+    welcomeEl && welcomeEl.remove();
+    data.history.forEach(msg => {
+      appendMessage(msg.role, msg.content, false);
+    });
+    scrollToBottom();
+  } else {
+    // Show welcome
+    messagesEl.innerHTML = `
+      <div class="welcome" id="welcome">
+        <div class="orb-large"></div>
+        <h2>Hey, I'm ${escapeHtml(name)}</h2>
+        <p>Start a conversation.</p>
+      </div>`;
+  }
+
+  refreshAgents();
+  chatInput.placeholder = `Message ${name}…`;
+});
+
+$('#createAgent').addEventListener('click', async () => {
+  const name = $('#agentName').value.trim();
+  if (!name) return;
+
+  await api('/api/agents', {
+    method: 'POST',
+    body: JSON.stringify({
+      name,
+      system: $('#agentSystemPrompt').value.trim(),
+      model: $('#agentModel').value.trim(),
+    }),
+  });
+
+  // Clear form
+  $('#agentName').value = '';
+  $('#agentSystemPrompt').value = '';
+  $('#agentModel').value = '';
+
+  agentPanel.classList.remove('open');
+  await refreshAgents();
+
+  // Switch view
+  agentSelect.value = name;
+  agentSelect.dispatchEvent(new Event('change'));
+});
+
+$('#deleteAgent').addEventListener('click', async () => {
+  const name = agentSelect.value;
+  if (name === 'Nova' || !confirm(`Delete agent "${name}"?`)) return;
+
+  await api(`/api/agents/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  await refreshAgents();
+  agentSelect.dispatchEvent(new Event('change'));
+});
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+function appendMessage(role, content, animate = true) {
+  // Remove welcome if present
+  const w = $('#welcome');
+  if (w) w.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+
+  if (role === 'assistant') {
+    div.innerHTML = renderMarkdown(content);
+  } else if (role === 'error') {
+    div.className = 'msg msg-error';
+    div.textContent = content;
+  } else {
+    div.textContent = content;
+  }
+
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function createStreamingBubble() {
+  const w = $('#welcome');
+  if (w) w.remove();
+
+  const div = document.createElement('div');
+  div.className = 'msg msg-assistant';
+  div.id = 'streamingMsg';
+  div.innerHTML = '';
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text || streaming) return;
+
+  streaming = true;
+  sendBtn.disabled = true;
+  chatInput.value = '';
+  autoResize(chatInput);
+
+  appendMessage('user', text);
+
+  // Show typing indicator briefly
+  typingIndicator.classList.add('active');
+
+  const bubble = createStreamingBubble();
+  let fullText = '';
+
+  try {
+    const response = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ message: text }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Request failed');
+    }
+
+    typingIndicator.classList.remove('active');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const raw = line.slice(5).trim();
+          if (!raw) continue;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.token) {
+              fullText += parsed.token;
+              bubble.innerHTML = renderMarkdown(fullText);
+              scrollToBottom();
+            }
+            if (parsed.error) {
+              appendMessage('error', parsed.error);
+            }
+          } catch {}
+        }
+      }
+    }
+
+    // Final render pass
+    if (fullText) {
+      bubble.innerHTML = renderMarkdown(fullText);
+    }
+
+  } catch (err) {
+    typingIndicator.classList.remove('active');
+    bubble.remove();
+    appendMessage('error', err.message);
+  }
+
+  streaming = false;
+  sendBtn.disabled = false;
+  chatInput.focus();
+  scrollToBottom();
+}
+
+// ---------------------------------------------------------------------------
+// Event listeners
+// ---------------------------------------------------------------------------
+sendBtn.addEventListener('click', sendMessage);
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+chatInput.addEventListener('input', () => autoResize(chatInput));
+
+// Panel toggles
+btnSettings.addEventListener('click', () => {
+  agentPanel.classList.remove('open');
+  settingsPanel.classList.toggle('open');
+  if (settingsPanel.classList.contains('open')) loadSettings();
+});
+$('#closeSettings').addEventListener('click', () => settingsPanel.classList.remove('open'));
+
+btnNewAgent.addEventListener('click', () => {
+  settingsPanel.classList.remove('open');
+  agentPanel.classList.toggle('open');
+});
+$('#closeAgent').addEventListener('click', () => agentPanel.classList.remove('open'));
+
+btnClear.addEventListener('click', async () => {
+  await api('/api/chat/clear', { method: 'POST' });
+  const name = agentSelect.value;
+  messagesEl.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="orb-large"></div>
+      <h2>Hey, I'm ${escapeHtml(name)}</h2>
+      <p>Chat cleared. Start fresh.</p>
+    </div>`;
+});
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+(async function init() {
+  await refreshStatus();
+  await refreshAgents();
+
+  // Poll status every 30s
+  setInterval(refreshStatus, 30000);
+})();
+</script>
+</body>
+</html>
