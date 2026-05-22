@@ -944,91 +944,125 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 }
 
 /* ---------- Chat Input ---------- */
+/* ---------- Chat Input Area ---------- */
 .chat-input-container {
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 16px 24px 24px;
+  padding: 12px 24px 24px;
+  position: relative;
+  z-index: 2;
 }
 
 .chat-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* --- Main input bar: floating glass with glow border --- */
 .chat-input-bar {
   display: flex;
-  align-items: center;
-  background: var(--nova-bg-glass);
-  backdrop-filter: var(--nova-glass-blur-sm);
-  -webkit-backdrop-filter: var(--nova-glass-blur-sm);
-  border: 1px solid var(--nova-border);
-  border-radius: var(--nova-radius-xl);
-  padding: 4px 8px 4px 16px;
-  gap: 4px;
+  align-items: flex-end;
+  background: rgba(10, 10, 30, 0.7);
+  backdrop-filter: var(--nova-glass-blur);
+  -webkit-backdrop-filter: var(--nova-glass-blur);
+  border: 1.5px solid var(--nova-border);
+  border-radius: 20px;
+  padding: 6px 8px 6px 6px;
+  gap: 2px;
   order: 1;
-  transition: border-color var(--nova-transition-fast), box-shadow var(--nova-transition-fast);
+  transition: border-color var(--nova-transition), box-shadow var(--nova-transition);
+  position: relative;
+}
+
+/* Outer glow ring — animated on focus */
+.chat-input-bar::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(160,64,255,0.12) 0%, rgba(99,102,241,0.06) 50%, rgba(56,189,248,0.08) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--nova-transition);
 }
 
 .chat-input-bar:focus-within {
-  border-color: var(--nova-accent-soft);
-  box-shadow: var(--nova-glow-md);
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow:
+    0 0 15px rgba(160, 64, 255, 0.15),
+    0 0 30px rgba(160, 64, 255, 0.08),
+    inset 0 0 20px rgba(139, 92, 246, 0.04);
 }
 
+.chat-input-bar:focus-within::before {
+  opacity: 1;
+}
+
+/* --- Left tool icons row --- */
+.input-tools {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.input-tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: all var(--nova-transition-fast);
+}
+
+.input-tool-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--nova-text-primary);
+}
+
+.input-tool-btn.active {
+  color: var(--nova-accent);
+}
+
+/* --- Text input --- */
 .chat-input {
   flex: 1;
   background: transparent;
   border: none;
   color: var(--nova-text-primary);
   font-size: 15px;
-  padding: 12px 0;
+  padding: 10px 8px;
   outline: none;
   font-family: inherit;
   line-height: 1.5;
   resize: none;
+  min-height: 24px;
+  max-height: 200px;
 }
 
 .chat-input::placeholder {
   color: var(--nova-text-muted);
 }
 
-.chat-action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  order: 2;
-}
-
-.action-btn {
-  border: 1px solid var(--nova-border);
-  background: var(--nova-bg-surface);
-  color: var(--nova-text-secondary);
-  padding: 8px 16px;
-  border-radius: var(--nova-radius-full);
-  font-size: 13px;
-  cursor: pointer;
+/* --- Right action buttons (mic + send) --- */
+.input-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  transition: all var(--nova-transition-fast);
-  white-space: nowrap;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
 }
 
-.action-btn:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: var(--nova-border-strong);
-  color: var(--nova-text-primary);
-  box-shadow: var(--nova-glow-sm);
-}
-
-.action-btn .btn-icon {
-  font-size: 14px;
-}
-
-/* ---------- Input Buttons ---------- */
 .input-btn {
   width: 36px;
   height: 36px;
@@ -1040,29 +1074,47 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
   flex-shrink: 0;
   transition: all var(--nova-transition-fast);
 }
 
 .input-btn:hover {
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(139, 92, 246, 0.12);
   color: var(--nova-text-primary);
 }
 
+/* Send button — gradient circle with glow */
 .send-btn {
+  width: 38px;
+  height: 38px;
   background: var(--nova-gradient-primary);
   color: #fff;
   border-radius: 50%;
-  box-shadow: var(--nova-glow-accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow:
+    0 0 12px rgba(160, 64, 255, 0.35),
+    0 0 24px rgba(160, 64, 255, 0.15);
+  transition: all var(--nova-transition-fast);
 }
 
 .send-btn:hover {
-  opacity: 0.9;
-  color: #fff;
-  box-shadow: var(--nova-glow-lg);
+  transform: scale(1.06);
+  box-shadow:
+    0 0 18px rgba(160, 64, 255, 0.5),
+    0 0 36px rgba(160, 64, 255, 0.2);
 }
 
+.send-btn:active {
+  transform: scale(0.96);
+}
+
+/* Mic listening state */
 .input-btn.listening {
   background: #ef4444;
   color: #fff;
@@ -1072,6 +1124,52 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 @keyframes pulse-mic {
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
   50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* --- Quick action pills below input --- */
+.chat-action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  order: 2;
+}
+
+.action-btn {
+  border: 1px solid var(--nova-border);
+  background: rgba(15, 10, 36, 0.5);
+  backdrop-filter: var(--nova-glass-blur-sm);
+  color: var(--nova-text-secondary);
+  padding: 7px 14px;
+  border-radius: var(--nova-radius-full);
+  font-size: 12.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: inherit;
+  transition: all var(--nova-transition-fast);
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--nova-border-strong);
+  color: var(--nova-text-primary);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.action-btn .btn-icon {
+  font-size: 13px;
+}
+
+/* --- Input hint text --- */
+.input-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  opacity: 0.6;
+  order: 3;
 }
 
 /* ---------- Thinking Bubble ---------- */
@@ -1360,16 +1458,22 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
     grid-template-columns: 1fr;
     max-width: 280px;
   }
-}
 
-@media (max-width: 480px) {
   .chat-action-buttons {
-    gap: 6px;
+    gap: 5px;
   }
 
   .action-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+  }
+
+  .input-tools {
+    display: none;
+  }
+
+  .input-hint {
+    display: none;
   }
 }
 
@@ -1657,28 +1761,44 @@ body,
   <div class="chat-input-container" id="chatInputContainer">
     <div class="chat-input-wrapper">
 
-      <!-- Action buttons row -->
-      <div class="chat-action-buttons">
-        <button class="action-btn" data-action="create-image">🎨 Create Image</button>
-        <button class="action-btn" data-action="write">✏️ Write</button>
-        <button class="action-btn" data-action="search">🔍 Search</button>
-        <button class="action-btn" data-action="projects">📁 Projects</button>
-      </div>
-
-      <!-- Input bar -->
+      <!-- Main input bar -->
       <div class="chat-input-bar">
-        <input
-          type="text"
+        <!-- Left tool icons -->
+        <div class="input-tools">
+          <button class="input-tool-btn" title="Web search" aria-label="Web search">🌐</button>
+          <button class="input-tool-btn" title="Upload image" aria-label="Upload image">🖼️</button>
+          <button class="input-tool-btn" title="Attach file" aria-label="Attach file">📎</button>
+          <button class="input-tool-btn" title="More options" aria-label="More options">•••</button>
+        </div>
+
+        <!-- Text input -->
+        <textarea
           id="chatInput"
           class="chat-input"
-          placeholder="Message Nova..."
+          placeholder="Message Nova AI..."
+          rows="1"
           autocomplete="off"
-          aria-label="Message Nova"
-        />
-        <button class="input-btn" id="micBtn" title="Voice input" aria-label="Voice input">🎤</button>
-        <button class="input-btn" id="voiceBtn" title="Voice playback" aria-label="Voice playback">🔊</button>
-        <button class="input-btn send-btn" id="sendBtn" title="Send message" aria-label="Send message">➤</button>
+          aria-label="Message Nova AI"
+        ></textarea>
+
+        <!-- Right actions -->
+        <div class="input-actions">
+          <button class="input-btn" id="micBtn" title="Voice input" aria-label="Voice input">🎤</button>
+          <button class="input-btn" id="voiceBtn" title="Voice playback" aria-label="Voice playback">🔊</button>
+          <button class="send-btn" id="sendBtn" title="Send message" aria-label="Send message">↑</button>
+        </div>
       </div>
+
+      <!-- Quick action pills -->
+      <div class="chat-action-buttons">
+        <button class="action-btn" data-action="create-image">📷 Create Image</button>
+        <button class="action-btn" data-action="write">✏️ Write</button>
+        <button class="action-btn" data-action="code">&lt;/&gt; Code</button>
+        <button class="action-btn" data-action="search">🧠 Analyze</button>
+      </div>
+
+      <!-- Hint -->
+      <div class="input-hint">Nova can make mistakes. Verify important info.</div>
 
     </div>
   </div>
