@@ -993,6 +993,610 @@ body::after {
 
 </style>
 </head>
+<style>
+/* ═══ DESI Cinematic Polish Layer v5.1 ═══ */
+/* ============================================================
+   DESI Cinematic Polish — v5.1
+   Refinement layer: atmosphere, depth, lighting, glass, motion
+   Preserves all structure. Overrides only.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. ENHANCED COSMIC BACKGROUND
+   More depth, nebula fog, light streak, atmospheric haze
+   ---------------------------------------------------------- */
+
+body {
+  background: #040712;
+}
+
+body::before {
+  background:
+    /* Star field — varied brightness, sparse */
+    radial-gradient(1.5px 1.5px at 8% 12%, rgba(220, 225, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 65%, rgba(200, 210, 255, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 8%, rgba(180, 195, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 62% 38%, rgba(200, 200, 240, 0.35) 0%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 78% 72%, rgba(220, 225, 255, 0.55) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 35% 85%, rgba(180, 190, 230, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 15%, rgba(200, 210, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 15% 48%, rgba(190, 200, 240, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 28%, rgba(210, 215, 250, 0.35) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 82% 52%, rgba(200, 205, 240, 0.3) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 5% 90%, rgba(180, 190, 230, 0.25) 0%, transparent 100%),
+    radial-gradient(0.7px 0.7px at 68% 5%, rgba(200, 210, 250, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 55%, rgba(190, 200, 240, 0.25) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 95% 40%, rgba(180, 190, 230, 0.2) 0%, transparent 100%);
+  animation: stars-breathe 12s ease-in-out infinite alternate;
+}
+
+@keyframes stars-breathe {
+  0%   { opacity: 0.7; }
+  50%  { opacity: 0.95; }
+  100% { opacity: 0.75; }
+}
+
+body::after {
+  background:
+    /* PRIMARY: Cinematic light streak — diagonal upper-right */
+    linear-gradient(125deg,
+      transparent 35%,
+      rgba(100, 130, 255, 0.035) 48%,
+      rgba(130, 120, 255, 0.06) 53%,
+      rgba(160, 150, 255, 0.04) 58%,
+      rgba(120, 140, 255, 0.025) 65%,
+      transparent 75%),
+
+    /* NEBULA 1: Upper-right — main cosmic cloud */
+    radial-gradient(ellipse 55% 45% at 72% 18%,
+      rgba(90, 70, 200, 0.08) 0%,
+      rgba(70, 55, 180, 0.04) 35%,
+      transparent 65%),
+
+    /* NEBULA 2: Center-left — subtle violet mist */
+    radial-gradient(ellipse 45% 50% at 20% 55%,
+      rgba(60, 45, 160, 0.05) 0%,
+      rgba(50, 40, 140, 0.02) 40%,
+      transparent 60%),
+
+    /* NEBULA 3: Lower — faint blue haze */
+    radial-gradient(ellipse 60% 30% at 50% 90%,
+      rgba(40, 60, 150, 0.04) 0%,
+      transparent 55%),
+
+    /* ATMOSPHERIC FOG — bottom */
+    linear-gradient(to top,
+      rgba(4, 7, 18, 0.5) 0%,
+      rgba(4, 7, 18, 0.15) 20%,
+      transparent 40%),
+
+    /* ATMOSPHERIC FOG — top */
+    linear-gradient(to bottom,
+      rgba(4, 7, 18, 0.3) 0%,
+      transparent 15%),
+
+    /* VIGNETTE — cinematic edge darkening */
+    radial-gradient(ellipse 80% 75% at 50% 50%,
+      transparent 45%,
+      rgba(3, 5, 14, 0.35) 75%,
+      rgba(2, 3, 10, 0.6) 100%);
+
+  animation: nebula-drift 30s ease-in-out infinite alternate;
+}
+
+@keyframes nebula-drift {
+  0%   { opacity: 0.85; transform: translate(0, 0) scale(1); }
+  50%  { opacity: 1; transform: translate(-4px, 3px) scale(1.01); }
+  100% { opacity: 0.9; transform: translate(2px, -2px) scale(0.995); }
+}
+
+/* ----------------------------------------------------------
+   2. GLASSMORPHISM — deeper, more premium
+   ---------------------------------------------------------- */
+
+.sidebar {
+  background: rgba(8, 12, 28, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 30px rgba(80, 60, 180, 0.02);
+}
+
+.chat-panel {
+  background: rgba(8, 12, 28, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 40px rgba(70, 50, 160, 0.015);
+}
+
+.widget {
+  background: rgba(10, 14, 30, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 20px rgba(80, 60, 180, 0.015);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.widget:hover {
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 30px rgba(123, 97, 255, 0.04);
+}
+
+/* Quick action cards — glass depth */
+.quick-card {
+  background: rgba(12, 16, 36, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-card:hover {
+  border-color: rgba(123, 97, 255, 0.2) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(123, 97, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-3px);
+}
+
+/* Welcome message bubble */
+.welcome-msg-bubble {
+  background: rgba(12, 16, 36, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ----------------------------------------------------------
+   3. CINEMATIC LIGHTING — ambient bloom & edge glow
+   ---------------------------------------------------------- */
+
+/* Hero area — planetary bloom behind text */
+.welcome-screen::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 600px;
+  height: 500px;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%,
+      rgba(90, 70, 200, 0.07) 0%,
+      rgba(70, 55, 180, 0.03) 40%,
+      transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  animation: hero-bloom 8s ease-in-out infinite alternate;
+}
+
+.welcome-screen {
+  position: relative;
+}
+
+@keyframes hero-bloom {
+  0%   { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Chat panel — subtle inner radial light */
+.chat-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse 50% 30% at 50% 5%,
+      rgba(100, 80, 200, 0.03) 0%,
+      transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-panel {
+  position: relative;
+}
+
+.chat-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Right sidebar status widget — ambient glow behind planet */
+.planet-vis::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(123, 97, 255, 0.1) 0%,
+    rgba(94, 235, 255, 0.04) 30%,
+    transparent 60%);
+  animation: planet-glow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes planet-glow {
+  0%   { opacity: 0.6; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* ----------------------------------------------------------
+   4. SIDEBAR — refined navigation
+   ---------------------------------------------------------- */
+
+.nav-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.03);
+}
+
+.nav-item.active {
+  background: rgba(42, 42, 78, 0.85) !important;
+  border-color: rgba(123, 97, 255, 0.15);
+  box-shadow:
+    0 0 24px rgba(123, 97, 255, 0.12),
+    inset 0 0 20px rgba(123, 97, 255, 0.04);
+}
+
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 0 4px rgba(123, 97, 255, 0.4));
+}
+
+/* Sidebar profile — subtle separator glow */
+.sidebar-profile {
+  border-top-color: rgba(123, 97, 255, 0.08) !important;
+  position: relative;
+}
+
+.sidebar-profile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(123, 97, 255, 0.15), transparent);
+}
+
+/* Logo glow */
+.nova-logo-planet {
+  box-shadow:
+    0 0 10px rgba(150, 170, 255, 0.5),
+    0 0 25px rgba(120, 140, 255, 0.2),
+    0 0 50px rgba(100, 120, 255, 0.08) !important;
+}
+
+/* ----------------------------------------------------------
+   5. PLANET VISUALIZATION — cinematic realism
+   ---------------------------------------------------------- */
+
+.planet-core {
+  background: radial-gradient(circle at 35% 30%,
+    #7060d0 0%,
+    #4030a0 30%,
+    #201060 55%,
+    #100840 75%,
+    #080420 100%) !important;
+  box-shadow:
+    0 0 25px rgba(100, 80, 200, 0.35),
+    0 0 60px rgba(80, 60, 180, 0.15),
+    0 0 100px rgba(60, 40, 160, 0.06),
+    inset 0 -6px 16px rgba(0, 0, 0, 0.4),
+    inset 2px 3px 8px rgba(150, 130, 255, 0.15) !important;
+}
+
+.planet-ring:nth-child(2) {
+  border-color: rgba(123, 97, 255, 0.5) !important;
+  box-shadow: 0 0 8px rgba(123, 97, 255, 0.15);
+}
+
+.planet-ring:nth-child(3) {
+  border-color: rgba(94, 235, 255, 0.25) !important;
+  box-shadow: 0 0 6px rgba(94, 235, 255, 0.08);
+}
+
+/* ----------------------------------------------------------
+   6. SEND BUTTON — premium glow
+   ---------------------------------------------------------- */
+
+.send-btn {
+  background: linear-gradient(135deg, #6B51EF 0%, #8B6BFF 50%, #7B61FF 100%) !important;
+  box-shadow:
+    0 0 18px rgba(123, 97, 255, 0.45),
+    0 0 45px rgba(123, 97, 255, 0.15),
+    0 0 80px rgba(123, 97, 255, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15) !important;
+  animation: send-breathe 4s ease-in-out infinite;
+}
+
+@keyframes send-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(123, 97, 255, 0.45),
+      0 0 45px rgba(123, 97, 255, 0.15),
+      0 0 80px rgba(123, 97, 255, 0.06),
+      inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(123, 97, 255, 0.55),
+      0 0 55px rgba(123, 97, 255, 0.2),
+      0 0 90px rgba(123, 97, 255, 0.08),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.send-btn:hover {
+  box-shadow:
+    0 0 28px rgba(123, 97, 255, 0.6),
+    0 0 65px rgba(123, 97, 255, 0.25),
+    0 0 100px rgba(123, 97, 255, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ----------------------------------------------------------
+   7. INPUT BAR — atmospheric refinement
+   ---------------------------------------------------------- */
+
+.chat-input-bar {
+  background: rgba(8, 10, 24, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-input-bar:focus-within {
+  border-color: rgba(123, 97, 255, 0.2) !important;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.25),
+    0 0 30px rgba(123, 97, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ----------------------------------------------------------
+   8. MESSAGE AVATARS — cosmic depth
+   ---------------------------------------------------------- */
+
+.msg-avatar,
+.welcome-msg-avatar {
+  background: radial-gradient(circle at 35% 30%,
+    #4a3a8e 0%, #2a1a60 50%, #150a40 100%) !important;
+  box-shadow:
+    0 0 12px rgba(100, 80, 200, 0.25),
+    0 0 30px rgba(80, 60, 180, 0.08) !important;
+}
+
+.profile-avatar {
+  box-shadow:
+    0 0 10px rgba(100, 80, 200, 0.2),
+    0 0 25px rgba(80, 60, 180, 0.06) !important;
+}
+
+/* ----------------------------------------------------------
+   9. AMBIENT MOTION — slow, expensive, cinematic
+   ---------------------------------------------------------- */
+
+/* Floating particles layer (via main content pseudo) */
+.main-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(2px 2px at 30% 20%, rgba(123, 97, 255, 0.15) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 60%, rgba(94, 235, 255, 0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 80%, rgba(123, 97, 255, 0.1) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 85% 25%, rgba(150, 140, 255, 0.08) 0%, transparent 100%);
+  animation: particles-float 20s ease-in-out infinite alternate;
+}
+
+@keyframes particles-float {
+  0%   { transform: translate(0, 0); opacity: 0.5; }
+  33%  { transform: translate(8px, -6px); opacity: 0.7; }
+  66%  { transform: translate(-5px, 4px); opacity: 0.55; }
+  100% { transform: translate(3px, -3px); opacity: 0.65; }
+}
+
+/* Ensure content above particles */
+.main-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Panel entrance — smoother */
+.panel.active {
+  animation: panel-cinema-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes panel-cinema-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Message entrance */
+.msg {
+  animation: msg-cinema-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes msg-cinema-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Status card hover */
+.status-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Button press feedback */
+.ctrl-btn:active,
+.quick-card:active,
+.nav-item:active,
+.input-tool-btn:active {
+  transform: scale(0.97);
+}
+
+/* ----------------------------------------------------------
+   10. TYPOGRAPHY — refined hierarchy
+   ---------------------------------------------------------- */
+
+.welcome-title {
+  font-size: 42px !important;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  text-shadow: 0 0 60px rgba(123, 97, 255, 0.08);
+}
+
+.welcome-title .accent {
+  background: linear-gradient(135deg, #7B61FF, #9B8BFF) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.welcome-subtitle {
+  font-size: 18px !important;
+  color: rgba(169, 177, 214, 0.85) !important;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.widget-label {
+  letter-spacing: 2.5px !important;
+  font-size: 10px !important;
+}
+
+.quick-card-title {
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+/* ----------------------------------------------------------
+   11. SCROLLBAR — premium
+   ---------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(123, 97, 255, 0.15);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 97, 255, 0.25);
+}
+
+/* ----------------------------------------------------------
+   12. THINKING BUBBLE — vivid dots
+   ---------------------------------------------------------- */
+
+.thinking-bubble .dot {
+  width: 9px !important;
+  height: 9px !important;
+  background: var(--accent-purple) !important;
+  box-shadow: 0 0 8px rgba(123, 97, 255, 0.4);
+}
+
+/* ----------------------------------------------------------
+   13. SELECTION
+   ---------------------------------------------------------- */
+
+::selection {
+  background: rgba(123, 97, 255, 0.3) !important;
+  color: #fff;
+}
+
+/* ----------------------------------------------------------
+   14. RIGHT SIDEBAR — conversation hover
+   ---------------------------------------------------------- */
+
+.conv-item {
+  transition: all 0.2s ease;
+  padding: 10px 6px !important;
+  border-radius: 6px;
+  margin: 0 -6px;
+}
+
+.conv-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 1 !important;
+}
+
+/* ----------------------------------------------------------
+   15. OVERALL PANEL GLASS
+   ---------------------------------------------------------- */
+
+.panel {
+  background: rgba(8, 12, 28, 0.4);
+  border-radius: var(--radius-lg);
+}
+
+.status-card,
+.agent-card {
+  background: rgba(12, 16, 36, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* ----------------------------------------------------------
+   16. LOGO LETTER-SPACING REFINEMENT
+   ---------------------------------------------------------- */
+
+.nova-logo-text {
+  letter-spacing: 8px !important;
+  font-weight: 600;
+  font-size: 17px !important;
+  opacity: 0.95;
+}
+
+</style>
 <body>
 
 <div class="app-layout">
@@ -1724,9 +2328,14 @@ body::after {
 
             if (evt.type === 'token' || evt.type === 'message') {
               if (firstToken) { hideThinking(); firstToken = false; }
-              var t = (typeof payload === 'object' && payload !== null)
-                ? (payload.token || payload.content || payload.text || '')
-                : String(payload);
+              var t = '';
+              if (typeof payload === 'string') {
+                t = payload;
+              } else if (typeof payload === 'object' && payload !== null) {
+                t = payload.token || payload.content || payload.text || payload.delta || '';
+                if (typeof t === 'object') t = JSON.stringify(t);
+              }
+              if (!t || t === '[object Object]') t = '';
               accumulated += t;
               if (assistantBody) assistantBody.innerHTML = formatMessage(accumulated);
               scrollToBottom();
