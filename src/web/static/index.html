@@ -64,14 +64,14 @@ body::after{
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
 }
 .sidebar-logo{
-  display:flex;align-items:center;gap:10px;
-  padding:0 14px 20px;
+  display:flex;align-items:center;gap:0;
+  padding:0 6px 20px;
 }
-.sidebar-logo svg{flex-shrink:0}
-.sidebar-logo span{
-  font-size:17px;font-weight:600;letter-spacing:6px;
-  color:var(--text);
+.sidebar-logo img{
+  height:28px;width:auto;max-width:170px;object-fit:contain;flex-shrink:0;
+  filter:brightness(1.15) drop-shadow(0 0 12px rgba(123,97,255,.15));
 }
+.sidebar-logo span{display:none}
 .sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
 .nav-item{
   display:flex;align-items:center;gap:10px;
@@ -135,7 +135,10 @@ body::after{
   width:36px;height:36px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,#6B51EF,#8B6BFF,#5EEBFF);
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700;
+  font-size:14px;font-weight:700;overflow:hidden;
+}
+.msg-avatar img{
+  width:100%;height:100%;object-fit:cover;border-radius:50%;
 }
 .message.user .msg-avatar{background:linear-gradient(135deg,#34D399,#5EEBFF)}
 .msg-bubble{
@@ -262,34 +265,21 @@ body::after{
 }
 .online-text{color:var(--green);font-size:12px;font-weight:500;letter-spacing:0;text-transform:none}
 
-/* Planet animation */
+/* Planet visualization */
 .planet-container{
-  width:100%;aspect-ratio:1;position:relative;
+  width:100%;position:relative;
   display:flex;align-items:center;justify-content:center;
-  margin:8px 0;
+  margin:8px 0;padding:10px 0;
 }
-.planet-core{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#6B51EF,#8B6BFF);
-  box-shadow:0 0 30px rgba(123,97,255,.4);
-  position:absolute;
+.planet-container img{
+  width:75%;height:auto;object-fit:contain;
+  border-radius:20px;
+  animation:planetFloat 6s ease-in-out infinite alternate;
 }
-.orbit{
-  position:absolute;border-radius:50%;
-  border:1px solid rgba(123,97,255,.15);
-  animation:orbitSpin linear infinite;
+@keyframes planetFloat{
+  0%{transform:translateY(0);filter:drop-shadow(0 0 20px rgba(123,97,255,.3))}
+  100%{transform:translateY(-4px);filter:drop-shadow(0 0 30px rgba(123,97,255,.4))}
 }
-.orbit-1{width:70%;height:70%;animation-duration:8s;transform:rotateX(60deg)}
-.orbit-2{width:88%;height:88%;animation-duration:12s;transform:rotateX(60deg) rotateZ(30deg)}
-.orbit-3{width:100%;height:100%;animation-duration:18s;transform:rotateX(60deg) rotateZ(-20deg)}
-.orbit::after{
-  content:'';position:absolute;width:6px;height:6px;border-radius:50%;
-  background:var(--blue);box-shadow:0 0 6px var(--blue);
-  top:-3px;left:50%;transform:translateX(-50%);
-}
-.orbit-2::after{background:var(--purple);box-shadow:0 0 6px var(--purple)}
-.orbit-3::after{background:var(--green);box-shadow:0 0 6px var(--green)}
-@keyframes orbitSpin{to{transform:rotateX(60deg) rotateZ(360deg)}}
 
 /* Focus widget */
 .focus-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
@@ -553,30 +543,15 @@ body::after{
   background:linear-gradient(90deg,transparent,rgba(123,97,255,.12),transparent);
 }
 
-/* Logo planet glow */
-.sidebar-logo svg circle[fill]{
-  filter:drop-shadow(0 0 8px rgba(123,97,255,.4));
-}
+/* Logo glow handled via img filter */
 
-/* ─── 6. PLANET VISUALIZATION — cinematic ─── */
-.planet-core{
-  box-shadow:
-    0 0 30px rgba(123,97,255,.45),
-    0 0 60px rgba(123,97,255,.15),
-    0 0 100px rgba(123,97,255,.06),
-    inset 0 -4px 12px rgba(0,0,0,.3);
-}
-
-/* Planet ambient glow */
+/* ─── 6. PLANET VISUALIZATION — image-based ─── */
 .planet-container::before{
-  content:'';position:absolute;width:75%;height:75%;border-radius:50%;
-  background:radial-gradient(circle,rgba(123,97,255,.1),rgba(94,235,255,.03) 40%,transparent 65%);
+  content:'';position:absolute;width:80%;height:80%;border-radius:50%;
+  background:radial-gradient(circle,rgba(123,97,255,.08),rgba(94,235,255,.03) 40%,transparent 65%);
   animation:planetGlow 6s ease-in-out infinite alternate;
 }
 @keyframes planetGlow{0%{opacity:.5;transform:scale(.95)}100%{opacity:1;transform:scale(1.05)}}
-
-.orbit{border-color:rgba(123,97,255,.2)}
-.orbit::after{box-shadow:0 0 8px currentColor}
 
 /* ─── 7. SEND BUTTON — energized AI core ─── */
 #sendBtn{
@@ -707,12 +682,7 @@ body::after{
 <!-- ═══════════ LEFT SIDEBAR ═══════════ -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="14" r="5" fill="#7B61FF"/>
-      <ellipse cx="14" cy="14" rx="12" ry="5" stroke="#7B61FF" stroke-width="1" opacity=".5" transform="rotate(-20 14 14)"/>
-      <ellipse cx="14" cy="14" rx="12" ry="5" stroke="#5EEBFF" stroke-width="1" opacity=".3" transform="rotate(30 14 14)"/>
-    </svg>
-    <span>N O V A</span>
+    <img src="/static/img/nova-logo.png" alt="Nova" />
   </div>
 
   <div class="sidebar-nav">
@@ -765,7 +735,7 @@ body::after{
     <div id="chatMessages">
       <!-- Welcome message -->
       <div class="message assistant">
-        <div class="msg-avatar">N</div>
+        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
         <div>
           <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
           <div class="msg-time">9:41 AM</div>
@@ -773,7 +743,7 @@ body::after{
       </div>
       <!-- Thinking bubble (hidden) -->
       <div id="thinkingBubble" class="message assistant">
-        <div class="msg-avatar">N</div>
+        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
         <div class="thinking-dots"><span></span><span></span><span></span></div>
       </div>
     </div>
@@ -869,10 +839,7 @@ body::after{
       <span><span class="status-dot"></span> <span class="online-text">Online</span></span>
     </div>
     <div class="planet-container">
-      <div class="planet-core"></div>
-      <div class="orbit orbit-1"></div>
-      <div class="orbit orbit-2"></div>
-      <div class="orbit orbit-3"></div>
+      <img src="/static/img/nova-icon.png" alt="Nova AI" />
     </div>
   </div>
 
@@ -967,7 +934,7 @@ function appendChat(role, content) {
   div.className = 'message ' + role;
   const isUser = role === 'user';
   div.innerHTML = `
-    <div class="msg-avatar">${isUser ? 'Y' : 'N'}</div>
+    <div class="msg-avatar">${isUser ? 'Y' : '<img src="/static/img/nova-icon.png" alt="N">'}</div>
     <div>
       <div class="msg-bubble">${formatMessage(content)}</div>
       <div class="msg-time">${timeStr()}</div>
