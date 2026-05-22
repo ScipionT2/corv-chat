@@ -1,0 +1,3654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — AI Assistant</title>
+<style>
+/* ============================================
+   Nova v5 — Cinematic Futuristic Interface
+   Matching reference UI: 3-column floating layout
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ---------- Design Tokens ---------- */
+:root {
+  --bg-primary: #050816;
+  --bg-secondary: #0A1022;
+  --bg-glass: rgba(15, 20, 40, 0.65);
+  --bg-glass-light: rgba(20, 28, 55, 0.45);
+  --bg-card: rgba(15, 20, 40, 0.75);
+  --bg-input: rgba(12, 16, 32, 0.8);
+  --bg-active: #2A2A4E;
+
+  --accent-purple: #7B61FF;
+  --accent-blue: #5EEBFF;
+  --accent-green: #34D399;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #A9B1D6;
+  --text-muted: #6B7394;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --glow-purple: rgba(123, 97, 255, 0.3);
+  --glow-purple-soft: rgba(123, 97, 255, 0.15);
+  --glow-blue: rgba(94, 235, 255, 0.2);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+
+  --transition-fast: 0.15s ease;
+  --transition: 0.25s ease;
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--accent-blue); text-decoration: none; }
+a:hover { opacity: 0.85; }
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* ---------- Cosmic Background ---------- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    /* Stars — sparse, varied */
+    radial-gradient(1px 1px at 8% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 23% 68%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 8%, rgba(200,210,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 62% 42%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 78% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 88%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 90% 18%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 50%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 55% 30%, rgba(200,200,240,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 82% 55%, rgba(255,255,255,0.28) 0%, transparent 100%);
+  animation: stars-drift 30s ease-in-out infinite alternate;
+}
+
+/* Nebula + light streak */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    /* Cinematic light streak — upper right diagonal */
+    linear-gradient(135deg,
+      transparent 40%,
+      rgba(94, 140, 255, 0.04) 55%,
+      rgba(140, 120, 255, 0.06) 60%,
+      rgba(180, 160, 255, 0.03) 70%,
+      transparent 80%),
+    /* Nebula — upper right */
+    radial-gradient(ellipse 50% 40% at 75% 20%,
+      rgba(100, 80, 200, 0.06) 0%,
+      rgba(80, 60, 180, 0.03) 40%,
+      transparent 70%),
+    /* Nebula — center-left subtle */
+    radial-gradient(ellipse 40% 50% at 25% 60%,
+      rgba(60, 50, 160, 0.04) 0%,
+      transparent 60%),
+    /* Vignette */
+    radial-gradient(ellipse 75% 75% at 50% 50%,
+      transparent 50%,
+      rgba(5, 8, 22, 0.4) 85%,
+      rgba(3, 5, 15, 0.6) 100%);
+}
+
+@keyframes stars-drift {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.85; }
+}
+
+/* ---------- App Layout: 3-Column ---------- */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  padding: 20px;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Left Sidebar (Floating) ---------- */
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px 14px;
+  overflow: hidden;
+}
+
+/* Logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 10px 20px;
+}
+
+.nova-logo-icon {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nova-logo-planet {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c8d8ff 0%, #6070b0 60%, #3040708 100%);
+  box-shadow: 0 0 8px rgba(150, 170, 255, 0.4), 0 0 20px rgba(120, 140, 255, 0.15);
+}
+
+.nova-logo-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(180, 195, 255, 0.35);
+}
+
+.nova-logo-ring:nth-child(2) {
+  width: 22px; height: 14px;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  border-color: rgba(200, 210, 255, 0.5);
+}
+
+.nova-logo-ring:nth-child(3) {
+  width: 30px; height: 18px;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  border-color: rgba(160, 180, 255, 0.2);
+}
+
+.nova-logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+/* Nav */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  box-shadow: 0 0 20px rgba(123, 97, 255, 0.15);
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon,
+.nav-item:hover .nav-icon {
+  opacity: 1;
+}
+
+/* Sidebar profile */
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #3a2a6e, #1a1040, #0a0820);
+  box-shadow: 0 0 8px rgba(100, 80, 200, 0.2);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(150, 130, 255, 0.3), transparent 60%);
+}
+
+.profile-info { flex: 1; min-width: 0; }
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-role {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.profile-arrow {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ---------- Center Content ---------- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Hero */
+.welcome-screen {
+  padding: 10px 0 20px;
+}
+
+.welcome-hero {
+  padding: 0 10px;
+}
+
+.welcome-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.welcome-title .accent {
+  color: var(--accent-purple);
+}
+
+.welcome-subtitle {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* Chat Panel */
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Chat messages area */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Message bubbles */
+.msg { margin-bottom: 20px; display: flex; gap: 12px; animation: msg-in 0.3s ease both; }
+.msg.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #3a2a6e, #1a1040);
+  box-shadow: 0 0 10px rgba(100, 80, 200, 0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.msg-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(150, 130, 255, 0.25), transparent 60%);
+}
+
+.msg-content { flex: 1; min-width: 0; }
+
+.msg-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.msg.user .msg-label { display: none; }
+
+.msg-body {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+
+.msg.user .msg-body {
+  background: rgba(123, 97, 255, 0.12);
+  border: 1px solid rgba(123, 97, 255, 0.15);
+  padding: 10px 16px;
+  border-radius: 16px;
+  display: inline-block;
+}
+
+.msg.user .msg-content { display: flex; flex-direction: column; align-items: flex-end; }
+.msg.user .msg-avatar { display: none; }
+
+.msg-body code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 13px; }
+.msg-body pre { background: rgba(5,8,22,0.6); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; overflow-x: auto; margin: 10px 0; }
+.msg-body pre code { background: none; padding: 0; }
+.msg-body ul, .msg-body ol { padding-left: 20px; margin-bottom: 10px; }
+.msg-body blockquote { border-left: 3px solid var(--accent-purple); padding-left: 12px; color: var(--text-secondary); margin: 10px 0; }
+
+.msg-timestamp {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Welcome message (initial) */
+.welcome-message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.welcome-msg-avatar {
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #3a2a6e, #1a1040);
+  box-shadow: 0 0 10px rgba(100, 80, 200, 0.2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-msg-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(150, 130, 255, 0.25), transparent 60%);
+}
+
+.welcome-msg-bubble {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  max-width: 380px;
+}
+
+.welcome-msg-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.welcome-msg-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* Quick Action Cards */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 0 0 20px;
+}
+
+.quick-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.quick-card:hover {
+  border-color: var(--border-strong);
+  background: rgba(20, 28, 55, 0.8);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2), 0 0 20px var(--glow-purple-soft);
+  transform: translateY(-2px);
+}
+
+.quick-card-icon {
+  font-size: 20px;
+  color: var(--accent-blue);
+}
+
+.quick-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quick-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Chat Input */
+.chat-input-container {
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 8px 8px 8px 16px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.chat-input-bar:focus-within {
+  border-color: rgba(123, 97, 255, 0.3);
+  box-shadow: 0 0 20px rgba(123, 97, 255, 0.08);
+}
+
+.input-tool-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  background: none; border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.input-tool-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+
+.chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 15px;
+  padding: 8px 0;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+}
+
+.chat-input::placeholder { color: var(--text-muted); }
+
+.send-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7B61FF 0%, #9B7BFF 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 16px rgba(123, 97, 255, 0.4), 0 0 40px rgba(123, 97, 255, 0.15);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  box-shadow: 0 0 24px rgba(123, 97, 255, 0.55), 0 0 60px rgba(123, 97, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.send-btn:active { transform: scale(0.96); }
+
+/* Thinking bubble */
+.thinking-bubble {
+  display: flex; gap: 4px; padding: 12px 24px; align-items: center;
+}
+
+.thinking-bubble .dot {
+  width: 8px; height: 8px; background: var(--accent-purple); border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.thinking-bubble .dot:nth-child(1) { animation-delay: 0s; }
+.thinking-bubble .dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-bubble .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.thinking-bubble[hidden] { display: none; }
+
+/* ---------- Right Sidebar ---------- */
+.right-sidebar {
+  width: 240px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* Right sidebar widgets */
+.widget {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.widget-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+.status-online {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-green);
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+}
+
+/* Planet visualization */
+.planet-vis {
+  width: 100%;
+  height: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.planet-core {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #6050c0 0%, #3020808 40%, #180840 70%, #0a0420 100%);
+  box-shadow:
+    0 0 20px rgba(100, 80, 200, 0.3),
+    0 0 50px rgba(80, 60, 180, 0.15),
+    inset 0 -4px 12px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.planet-core::after {
+  content: '';
+  position: absolute;
+  top: 15%; left: 20%;
+  width: 35%; height: 25%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180, 170, 255, 0.3), transparent);
+}
+
+.planet-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+.planet-ring:nth-child(2) {
+  width: 90px; height: 36px;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  border-color: rgba(123, 97, 255, 0.4);
+  animation: ring-orbit 12s linear infinite;
+}
+
+.planet-ring:nth-child(3) {
+  width: 110px; height: 44px;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  border-color: rgba(94, 235, 255, 0.2);
+  animation: ring-orbit 18s linear infinite reverse;
+}
+
+@keyframes ring-orbit {
+  from { transform: translate(-50%, -50%) rotate(-20deg); }
+  to { transform: translate(-50%, -50%) rotate(340deg); }
+}
+
+/* Planet glow behind */
+.planet-vis::before {
+  content: '';
+  position: absolute;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(123, 97, 255, 0.12), transparent 70%);
+}
+
+/* Focus widget */
+.focus-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.focus-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Recent conversations */
+.conv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.conv-item:last-child { border-bottom: none; }
+.conv-item:hover { opacity: 0.8; }
+
+.conv-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.conv-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.conv-viewall {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.conv-viewall:hover { color: var(--text-primary); }
+
+/* Weather widget */
+.weather-widget {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 0;
+}
+
+.weather-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weather-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #2a2060, #151030);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.weather-temp { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.weather-desc { font-size: 11px; color: var(--text-muted); }
+
+.weather-right { text-align: right; }
+.weather-time { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.weather-date { font-size: 11px; color: var(--text-muted); }
+
+/* ---------- Panels (hidden views) ---------- */
+.panel {
+  display: none;
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.panel.active { display: block; animation: panel-in 0.25s ease both; }
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.panel h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--text-secondary);
+}
+
+/* Panel cards */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.status-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.status-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+.status-value { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+
+.ctrl-btn {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.ctrl-btn:hover { border-color: var(--border-strong); background: rgba(20, 28, 55, 0.8); }
+
+.agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus { border-color: rgba(123, 97, 255, 0.3); outline: none; }
+
+.log-area {
+  background: rgba(5, 8, 22, 0.6);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  max-height: 500px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--border);
+}
+
+.vision-result {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  min-height: 100px;
+}
+
+.placeholder-text { color: var(--text-muted); font-style: italic; }
+
+.settings-section, .agent-section, .status-section, .status-controls { margin-bottom: 20px; }
+
+.right-panel {
+  width: 280px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: none;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.right-panel.visible { display: flex; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .right-sidebar { display: none; }
+}
+
+@media (max-width: 768px) {
+  .app-layout { padding: 10px; gap: 10px; }
+  .sidebar { display: none; }
+  .welcome-title { font-size: 28px; }
+  .welcome-subtitle { font-size: 16px; }
+  .quick-actions { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .quick-actions { grid-template-columns: 1fr; }
+}
+
+/* ---------- Utility ---------- */
+.hidden { display: none !important; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Selection */
+::selection { background: rgba(123, 97, 255, 0.25); color: #fff; }
+::-moz-selection { background: rgba(123, 97, 255, 0.25); color: #fff; }
+
+/* Focus */
+:focus-visible { outline: 2px solid rgba(123, 97, 255, 0.5); outline-offset: 2px; }
+
+/* Mic listening */
+.input-btn { width: 32px; height: 32px; border-radius: 50%; background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all var(--transition-fast); flex-shrink: 0; }
+.input-btn:hover { color: var(--text-primary); }
+.input-btn.listening { background: #ef4444; color: #fff; animation: pulse-mic 1.5s ease-in-out infinite; }
+@keyframes pulse-mic { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+
+</style>
+</head>
+<style>
+/* ═══ DESI Cinematic Polish Layer v5.1 ═══ */
+/* ============================================================
+   DESI Cinematic Polish — v5.1
+   Refinement layer: atmosphere, depth, lighting, glass, motion
+   Preserves all structure. Overrides only.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. ENHANCED COSMIC BACKGROUND
+   More depth, nebula fog, light streak, atmospheric haze
+   ---------------------------------------------------------- */
+
+body {
+  background: #040712;
+}
+
+body::before {
+  background:
+    /* Star field — varied brightness, sparse */
+    radial-gradient(1.5px 1.5px at 8% 12%, rgba(220, 225, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 65%, rgba(200, 210, 255, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 8%, rgba(180, 195, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 62% 38%, rgba(200, 200, 240, 0.35) 0%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 78% 72%, rgba(220, 225, 255, 0.55) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 35% 85%, rgba(180, 190, 230, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 15%, rgba(200, 210, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 15% 48%, rgba(190, 200, 240, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 28%, rgba(210, 215, 250, 0.35) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 82% 52%, rgba(200, 205, 240, 0.3) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 5% 90%, rgba(180, 190, 230, 0.25) 0%, transparent 100%),
+    radial-gradient(0.7px 0.7px at 68% 5%, rgba(200, 210, 250, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 55%, rgba(190, 200, 240, 0.25) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 95% 40%, rgba(180, 190, 230, 0.2) 0%, transparent 100%);
+  animation: stars-breathe 12s ease-in-out infinite alternate;
+}
+
+@keyframes stars-breathe {
+  0%   { opacity: 0.7; }
+  50%  { opacity: 0.95; }
+  100% { opacity: 0.75; }
+}
+
+body::after {
+  background:
+    /* PRIMARY: Cinematic light streak — diagonal upper-right */
+    linear-gradient(125deg,
+      transparent 35%,
+      rgba(100, 130, 255, 0.035) 48%,
+      rgba(130, 120, 255, 0.06) 53%,
+      rgba(160, 150, 255, 0.04) 58%,
+      rgba(120, 140, 255, 0.025) 65%,
+      transparent 75%),
+
+    /* NEBULA 1: Upper-right — main cosmic cloud */
+    radial-gradient(ellipse 55% 45% at 72% 18%,
+      rgba(90, 70, 200, 0.08) 0%,
+      rgba(70, 55, 180, 0.04) 35%,
+      transparent 65%),
+
+    /* NEBULA 2: Center-left — subtle violet mist */
+    radial-gradient(ellipse 45% 50% at 20% 55%,
+      rgba(60, 45, 160, 0.05) 0%,
+      rgba(50, 40, 140, 0.02) 40%,
+      transparent 60%),
+
+    /* NEBULA 3: Lower — faint blue haze */
+    radial-gradient(ellipse 60% 30% at 50% 90%,
+      rgba(40, 60, 150, 0.04) 0%,
+      transparent 55%),
+
+    /* ATMOSPHERIC FOG — bottom */
+    linear-gradient(to top,
+      rgba(4, 7, 18, 0.5) 0%,
+      rgba(4, 7, 18, 0.15) 20%,
+      transparent 40%),
+
+    /* ATMOSPHERIC FOG — top */
+    linear-gradient(to bottom,
+      rgba(4, 7, 18, 0.3) 0%,
+      transparent 15%),
+
+    /* VIGNETTE — cinematic edge darkening */
+    radial-gradient(ellipse 80% 75% at 50% 50%,
+      transparent 45%,
+      rgba(3, 5, 14, 0.35) 75%,
+      rgba(2, 3, 10, 0.6) 100%);
+
+  animation: nebula-drift 30s ease-in-out infinite alternate;
+}
+
+@keyframes nebula-drift {
+  0%   { opacity: 0.85; transform: translate(0, 0) scale(1); }
+  50%  { opacity: 1; transform: translate(-4px, 3px) scale(1.01); }
+  100% { opacity: 0.9; transform: translate(2px, -2px) scale(0.995); }
+}
+
+/* ----------------------------------------------------------
+   2. GLASSMORPHISM — deeper, more premium
+   ---------------------------------------------------------- */
+
+.sidebar {
+  background: rgba(8, 12, 28, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 30px rgba(80, 60, 180, 0.02);
+}
+
+.chat-panel {
+  background: rgba(8, 12, 28, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 40px rgba(70, 50, 160, 0.015);
+}
+
+.widget {
+  background: rgba(10, 14, 30, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 20px rgba(80, 60, 180, 0.015);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.widget:hover {
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 30px rgba(123, 97, 255, 0.04);
+}
+
+/* Quick action cards — glass depth */
+.quick-card {
+  background: rgba(12, 16, 36, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-card:hover {
+  border-color: rgba(123, 97, 255, 0.2) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(123, 97, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-3px);
+}
+
+/* Welcome message bubble */
+.welcome-msg-bubble {
+  background: rgba(12, 16, 36, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ----------------------------------------------------------
+   3. CINEMATIC LIGHTING — ambient bloom & edge glow
+   ---------------------------------------------------------- */
+
+/* Hero area — planetary bloom behind text */
+.welcome-screen::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 600px;
+  height: 500px;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%,
+      rgba(90, 70, 200, 0.07) 0%,
+      rgba(70, 55, 180, 0.03) 40%,
+      transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  animation: hero-bloom 8s ease-in-out infinite alternate;
+}
+
+.welcome-screen {
+  position: relative;
+}
+
+@keyframes hero-bloom {
+  0%   { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Chat panel — subtle inner radial light */
+.chat-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse 50% 30% at 50% 5%,
+      rgba(100, 80, 200, 0.03) 0%,
+      transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-panel {
+  position: relative;
+}
+
+.chat-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Right sidebar status widget — ambient glow behind planet */
+.planet-vis::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(123, 97, 255, 0.1) 0%,
+    rgba(94, 235, 255, 0.04) 30%,
+    transparent 60%);
+  animation: planet-glow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes planet-glow {
+  0%   { opacity: 0.6; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* ----------------------------------------------------------
+   4. SIDEBAR — refined navigation
+   ---------------------------------------------------------- */
+
+.nav-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.03);
+}
+
+.nav-item.active {
+  background: rgba(42, 42, 78, 0.85) !important;
+  border-color: rgba(123, 97, 255, 0.15);
+  box-shadow:
+    0 0 24px rgba(123, 97, 255, 0.12),
+    inset 0 0 20px rgba(123, 97, 255, 0.04);
+}
+
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 0 4px rgba(123, 97, 255, 0.4));
+}
+
+/* Sidebar profile — subtle separator glow */
+.sidebar-profile {
+  border-top-color: rgba(123, 97, 255, 0.08) !important;
+  position: relative;
+}
+
+.sidebar-profile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(123, 97, 255, 0.15), transparent);
+}
+
+/* Logo glow */
+.nova-logo-planet {
+  box-shadow:
+    0 0 10px rgba(150, 170, 255, 0.5),
+    0 0 25px rgba(120, 140, 255, 0.2),
+    0 0 50px rgba(100, 120, 255, 0.08) !important;
+}
+
+/* ----------------------------------------------------------
+   5. PLANET VISUALIZATION — cinematic realism
+   ---------------------------------------------------------- */
+
+.planet-core {
+  background: radial-gradient(circle at 35% 30%,
+    #7060d0 0%,
+    #4030a0 30%,
+    #201060 55%,
+    #100840 75%,
+    #080420 100%) !important;
+  box-shadow:
+    0 0 25px rgba(100, 80, 200, 0.35),
+    0 0 60px rgba(80, 60, 180, 0.15),
+    0 0 100px rgba(60, 40, 160, 0.06),
+    inset 0 -6px 16px rgba(0, 0, 0, 0.4),
+    inset 2px 3px 8px rgba(150, 130, 255, 0.15) !important;
+}
+
+.planet-ring:nth-child(2) {
+  border-color: rgba(123, 97, 255, 0.5) !important;
+  box-shadow: 0 0 8px rgba(123, 97, 255, 0.15);
+}
+
+.planet-ring:nth-child(3) {
+  border-color: rgba(94, 235, 255, 0.25) !important;
+  box-shadow: 0 0 6px rgba(94, 235, 255, 0.08);
+}
+
+/* ----------------------------------------------------------
+   6. SEND BUTTON — premium glow
+   ---------------------------------------------------------- */
+
+.send-btn {
+  background: linear-gradient(135deg, #6B51EF 0%, #8B6BFF 50%, #7B61FF 100%) !important;
+  box-shadow:
+    0 0 18px rgba(123, 97, 255, 0.45),
+    0 0 45px rgba(123, 97, 255, 0.15),
+    0 0 80px rgba(123, 97, 255, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15) !important;
+  animation: send-breathe 4s ease-in-out infinite;
+}
+
+@keyframes send-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(123, 97, 255, 0.45),
+      0 0 45px rgba(123, 97, 255, 0.15),
+      0 0 80px rgba(123, 97, 255, 0.06),
+      inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(123, 97, 255, 0.55),
+      0 0 55px rgba(123, 97, 255, 0.2),
+      0 0 90px rgba(123, 97, 255, 0.08),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.send-btn:hover {
+  box-shadow:
+    0 0 28px rgba(123, 97, 255, 0.6),
+    0 0 65px rgba(123, 97, 255, 0.25),
+    0 0 100px rgba(123, 97, 255, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ----------------------------------------------------------
+   7. INPUT BAR — atmospheric refinement
+   ---------------------------------------------------------- */
+
+.chat-input-bar {
+  background: rgba(8, 10, 24, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-input-bar:focus-within {
+  border-color: rgba(123, 97, 255, 0.2) !important;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.25),
+    0 0 30px rgba(123, 97, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ----------------------------------------------------------
+   8. MESSAGE AVATARS — cosmic depth
+   ---------------------------------------------------------- */
+
+.msg-avatar,
+.welcome-msg-avatar {
+  background: radial-gradient(circle at 35% 30%,
+    #4a3a8e 0%, #2a1a60 50%, #150a40 100%) !important;
+  box-shadow:
+    0 0 12px rgba(100, 80, 200, 0.25),
+    0 0 30px rgba(80, 60, 180, 0.08) !important;
+}
+
+.profile-avatar {
+  box-shadow:
+    0 0 10px rgba(100, 80, 200, 0.2),
+    0 0 25px rgba(80, 60, 180, 0.06) !important;
+}
+
+/* ----------------------------------------------------------
+   9. AMBIENT MOTION — slow, expensive, cinematic
+   ---------------------------------------------------------- */
+
+/* Floating particles layer (via main content pseudo) */
+.main-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(2px 2px at 30% 20%, rgba(123, 97, 255, 0.15) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 60%, rgba(94, 235, 255, 0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 80%, rgba(123, 97, 255, 0.1) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 85% 25%, rgba(150, 140, 255, 0.08) 0%, transparent 100%);
+  animation: particles-float 20s ease-in-out infinite alternate;
+}
+
+@keyframes particles-float {
+  0%   { transform: translate(0, 0); opacity: 0.5; }
+  33%  { transform: translate(8px, -6px); opacity: 0.7; }
+  66%  { transform: translate(-5px, 4px); opacity: 0.55; }
+  100% { transform: translate(3px, -3px); opacity: 0.65; }
+}
+
+/* Ensure content above particles */
+.main-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Panel entrance — smoother */
+.panel.active {
+  animation: panel-cinema-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes panel-cinema-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Message entrance */
+.msg {
+  animation: msg-cinema-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes msg-cinema-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Status card hover */
+.status-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Button press feedback */
+.ctrl-btn:active,
+.quick-card:active,
+.nav-item:active,
+.input-tool-btn:active {
+  transform: scale(0.97);
+}
+
+/* ----------------------------------------------------------
+   10. TYPOGRAPHY — refined hierarchy
+   ---------------------------------------------------------- */
+
+.welcome-title {
+  font-size: 42px !important;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  text-shadow: 0 0 60px rgba(123, 97, 255, 0.08);
+}
+
+.welcome-title .accent {
+  background: linear-gradient(135deg, #7B61FF, #9B8BFF) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.welcome-subtitle {
+  font-size: 18px !important;
+  color: rgba(169, 177, 214, 0.85) !important;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.widget-label {
+  letter-spacing: 2.5px !important;
+  font-size: 10px !important;
+}
+
+.quick-card-title {
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+/* ----------------------------------------------------------
+   11. SCROLLBAR — premium
+   ---------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(123, 97, 255, 0.15);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 97, 255, 0.25);
+}
+
+/* ----------------------------------------------------------
+   12. THINKING BUBBLE — vivid dots
+   ---------------------------------------------------------- */
+
+.thinking-bubble .dot {
+  width: 9px !important;
+  height: 9px !important;
+  background: var(--accent-purple) !important;
+  box-shadow: 0 0 8px rgba(123, 97, 255, 0.4);
+}
+
+/* ----------------------------------------------------------
+   13. SELECTION
+   ---------------------------------------------------------- */
+
+::selection {
+  background: rgba(123, 97, 255, 0.3) !important;
+  color: #fff;
+}
+
+/* ----------------------------------------------------------
+   14. RIGHT SIDEBAR — conversation hover
+   ---------------------------------------------------------- */
+
+.conv-item {
+  transition: all 0.2s ease;
+  padding: 10px 6px !important;
+  border-radius: 6px;
+  margin: 0 -6px;
+}
+
+.conv-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 1 !important;
+}
+
+/* ----------------------------------------------------------
+   15. OVERALL PANEL GLASS
+   ---------------------------------------------------------- */
+
+.panel {
+  background: rgba(8, 12, 28, 0.4);
+  border-radius: var(--radius-lg);
+}
+
+.status-card,
+.agent-card {
+  background: rgba(12, 16, 36, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* ----------------------------------------------------------
+   16. LOGO LETTER-SPACING REFINEMENT
+   ---------------------------------------------------------- */
+
+.nova-logo-text {
+  letter-spacing: 8px !important;
+  font-weight: 600;
+  font-size: 17px !important;
+  opacity: 0.95;
+}
+
+</style>
+<body>
+
+<div class="app-layout">
+
+<!-- ═══ LEFT SIDEBAR (floating) ═══ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="nova-logo-icon">
+      <div class="nova-logo-planet"></div>
+      <div class="nova-logo-ring"></div>
+      <div class="nova-logo-ring"></div>
+    </div>
+    <span class="nova-logo-text">Nova</span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-panel="chat">
+      <span class="nav-icon">💬</span> Chat
+    </button>
+    <button class="nav-item" data-panel="explore">
+      <span class="nav-icon">🧭</span> Explore
+    </button>
+    <button class="nav-item" data-panel="memory">
+      <span class="nav-icon">🧠</span> Memory
+    </button>
+    <button class="nav-item" data-panel="tasks">
+      <span class="nav-icon">✓</span> Tasks
+    </button>
+    <button class="nav-item" data-panel="knowledge">
+      <span class="nav-icon">📖</span> Knowledge
+    </button>
+    <button class="nav-item" data-panel="settings">
+      <span class="nav-icon">⚙</span> Settings
+    </button>
+  </nav>
+
+  <!-- Profile -->
+  <div class="sidebar-profile">
+    <div class="profile-avatar"></div>
+    <div class="profile-info">
+      <div class="profile-name">You</div>
+      <div class="profile-role">Explorer</div>
+    </div>
+    <span class="profile-arrow">›</span>
+  </div>
+
+</aside>
+
+
+<!-- ═══ CENTER CONTENT ═══ -->
+<main class="main-content" id="mainContent">
+
+  <!-- Welcome Screen (hero + initial chat) -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-hero">
+      <h1 class="welcome-title">Hello, I'm <span class="accent">Nova.</span></h1>
+      <p class="welcome-subtitle">How can I help you today?</p>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="chat-panel" id="chatPanel">
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- Welcome message (built-in) -->
+      <div class="welcome-message" id="welcomeMsg">
+        <div class="welcome-msg-avatar">
+          <div style="position:relative;z-index:1;font-size:14px;">✦</div>
+        </div>
+        <div>
+          <div class="welcome-msg-bubble">
+            <div class="welcome-msg-text">Welcome back! What would you like to explore or create today?</div>
+            <div class="welcome-msg-time">9:41 AM</div>
+          </div>
+          <!-- Quick Actions -->
+          <div class="quick-actions" style="margin-top:16px;">
+            <button class="quick-card" data-action="search">
+              <span class="quick-card-icon">✦</span>
+              <span class="quick-card-title">Explain</span>
+              <span class="quick-card-desc">AI topics</span>
+            </button>
+            <button class="quick-card" data-action="write">
+              <span class="quick-card-icon">✎</span>
+              <span class="quick-card-title">Help me write</span>
+              <span class="quick-card-desc">Something</span>
+            </button>
+            <button class="quick-card" data-action="search">
+              <span class="quick-card-icon">≡</span>
+              <span class="quick-card-title">Summarize</span>
+              <span class="quick-card-desc">This document</span>
+            </button>
+            <button class="quick-card" data-action="create-image">
+              <span class="quick-card-icon">✧</span>
+              <span class="quick-card-title">Create</span>
+              <span class="quick-card-desc">An image</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thinking Bubble -->
+    <div class="thinking-bubble" id="thinkingBubble" hidden>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-container" id="chatInputContainer">
+      <div class="chat-input-bar">
+        <button class="input-tool-btn" title="Add">＋</button>
+        <button class="input-tool-btn" title="Tools">🌐</button>
+        <textarea id="chatInput" class="chat-input" placeholder="Message Nova..." rows="1" autocomplete="off" aria-label="Message Nova"></textarea>
+        <button class="input-btn" id="micBtn" title="Voice input">🎤</button>
+        <button class="input-btn" id="voiceBtn" title="Voice playback" style="display:none;">🔊</button>
+        <button class="send-btn" id="sendBtn" title="Send">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANELS (toggled by nav) ═══ -->
+
+  <section class="panel" id="panel-status">
+    <h2>📊 System Status</h2>
+    <div class="status-grid">
+      <div class="status-card"><span class="status-label">Pipeline</span><span class="status-value" id="sPipeline">—</span></div>
+      <div class="status-card"><span class="status-label">Ollama</span><span class="status-value" id="sOllama">—</span></div>
+      <div class="status-card"><span class="status-label">Chat Model</span><span class="status-value" id="sChatModel">—</span></div>
+      <div class="status-card"><span class="status-label">Vision</span><span class="status-value" id="sVision">—</span></div>
+      <div class="status-card"><span class="status-label">Uptime</span><span class="status-value" id="sUptime">—</span></div>
+      <div class="status-card"><span class="status-label">RAM</span><span class="status-value" id="sRAM">—</span></div>
+      <div class="status-card"><span class="status-label">GPU</span><span class="status-value" id="sGPU">—</span></div>
+      <div class="status-card"><span class="status-label">LLM Mode</span><span class="status-value" id="sLLMMode">—</span></div>
+    </div>
+    <div class="status-controls"><h3>Pipeline Controls</h3><div class="control-buttons"><button class="ctrl-btn" id="btnStartPipeline">▶ Start</button><button class="ctrl-btn" id="btnStopPipeline">⏹ Stop</button><button class="ctrl-btn" id="btnRestartPipeline">🔄 Restart</button></div></div>
+    <div class="status-section"><h3>Models Loaded</h3><div id="modelsLoaded"><p class="placeholder-text">No models loaded</p></div></div>
+    <div class="status-section"><h3>Usage Metrics</h3><div id="usageMetrics"><p class="placeholder-text">No usage data</p></div></div>
+  </section>
+
+  <section class="panel" id="panel-chat"></section>
+
+  <section class="panel" id="panel-scripts"><h2>📜 Scripts</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-projects"><h2>📁 Projects</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-agents">
+    <h2>🤖 Agents</h2>
+    <div class="agent-card active-agent"><h3>Active Agent</h3><div class="agent-detail"><span>Name:</span><span id="activeAgentName">—</span></div><div class="agent-detail"><span>Model:</span><span id="activeAgentModel">—</span></div><div class="agent-detail"><span>Prompt:</span><span id="activeAgentPrompt">—</span></div></div>
+    <div class="agent-section"><h3>All Agents</h3><div id="agentList"><p class="placeholder-text">No agents configured</p></div></div>
+    <div class="agent-section"><h3>Quick Add Agent</h3><form id="addAgentForm"><div class="form-group"><label for="newAgentName">Name</label><input type="text" id="newAgentName" placeholder="Agent name" /></div><div class="form-group"><label for="newAgentModel">Model</label><input type="text" id="newAgentModel" placeholder="e.g. llama3" /></div><div class="form-group"><label for="newAgentPrompt">System Prompt</label><textarea id="newAgentPrompt" rows="3" placeholder="System prompt..."></textarea></div><button type="submit" class="ctrl-btn">➕ Add Agent</button></form></div>
+  </section>
+
+  <section class="panel" id="panel-skills">
+    <h2>🧩 Skills</h2>
+    <div class="skills-stats" id="skillsStats"><span>Total: <strong id="skillsTotal">0</strong></span><span>Active: <strong id="skillsActive">0</strong></span></div>
+    <button class="ctrl-btn" id="btnReloadSkills">🔄 Reload Skills</button>
+    <div id="skillsList"><p class="placeholder-text">No skills loaded</p></div>
+  </section>
+
+  <section class="panel" id="panel-memory"><h2>🧠 Memory</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-settings">
+    <h2>⚙️ Settings</h2>
+    <div class="settings-section"><h3>API Keys</h3><form id="apiKeysForm"><div class="form-group"><label for="settingOpenRouterKey">OpenRouter API Key</label><input type="password" id="settingOpenRouterKey" placeholder="sk-or-..." /></div><div class="form-group"><label for="settingOpenAIKey">OpenAI API Key</label><input type="password" id="settingOpenAIKey" placeholder="sk-..." /></div><div class="form-group"><label for="settingAnthropicKey">Anthropic API Key</label><input type="password" id="settingAnthropicKey" placeholder="sk-ant-..." /></div></form></div>
+    <div class="settings-section"><h3>Provider Status</h3><div id="providerStatus"><p class="placeholder-text">Checking providers...</p></div></div>
+    <div class="settings-section"><h3>Configuration</h3><form id="configForm"><div class="form-group"><label for="settingDefaultModel">Default Model</label><input type="text" id="settingDefaultModel" placeholder="e.g. llama3" /></div><div class="form-group"><label for="settingVisionModel">Vision Model</label><input type="text" id="settingVisionModel" placeholder="e.g. llava" /></div><div class="form-group"><label for="settingTemperature">Temperature</label><input type="number" id="settingTemperature" min="0" max="2" step="0.1" value="0.7" /></div><div class="form-group"><label for="settingMaxTokens">Max Tokens</label><input type="number" id="settingMaxTokens" min="1" max="128000" value="4096" /></div><button type="submit" class="ctrl-btn">💾 Save Settings</button></form></div>
+    <div class="settings-section"><h3>System Info</h3><div><div><span>Version:</span> <span id="infoVersion">—</span></div><div><span>Host:</span> <span id="infoHost">—</span></div><div><span>Platform:</span> <span id="infoPlatform">—</span></div><div><span>Node:</span> <span id="infoNode">—</span></div></div></div>
+  </section>
+
+  <section class="panel" id="panel-vision">
+    <h2>👁️ Vision</h2>
+    <div><div class="form-group"><label for="visionImageInput">Image</label><input type="file" id="visionImageInput" accept="image/*" /></div><div class="form-group"><label for="visionPrompt">Prompt</label><input type="text" id="visionPrompt" placeholder="What do you want to know about this image?" /></div><button class="ctrl-btn" id="btnAnalyzeVision">🔍 Analyze</button></div>
+    <div class="vision-result" id="visionResult"><p class="placeholder-text">Upload an image and click Analyze</p></div>
+  </section>
+
+  <section class="panel" id="panel-logs">
+    <h2>📋 Logs</h2>
+    <div><button class="ctrl-btn" id="btnRefreshLogs">🔄 Refresh</button> <button class="ctrl-btn" id="btnClearLogs">🗑️ Clear</button></div>
+    <pre class="log-area" id="logArea">No logs available.</pre>
+  </section>
+
+  <section class="panel" id="panel-help">
+    <h2>❓ Help</h2>
+    <div><h3>Getting Started</h3><p>Nova is your AI-powered control hub. Use the sidebar to navigate.</p><h3>Chat</h3><p>Talk to Nova directly. Ask questions, request actions, or have a conversation.</p><h3>Keyboard Shortcuts</h3><ul><li><kbd>Enter</kbd> — Send</li><li><kbd>Shift+Enter</kbd> — New line</li></ul></div>
+  </section>
+
+  <!-- Explore panel (new) -->
+  <section class="panel" id="panel-explore"><h2>🧭 Explore</h2><p class="placeholder-text">Discover Nova's capabilities</p></section>
+
+  <!-- Tasks panel (new) -->
+  <section class="panel" id="panel-tasks"><h2>✓ Tasks</h2><p class="placeholder-text">Task management coming soon</p></section>
+
+  <!-- Knowledge panel (new) -->
+  <section class="panel" id="panel-knowledge"><h2>📖 Knowledge</h2><p class="placeholder-text">Knowledge base coming soon</p></section>
+
+</main>
+
+
+<!-- ═══ RIGHT SIDEBAR ═══ -->
+<aside class="right-sidebar" id="rightSidebar">
+
+  <!-- Nova Status Widget -->
+  <div class="widget">
+    <div class="widget-header">
+      <span class="widget-label">Nova Status</span>
+      <span class="status-online"><span class="status-dot"></span> Online</span>
+    </div>
+    <div class="planet-vis">
+      <div class="planet-core"></div>
+      <div class="planet-ring"></div>
+      <div class="planet-ring"></div>
+    </div>
+  </div>
+
+  <!-- Current Focus -->
+  <div class="widget">
+    <div class="focus-title">Current Focus</div>
+    <div class="focus-text">Helping you explore and create.</div>
+  </div>
+
+  <!-- Recent Conversations -->
+  <div class="widget">
+    <div class="widget-header">
+      <span class="widget-label">Recent Conversations</span>
+    </div>
+    <div class="conv-list">
+      <div class="conv-item"><span class="conv-title">Quantum mechanics explained</span><span class="conv-time">Today</span></div>
+      <div class="conv-item"><span class="conv-title">Ideas for a sci-fi story</span><span class="conv-time">Yesterday</span></div>
+      <div class="conv-item"><span class="conv-title">Workout plan help</span><span class="conv-time">2d ago</span></div>
+      <div class="conv-item"><span class="conv-title">Photosynthesis summary</span><span class="conv-time">3d ago</span></div>
+    </div>
+    <div class="conv-viewall">View all <span>›</span></div>
+  </div>
+
+  <!-- Weather / Time -->
+  <div class="widget">
+    <div class="weather-widget">
+      <div class="weather-left">
+        <div class="weather-icon">🌙</div>
+        <div>
+          <div class="weather-temp">24°</div>
+          <div class="weather-desc">Clear</div>
+        </div>
+      </div>
+      <div class="weather-right">
+        <div class="weather-time" id="clockTime">9:41 AM</div>
+        <div class="weather-date" id="clockDate">May 22</div>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+</div><!-- end app-layout -->
+
+<!-- Right panel for legacy JS compat (hidden) -->
+<aside class="right-panel" id="rightPanel" style="display:none;">
+  <div><h3>Model</h3><select id="modelSelector"><option value="openrouter">OpenRouter</option><option value="lmstudio">LMStudio</option><option value="ollama">Local Ollama</option><option value="custom">Custom</option></select><input type="text" id="modelName" class="model-name-input" placeholder="Model name..." /></div>
+  <div id="knowledgeBase"></div>
+  <div><span id="rpAgentName">Nova</span><span id="rpAgentModel">—</span><span id="rpAgentStatus">Idle</span></div>
+  <div id="skillsOverview"></div>
+  <div><span id="ctxMessageCount">0</span><span id="ctxTokenCount">0</span><span id="ctxSessionId">—</span></div>
+  <div><span id="metricRequests">0</span><span id="metricTokensIn">0</span><span id="metricTokensOut">0</span><span id="metricLatency">—</span></div>
+  <div id="rpUsageMetrics"></div>
+</aside>
+
+<!-- Hidden compat elements for accessibility toggles -->
+<div style="display:none;">
+  <input type="checkbox" id="toggleHighContrast" />
+  <input type="checkbox" id="toggleLargeText" />
+  <input type="checkbox" id="toggleTTS" />
+</div>
+
+<script>
+/**
+ * Nova Web Control Hub — Merged & Fixed JS (v3)
+ * ──────────────────────────────────────────────
+ * Combines js-core.js (chat/interaction) and js-panels.js (system panels).
+ *
+ * Fixes applied:
+ *   1. Single API declaration
+ *   2. All element IDs match the HTML exactly
+ *   3. All querySelector class names match the HTML exactly
+ *   4. Correct navigation logic (panels, right-panel, chat specifics)
+ *   5. Proper chat with SSE streaming
+ *   6. Web Speech API for mic + speechSynthesis for voice
+ *   7. Complete event listener wiring
+ *   8. Unified init at bottom
+ *
+ * v3 changes (ChatGPT-like init behavior):
+ *   - Default panel is "chat" (not "status")
+ *   - Chat panel: shows welcomeScreen OR chatMessages (mutually exclusive),
+ *     shows chatInputContainer, hides all .panel sections, hides rightPanel
+ *   - Other panels: hide welcomeScreen, chatInputContainer, chatMessages,
+ *     thinkingBubble; show matching panel-{name} section
+ *   - welcomeScreen hidden on first message; chatMessages shown instead
+ */
+
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  SINGLE API BASE — no duplicates
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const API = window.location.origin;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════════════════════
+
+  let ws = null;
+  let reconnectTimer = null;
+  let requestCount = 0;
+  let recognition = null;
+  let isListening = false;
+  let isSpeaking = false;
+  let hasMessages = false; // tracks whether chat has any messages
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  DOM HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function $(id) { return document.getElementById(id); }
+
+  function setText(id, val) {
+    var el = $(id);
+    if (el) el.textContent = val != null ? val : '—';
+  }
+
+  function setHTML(id, html) {
+    var el = $(id);
+    if (el) el.innerHTML = html;
+  }
+
+  async function apiFetch(path, opts) {
+    opts = opts || {};
+    requestCount++;
+    var url = API + path;
+    var res = await fetch(url, {
+      headers: Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {}),
+      method: opts.method || 'GET',
+      body: opts.body || undefined,
+    });
+    if (!res.ok) {
+      var body = await res.text().catch(function () { return ''; });
+      throw new Error('API ' + res.status + ': ' + body);
+    }
+    var ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  function statusDot(ok) {
+    return ok
+      ? '<span class="status-dot online"></span>'
+      : '<span class="status-dot offline"></span>';
+  }
+
+  function badge(text, cls) {
+    return '<span class="badge ' + (cls || '') + '">' + text + '</span>';
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+  }
+
+  function scrollToBottom() {
+    var el = $('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  1. NAVIGATION — matches HTML class names exactly
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /**
+   * switchPanel — activate a panel by name.
+   *
+   * v3 behaviour:
+   *   "chat" panel:
+   *     - Hide ALL .panel sections (chat lives outside them)
+   *     - Show chatInputContainer
+   *     - Show welcomeScreen if no messages yet, otherwise show chatMessages
+   *     - Hide rightPanel (clean ChatGPT look)
+   *
+   *   Any other panel:
+   *     - Hide welcomeScreen, chatInputContainer, chatMessages, thinkingBubble
+   *     - Hide rightPanel
+   *     - Show matching panel-{name} section
+   */
+  function switchPanel(target) {
+    var panelName;
+
+    if (typeof target === 'string') {
+      panelName = target;
+    } else if (target && target.dataset) {
+      panelName = target.dataset.panel;
+    }
+    if (!panelName) return;
+
+    // --- Deactivate all nav-items ---
+    var navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(function (item) {
+      item.classList.remove('active');
+    });
+
+    // --- Hide all panels ---
+    var panels = document.querySelectorAll('.panel');
+    panels.forEach(function (p) {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+
+    // --- Activate the clicked nav-item ---
+    var activeNav = document.querySelector('.nav-item[data-panel="' + panelName + '"]');
+    if (activeNav) activeNav.classList.add('active');
+
+    // --- Grab chat-specific elements ---
+    var welcomeScreen = $('welcomeScreen');
+    var chatInputContainer = $('chatInputContainer');
+    var chatMessages = $('chatMessages');
+    var thinkingBubble = $('thinkingBubble');
+    var rightPanel = $('rightPanel');
+
+    if (panelName === 'chat') {
+      // ── Chat panel: no .panel section, uses its own elements ──
+
+      // Show input bar
+      if (chatInputContainer) chatInputContainer.style.display = '';
+
+      // Welcome vs messages — mutually exclusive
+      if (hasMessages) {
+        if (welcomeScreen) {
+          welcomeScreen.style.display = 'none';
+          welcomeScreen.hidden = true;
+        }
+        if (chatMessages) chatMessages.style.display = '';
+      } else {
+        if (welcomeScreen) {
+          welcomeScreen.style.display = '';
+          welcomeScreen.hidden = false;
+        }
+        if (chatMessages) chatMessages.style.display = 'none';
+      }
+
+      // Keep it clean — no right panel by default (ChatGPT style)
+      if (rightPanel) rightPanel.classList.remove('visible');
+
+    } else {
+      // ── Non-chat panels ──
+
+      // Hide all chat-related elements
+      if (welcomeScreen) {
+        welcomeScreen.style.display = 'none';
+        welcomeScreen.hidden = true;
+      }
+      if (chatInputContainer) chatInputContainer.style.display = 'none';
+      if (chatMessages) chatMessages.style.display = 'none';
+      if (thinkingBubble) thinkingBubble.setAttribute('hidden', '');
+
+      // Hide right panel for non-chat panels too
+      if (rightPanel) rightPanel.classList.remove('visible');
+
+      // Show the matching panel section (id = "panel-{name}")
+      var activePanel = $('panel-' + panelName);
+      if (activePanel) {
+        activePanel.classList.add('active');
+        activePanel.style.display = '';
+      }
+    }
+  }
+
+  /**
+   * toggleCategory — collapse/expand a sidebar nav category.
+   *
+   * HTML contract:
+   *   • category wrapper has class "nav-category" with data-category attribute
+   *   • clickable header has class "nav-category-toggle"
+   *   • arrow icon has class "category-arrow"
+   */
+  function toggleCategory(toggle) {
+    if (!toggle) return;
+    var category = toggle.closest('.nav-category');
+    if (!category) return;
+
+    category.classList.toggle('collapsed');
+
+    // Toggle visibility of child items within the category
+    var items = category.querySelectorAll('.nav-item');
+    items.forEach(function (item) {
+      if (category.classList.contains('collapsed')) {
+        item.style.display = 'none';
+      } else {
+        item.style.display = '';
+      }
+    });
+
+    // Rotate the arrow icon
+    var arrow = toggle.querySelector('.category-arrow');
+    if (arrow) {
+      arrow.classList.toggle('rotated');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  2. CHAT — message rendering, SSE streaming
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /**
+   * appendChat — add a message bubble to the chat panel.
+   *
+   * HTML contract for message bubbles:
+   *   div.msg.user | div.msg.assistant
+   *     div.msg-avatar  (assistant only)
+   *     div.msg-content
+   *       span.msg-label (assistant only, "Nova")
+   *       span.msg-body  (the actual text)
+   */
+  function appendChat(role, content) {
+    var chatMessages = $('chatMessages');
+    if (!chatMessages) return null;
+
+    // Mark that we have messages — switch from welcome to chat view
+    if (!hasMessages) {
+      hasMessages = true;
+      var ws = $('welcomeScreen');
+      if (ws) {
+        ws.style.display = 'none';
+        ws.hidden = true;
+      }
+      chatMessages.style.display = '';
+    }
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'msg ' + role;
+
+    if (role === 'assistant') {
+      var avatar = document.createElement('div');
+      avatar.className = 'msg-avatar';
+      avatar.textContent = '✦';
+      wrapper.appendChild(avatar);
+    }
+
+    var msgContent = document.createElement('div');
+    msgContent.className = 'msg-content';
+
+    if (role === 'assistant') {
+      var label = document.createElement('span');
+      label.className = 'msg-label';
+      label.textContent = 'Nova';
+      msgContent.appendChild(label);
+    }
+
+    var body = document.createElement('span');
+    body.className = 'msg-body';
+
+    if (role === 'user') {
+      body.textContent = content;
+    } else {
+      body.innerHTML = formatMessage(content);
+    }
+
+    msgContent.appendChild(body);
+    wrapper.appendChild(msgContent);
+    chatMessages.appendChild(wrapper);
+    scrollToBottom();
+
+    return body; // return body span for streaming updates
+  }
+
+  /**
+   * Minimal markdown-ish formatting.
+   */
+  function formatMessage(text) {
+    if (!text) return '';
+    var safe = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Code blocks: ```...```
+    safe = safe.replace(/```(\w*)\n?([\s\S]*?)```/g, function (_m, _lang, code) {
+      return '<pre><code>' + code.trim() + '</code></pre>';
+    });
+    // Inline code
+    safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Bold
+    safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Newlines
+    safe = safe.replace(/\n/g, '<br>');
+
+    return safe;
+  }
+
+  function hideWelcome() {
+    var ws = $('welcomeScreen');
+    if (ws) {
+      ws.style.display = 'none';
+      ws.hidden = true;
+    }
+    // Also ensure chatMessages is visible
+    var cm = $('chatMessages');
+    if (cm) cm.style.display = '';
+    hasMessages = true;
+  }
+
+  function isWelcomeVisible() {
+    var ws = $('welcomeScreen');
+    if (!ws) return false;
+    return ws.style.display !== 'none' && !ws.hidden;
+  }
+
+  // ── Thinking bubble (uses hidden attribute per spec) ───────────────────
+
+  function showThinking() {
+    var tb = $('thinkingBubble');
+    if (tb) {
+      tb.removeAttribute('hidden');
+      scrollToBottom();
+    }
+  }
+
+  function hideThinking() {
+    var tb = $('thinkingBubble');
+    if (tb) {
+      tb.setAttribute('hidden', '');
+    }
+  }
+
+  // ── SSE parser ─────────────────────────────────────────────────────────
+
+  function parseSSEChunk(chunk) {
+    var events = [];
+    var blocks = chunk.split(/\n\n/);
+
+    for (var i = 0; i < blocks.length; i++) {
+      var block = blocks[i];
+      if (!block.trim()) continue;
+
+      var eventType = 'token';
+      var data = '';
+
+      var lines = block.split('\n');
+      for (var j = 0; j < lines.length; j++) {
+        var line = lines[j];
+        if (line.indexOf('event: ') === 0) {
+          eventType = line.slice(7).trim();
+        } else if (line.indexOf('data: ') === 0) {
+          data += line.slice(6);
+        }
+      }
+
+      if (data) {
+        events.push({ type: eventType, data: data });
+      }
+    }
+    return events;
+  }
+
+  /**
+   * sendChat — POST to /api/chat, stream SSE response.
+   */
+  async function sendChat() {
+    var chatInput = $('chatInput');
+    if (!chatInput) return;
+
+    var text = chatInput.value.trim();
+    if (!text) return;
+
+    // Hide welcome on first message
+    hideWelcome();
+
+    // Render user message
+    appendChat('user', text);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Show thinking bubble (remove hidden attr)
+    showThinking();
+
+    // Prepare assistant placeholder for streaming
+    var assistantBody = appendChat('assistant', '');
+    var accumulated = '';
+    var firstToken = true;
+
+    try {
+      var response = await fetch(API + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!response.ok) {
+        hideThinking();
+        if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ Error: could not reach Nova backend.');
+        scrollToBottom();
+        return;
+      }
+
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+
+        buffer += decoder.decode(chunk.value, { stream: true });
+
+        // Split on double-newline for complete SSE blocks
+        var parts = buffer.split('\n\n');
+        buffer = parts.pop(); // keep incomplete tail
+
+        for (var pi = 0; pi < parts.length; pi++) {
+          var sseEvents = parseSSEChunk(parts[pi] + '\n\n');
+          for (var ei = 0; ei < sseEvents.length; ei++) {
+            var evt = sseEvents[ei];
+            var payload;
+            try { payload = JSON.parse(evt.data); } catch (_e) { payload = evt.data; }
+
+            if (evt.type === 'token' || evt.type === 'message') {
+              if (firstToken) { hideThinking(); firstToken = false; }
+              var t = '';
+              if (typeof payload === 'string') {
+                t = payload;
+              } else if (typeof payload === 'object' && payload !== null) {
+                t = payload.token || payload.content || payload.text || payload.delta || '';
+                if (typeof t === 'object') t = JSON.stringify(t);
+              }
+              if (!t || t === '[object Object]') t = '';
+              accumulated += t;
+              if (assistantBody) assistantBody.innerHTML = formatMessage(accumulated);
+              scrollToBottom();
+
+            } else if (evt.type === 'done') {
+              hideThinking();
+              var final = (typeof payload === 'object' && payload !== null)
+                ? (payload.content || payload.text || payload.message || '')
+                : '';
+              if (final && assistantBody) assistantBody.innerHTML = formatMessage(final);
+              scrollToBottom();
+
+            } else if (evt.type === 'error') {
+              hideThinking();
+              var errMsg = (typeof payload === 'object' && payload !== null)
+                ? (payload.message || payload.error || 'Unknown error')
+                : String(payload);
+              if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ ' + errMsg);
+              scrollToBottom();
+            }
+          }
+        }
+      }
+
+      // Flush remaining buffer
+      if (buffer.trim()) {
+        var remaining = parseSSEChunk(buffer + '\n\n');
+        for (var ri = 0; ri < remaining.length; ri++) {
+          var revt = remaining[ri];
+          var rpayload;
+          try { rpayload = JSON.parse(revt.data); } catch (_e) { rpayload = revt.data; }
+          if (revt.type === 'done' || revt.type === 'token') {
+            if (firstToken) { hideThinking(); firstToken = false; }
+            var rt = (typeof rpayload === 'object' && rpayload !== null)
+              ? (rpayload.token || rpayload.content || rpayload.text || '')
+              : String(rpayload);
+            if (rt) {
+              accumulated += rt;
+              if (assistantBody) assistantBody.innerHTML = formatMessage(accumulated);
+            }
+          }
+        }
+      }
+
+      hideThinking();
+      scrollToBottom();
+
+    } catch (err) {
+      hideThinking();
+      console.error('sendChat error:', err);
+      if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ Connection error. Please try again.');
+      scrollToBottom();
+    }
+  }
+
+  /**
+   * loadHistory — fetch /api/history and populate chat.
+   */
+  async function loadHistory() {
+    try {
+      var res = await fetch(API + '/api/history');
+      if (!res.ok) return;
+      var data = await res.json();
+      var messages = data.messages || data.history || data || [];
+      if (!Array.isArray(messages) || messages.length === 0) return;
+      // History exists — hide welcome, show messages
+      hideWelcome();
+      for (var i = 0; i < messages.length; i++) {
+        var msg = messages[i];
+        var role = msg.role || (msg.is_user ? 'user' : 'assistant');
+        var content = msg.content || msg.text || msg.message || '';
+        appendChat(role, content);
+      }
+    } catch (err) {
+      console.error('loadHistory error:', err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  3. VOICE / MICROPHONE — Web Speech API
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleMic() {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice input is not supported in your browser. Try Chrome or Edge.');
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function () {
+      isListening = true;
+      var micBtn = $('micBtn');
+      if (micBtn) micBtn.classList.add('listening');
+    };
+
+    recognition.onresult = function (event) {
+      var transcript = '';
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      var chatInput = $('chatInput');
+      if (chatInput) chatInput.value = transcript;
+    };
+
+    recognition.onerror = function (event) {
+      console.error('Speech recognition error:', event.error);
+      stopListening();
+    };
+
+    recognition.onend = function () {
+      stopListening();
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error('Could not start speech recognition:', err);
+      stopListening();
+    }
+  }
+
+  function stopListening() {
+    isListening = false;
+    var micBtn = $('micBtn');
+    if (micBtn) micBtn.classList.remove('listening');
+    if (recognition) {
+      try { recognition.stop(); } catch (_e) { /* ignore */ }
+      recognition = null;
+    }
+  }
+
+  function toggleVoice() {
+    var synth = window.speechSynthesis;
+    if (!synth) {
+      alert('Text-to-speech is not supported in your browser.');
+      return;
+    }
+
+    if (isSpeaking) {
+      synth.cancel();
+      isSpeaking = false;
+      var vb = $('voiceBtn');
+      if (vb) vb.classList.remove('speaking');
+      return;
+    }
+
+    // Find last assistant message body
+    var chatMessages = $('chatMessages');
+    var assistantBodies = chatMessages
+      ? chatMessages.querySelectorAll('.msg.assistant .msg-body')
+      : [];
+
+    if (assistantBodies.length === 0) return;
+
+    var lastBody = assistantBodies[assistantBodies.length - 1];
+    var text = lastBody.textContent || lastBody.innerText || '';
+    if (!text.trim()) return;
+
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    var voiceBtn = $('voiceBtn');
+
+    utterance.onstart = function () {
+      isSpeaking = true;
+      if (voiceBtn) voiceBtn.classList.add('speaking');
+    };
+    utterance.onend = function () {
+      isSpeaking = false;
+      if (voiceBtn) voiceBtn.classList.remove('speaking');
+    };
+    utterance.onerror = function () {
+      isSpeaking = false;
+      if (voiceBtn) voiceBtn.classList.remove('speaking');
+    };
+
+    synth.speak(utterance);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  4. THEME
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleTheme() {
+    var body = document.body;
+    if (body.classList.contains('dark-theme')) {
+      body.classList.remove('dark-theme');
+      body.classList.add('light-theme');
+      localStorage.setItem('nova-theme', 'light');
+    } else {
+      body.classList.remove('light-theme');
+      body.classList.add('dark-theme');
+      localStorage.setItem('nova-theme', 'dark');
+    }
+  }
+
+  function restoreTheme() {
+    var saved = localStorage.getItem('nova-theme');
+    if (saved === 'light') {
+      document.body.classList.remove('dark-theme');
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+      document.body.classList.add('dark-theme');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  5. ACTION BUTTONS (welcome-card and data-action)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function handleAction(type) {
+    // Switch to chat first
+    switchPanel('chat');
+
+    var prefills = {
+      'create-image': 'Create an image of ',
+      'write':        'Write ',
+      'code':         'Help me code ',
+      'search':       'Search for ',
+      'projects':     null,
+    };
+
+    if (type === 'projects') {
+      switchPanel('projects');
+      return;
+    }
+
+    var prefill = prefills[type];
+    if (prefill) {
+      hideWelcome();
+      var chatInput = $('chatInput');
+      if (chatInput) {
+        chatInput.value = prefill;
+        chatInput.focus();
+        chatInput.setSelectionRange(prefill.length, prefill.length);
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  6. WEBSOCKET
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function connectWS() {
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+    var proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(proto + '://' + location.host + '/ws');
+
+    ws.onopen = function () {
+      console.log('[WS] connected');
+      setHeaderStatus('Connected', 'green');
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    };
+
+    ws.onmessage = function (ev) {
+      try {
+        var msg = JSON.parse(ev.data);
+        handleWSMessage(msg);
+      } catch (e) {
+        console.warn('[WS] non-JSON message:', ev.data);
+      }
+    };
+
+    ws.onerror = function (err) {
+      console.error('[WS] error:', err);
+    };
+
+    ws.onclose = function () {
+      console.log('[WS] closed — reconnecting in 3s');
+      setHeaderStatus('Disconnected', 'red');
+      ws = null;
+      if (!reconnectTimer) {
+        reconnectTimer = setTimeout(function () { reconnectTimer = null; connectWS(); }, 3000);
+      }
+    };
+  }
+
+  function handleWSMessage(msg) {
+    switch (msg.type) {
+      case 'status':
+        updateStatusFromData(msg.data || msg);
+        break;
+      case 'log':
+        appendLog(msg.data || msg.message || msg);
+        break;
+      case 'chat':
+        // Could be handled here for push-based chat
+        break;
+      case 'vision':
+        if (msg.data) {
+          setHTML('visionResult', '<pre class="vision-output">' + escapeHtml(
+            typeof msg.data === 'string' ? msg.data : JSON.stringify(msg.data, null, 2)
+          ) + '</pre>');
+        }
+        break;
+      case 'config':
+        if (msg.data) populateConfigForm(msg.data);
+        break;
+      case 'agent_switch':
+        loadAgents();
+        break;
+      case 'provider_model':
+        if (msg.data) setText('modelName', msg.data.model || msg.data.name || '');
+        break;
+      case 'settings':
+        loadSettingsApiKey();
+        break;
+      default:
+        console.log('[WS] unhandled type:', msg.type, msg);
+    }
+  }
+
+  function setHeaderStatus(label, color) {
+    var dot = document.querySelector('.chat-status-dot, #headerStatusDot');
+    var txt = document.querySelector('.chat-status-text, #headerStatusText');
+    if (dot) {
+      dot.style.background = color;
+      dot.className = dot.className.replace(/\bonline\b|\boffline\b|\bwarning\b/g, '');
+      if (color === 'green') dot.classList.add('online');
+      else if (color === 'red') dot.classList.add('offline');
+      else dot.classList.add('warning');
+    }
+    if (txt) txt.textContent = label;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  7. STATUS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function refreshStatus() {
+    try {
+      var d = await apiFetch('/api/status');
+      updateStatusFromData(d);
+    } catch (e) {
+      console.error('[Status] refresh failed:', e);
+      setText('sPipeline', 'Error');
+    }
+  }
+
+  function updateStatusFromData(d) {
+    if (!d) return;
+
+    // Pipeline
+    setText('sPipeline', d.pipeline || d.pipeline_status || '—');
+    var pipeEl = $('sPipeline');
+    if (pipeEl) {
+      pipeEl.className = pipeEl.className.replace(/\bstatus-\w+/g, '');
+      var running = (d.pipeline === 'running' || d.pipeline_status === 'running');
+      pipeEl.classList.add(running ? 'status-online' : 'status-offline');
+    }
+
+    setText('sOllama', d.ollama || d.ollama_status || '—');
+    setText('sChatModel', d.chat_model || d.model || '—');
+    setText('sVision', d.vision || d.vision_status || '—');
+    setText('sLLMMode', d.llm_mode || d.mode || '—');
+
+    // Uptime
+    if (d.uptime != null) setText('sUptime', formatUptime(d.uptime));
+
+    // Resources
+    setText('sRAM', d.ram || d.memory || '—');
+    setText('sGPU', d.gpu || d.gpu_usage || '—');
+
+    // Models loaded
+    if (d.models_loaded != null) {
+      var ml = $('modelsLoaded');
+      if (ml) {
+        if (Array.isArray(d.models_loaded)) {
+          ml.textContent = d.models_loaded.join(', ') || 'None';
+        } else {
+          ml.textContent = String(d.models_loaded);
+        }
+      }
+    }
+
+    // Usage metrics
+    var metricsEl = $('usageMetrics');
+    if (metricsEl && d.usage) {
+      setText('metricRequests', d.usage.requests != null ? d.usage.requests : '—');
+      setText('metricTokensIn', d.usage.tokens_in != null ? d.usage.tokens_in : '—');
+      setText('metricTokensOut', d.usage.tokens_out != null ? d.usage.tokens_out : '—');
+      setText('metricLatency', d.usage.latency != null ? d.usage.latency + 'ms' : '—');
+    }
+
+    // Right panel agent info
+    setText('rpAgentName', d.active_agent || d.agent_name || '—');
+    setText('rpAgentModel', d.chat_model || d.model || '—');
+    setText('rpAgentStatus', d.pipeline === 'running' || d.pipeline_status === 'running' ? 'Online' : 'Offline');
+
+    // Live context
+    if (d.context) {
+      setText('ctxMessageCount', d.context.messages != null ? d.context.messages : '—');
+      setText('ctxTokenCount', d.context.tokens != null ? d.context.tokens : '—');
+      setText('ctxSessionId', d.context.session_id || '—');
+    }
+
+    // Model name in right panel
+    setText('modelName', d.chat_model || d.model || '—');
+  }
+
+  function formatUptime(seconds) {
+    if (seconds == null || isNaN(seconds)) return '—';
+    seconds = Math.floor(Number(seconds));
+    if (seconds < 60) return seconds + 's';
+    var mins = Math.floor(seconds / 60);
+    var secs = seconds % 60;
+    if (mins < 60) return mins + 'm ' + secs + 's';
+    var hrs = Math.floor(mins / 60);
+    var remMins = mins % 60;
+    if (hrs < 24) return hrs + 'h ' + remMins + 'm';
+    var days = Math.floor(hrs / 24);
+    var remHrs = hrs % 24;
+    return days + 'd ' + remHrs + 'h ' + remMins + 'm';
+  }
+
+  // ── Pipeline controls ──────────────────────────────────────────────────
+
+  async function startPipeline() {
+    try {
+      await apiFetch('/api/start', { method: 'POST' });
+      setText('sPipeline', 'Starting…');
+      setTimeout(refreshStatus, 1500);
+    } catch (e) {
+      console.error('[Pipeline] start failed:', e);
+      alert('Failed to start pipeline: ' + e.message);
+    }
+  }
+
+  async function stopPipeline() {
+    try {
+      await apiFetch('/api/stop', { method: 'POST' });
+      setText('sPipeline', 'Stopping…');
+      setTimeout(refreshStatus, 1500);
+    } catch (e) {
+      console.error('[Pipeline] stop failed:', e);
+      alert('Failed to stop pipeline: ' + e.message);
+    }
+  }
+
+  async function restartPipeline() {
+    try {
+      await apiFetch('/api/restart', { method: 'POST' });
+      setText('sPipeline', 'Restarting…');
+      setTimeout(refreshStatus, 2000);
+    } catch (e) {
+      console.error('[Pipeline] restart failed:', e);
+      alert('Failed to restart pipeline: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  8. AGENTS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadAgents() {
+    try {
+      var data = await apiFetch('/api/agents');
+      var agents = Array.isArray(data) ? data : (data.agents || []);
+      var active = agents.find(function (a) { return a.active || a.is_active; }) || agents[0];
+
+      // Active agent card
+      if (active) {
+        setText('activeAgentName', active.name || active.id || '—');
+        setText('activeAgentModel', active.model || '—');
+        setText('activeAgentPrompt', active.system_prompt || active.prompt || '—');
+      }
+
+      // Agent list
+      var listEl = $('agentList');
+      if (listEl) {
+        listEl.innerHTML = agents.map(function (a) {
+          var isActive = a.active || a.is_active;
+          return '<div class="agent-item ' + (isActive ? 'active' : '') + '" data-agent-id="' + escapeHtml(a.id || a.name) + '">'
+            + '<div class="agent-item-header">'
+            + '<span class="agent-name">' + escapeHtml(a.name || a.id) + '</span>'
+            + (isActive ? badge('Active', 'badge-success') : '')
+            + '</div>'
+            + '<div class="agent-item-meta">'
+            + '<span class="agent-model">' + escapeHtml(a.model || '—') + '</span>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+
+        // Bind click handlers for agent switching
+        listEl.querySelectorAll('.agent-item[data-agent-id]').forEach(function (item) {
+          item.addEventListener('click', function () {
+            switchAgent(this.dataset.agentId);
+          });
+        });
+      }
+
+      // Right panel
+      setText('rpAgentName', active ? (active.name || active.id || '—') : '—');
+      setText('rpAgentModel', active ? (active.model || '—') : '—');
+      setText('rpAgentStatus', active ? 'Online' : 'Offline');
+
+    } catch (e) {
+      console.error('[Agents] load failed:', e);
+    }
+  }
+
+  async function switchAgent(id) {
+    try {
+      await apiFetch('/api/agents/switch', {
+        method: 'POST',
+        body: JSON.stringify({ agent_id: id }),
+      });
+      await loadAgents();
+      refreshStatus();
+    } catch (e) {
+      console.error('[Agents] switch failed:', e);
+      alert('Failed to switch agent: ' + e.message);
+    }
+  }
+
+  async function addAgent(e) {
+    if (e) e.preventDefault();
+
+    var name = ($('newAgentName') || {}).value;
+    var model = ($('newAgentModel') || {}).value;
+    var prompt = ($('newAgentPrompt') || {}).value;
+
+    if (!name) { alert('Agent name is required.'); return; }
+
+    try {
+      await apiFetch('/api/agents', {
+        method: 'POST',
+        body: JSON.stringify({ name: name, model: model || undefined, system_prompt: prompt || undefined }),
+      });
+      if ($('newAgentName')) $('newAgentName').value = '';
+      if ($('newAgentModel')) $('newAgentModel').value = '';
+      if ($('newAgentPrompt')) $('newAgentPrompt').value = '';
+      await loadAgents();
+    } catch (e) {
+      console.error('[Agents] add failed:', e);
+      alert('Failed to add agent: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  9. SKILLS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadSkills() {
+    try {
+      var data = await apiFetch('/api/skills');
+      var skills = Array.isArray(data) ? data : (data.skills || []);
+
+      var total = skills.length;
+      var activeCount = skills.filter(function (s) { return s.active !== false && s.enabled !== false; }).length;
+
+      setText('skillsTotal', total);
+      setText('skillsActive', activeCount);
+
+      // Skills stats (summary element)
+      var statsEl = $('skillsStats');
+      if (statsEl) {
+        statsEl.textContent = total + ' skills loaded, ' + activeCount + ' active';
+      }
+
+      // Skills list
+      var listEl = $('skillsList');
+      if (listEl) {
+        listEl.innerHTML = skills.map(function (s) {
+          var isActive = s.active !== false && s.enabled !== false;
+          return '<div class="skill-item ' + (isActive ? '' : 'skill-disabled') + '">'
+            + '<span class="skill-name">' + escapeHtml(s.name || s.id || '—') + '</span>'
+            + (isActive ? badge('Active', 'badge-success') : badge('Inactive', 'badge-muted'))
+            + (s.description ? '<p class="skill-desc">' + escapeHtml(s.description) + '</p>' : '')
+            + '</div>';
+        }).join('');
+      }
+
+      // Right panel skills overview
+      var soEl = $('skillsOverview');
+      if (soEl) {
+        soEl.textContent = activeCount + '/' + total + ' active';
+      }
+    } catch (e) {
+      console.error('[Skills] load failed:', e);
+    }
+  }
+
+  async function reloadSkills() {
+    try {
+      await apiFetch('/api/skills/reload', { method: 'POST' });
+      await loadSkills();
+    } catch (e) {
+      console.error('[Skills] reload failed:', e);
+      alert('Failed to reload skills: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  10. SETTINGS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadConfig() {
+    try {
+      var cfg = await apiFetch('/api/config');
+      populateConfigForm(cfg);
+    } catch (e) {
+      console.error('[Config] load failed:', e);
+    }
+  }
+
+  function populateConfigForm(cfg) {
+    if (!cfg) return;
+
+    // Map config fields to element IDs
+    var fieldMap = {
+      settingDefaultModel: cfg.model || cfg.default_model || cfg.chat_model,
+      settingVisionModel: cfg.vision_model || cfg.vision,
+      settingTemperature: cfg.temperature,
+      settingMaxTokens: cfg.max_tokens,
+    };
+
+    Object.keys(fieldMap).forEach(function (id) {
+      var val = fieldMap[id];
+      var el = $(id);
+      if (!el || val == null) return;
+      if (el.tagName === 'SELECT') {
+        var opt = Array.from(el.options).find(function (o) { return o.value === String(val); });
+        if (opt) opt.selected = true;
+        else el.value = val;
+      } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.value = val;
+      } else {
+        el.textContent = val;
+      }
+    });
+
+    // Info display
+    setText('infoVersion', cfg.version || '—');
+    setText('infoHost', cfg.host || '—');
+    setText('infoPlatform', cfg.platform || '—');
+    setText('infoNode', cfg.node_version || cfg.node || '—');
+  }
+
+  async function saveConfig(e) {
+    if (e) e.preventDefault();
+
+    var payload = {};
+
+    var defaultModel = ($('settingDefaultModel') || {}).value;
+    var visionModel = ($('settingVisionModel') || {}).value;
+    var temperature = ($('settingTemperature') || {}).value;
+    var maxTokens = ($('settingMaxTokens') || {}).value;
+
+    if (defaultModel) payload.model = defaultModel;
+    if (visionModel) payload.vision_model = visionModel;
+    if (temperature) payload.temperature = parseFloat(temperature);
+    if (maxTokens) payload.max_tokens = parseInt(maxTokens, 10);
+
+    try {
+      await apiFetch('/api/config', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      await loadConfig();
+      alert('Configuration saved.');
+    } catch (e) {
+      console.error('[Config] save failed:', e);
+      alert('Failed to save configuration: ' + e.message);
+    }
+  }
+
+  async function loadSettingsApiKey() {
+    try {
+      var data = await apiFetch('/api/settings');
+
+      // Provider status
+      var providerEl = $('providerStatus');
+      if (providerEl && data.providers) {
+        var providers = Array.isArray(data.providers)
+          ? data.providers
+          : Object.keys(data.providers).map(function (k) { return Object.assign({ name: k }, data.providers[k]); });
+        providerEl.innerHTML = providers.map(function (p) {
+          return '<div class="provider-card ' + (p.status === 'active' || p.available ? 'provider-active' : 'provider-inactive') + '">'
+            + '<div class="provider-name">' + escapeHtml(p.name || p.id || '—') + '</div>'
+            + '<div class="provider-status">' + escapeHtml(p.status || (p.available ? 'Active' : 'Inactive')) + '</div>'
+            + '</div>';
+        }).join('');
+      }
+    } catch (e) {
+      console.error('[Settings] load failed:', e);
+    }
+  }
+
+  async function saveApiKeys(e) {
+    if (e) e.preventDefault();
+
+    var openRouterKey = ($('settingOpenRouterKey') || {}).value;
+    var openAIKey = ($('settingOpenAIKey') || {}).value;
+    var anthropicKey = ($('settingAnthropicKey') || {}).value;
+
+    var payload = {};
+    if (openRouterKey) payload.openrouter_key = openRouterKey;
+    if (openAIKey) payload.openai_key = openAIKey;
+    if (anthropicKey) payload.anthropic_key = anthropicKey;
+
+    try {
+      await apiFetch('/api/settings/keys', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      // Clear fields
+      if ($('settingOpenRouterKey')) $('settingOpenRouterKey').value = '';
+      if ($('settingOpenAIKey')) $('settingOpenAIKey').value = '';
+      if ($('settingAnthropicKey')) $('settingAnthropicKey').value = '';
+      await loadSettingsApiKey();
+      alert('API keys saved.');
+    } catch (e) {
+      console.error('[Settings] save keys failed:', e);
+      alert('Failed to save API keys: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  11. VISION PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function analyzeVision() {
+    var resultEl = $('visionResult');
+    var promptEl = $('visionPrompt');
+    var imageInput = $('visionImageInput');
+
+    if (resultEl) resultEl.innerHTML = '<div class="loading-spinner"></div> Analyzing…';
+
+    var formData = new FormData();
+    if (promptEl && promptEl.value.trim()) {
+      formData.append('prompt', promptEl.value.trim());
+    }
+    if (imageInput && imageInput.files && imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
+
+    try {
+      requestCount++;
+      var res = await fetch(API + '/api/vision/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        var errBody = await res.text().catch(function () { return ''; });
+        throw new Error('API ' + res.status + ': ' + errBody);
+      }
+
+      var data = await res.json();
+      if (resultEl) {
+        var content = data.analysis || data.result || data.description || JSON.stringify(data, null, 2);
+        resultEl.innerHTML = '<pre class="vision-output">' + escapeHtml(content) + '</pre>';
+      }
+    } catch (e) {
+      console.error('[Vision] analyze failed:', e);
+      if (resultEl) resultEl.innerHTML = '<div class="error-text">Analysis failed: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  12. LOGS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function refreshLogs() {
+    try {
+      var data = await apiFetch('/api/logs');
+      var logs = Array.isArray(data) ? data : (data.logs || []);
+      var logEl = $('logArea');
+      if (logEl) {
+        logEl.innerHTML = '';
+        logs.forEach(function (entry) { appendLog(entry); });
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+    } catch (e) {
+      console.error('[Logs] refresh failed:', e);
+    }
+  }
+
+  function appendLog(entry) {
+    var logEl = $('logArea');
+    if (!logEl) return;
+
+    var div = document.createElement('div');
+    div.className = 'log-entry';
+
+    if (typeof entry === 'string') {
+      div.textContent = entry;
+    } else {
+      var ts = entry.timestamp || entry.time || '';
+      var level = entry.level || entry.severity || 'info';
+      var msg = entry.message || entry.msg || entry.text || JSON.stringify(entry);
+      div.classList.add('log-' + level.toLowerCase());
+      div.innerHTML = '<span class="log-ts">' + escapeHtml(ts) + '</span> '
+        + '<span class="log-level">[' + escapeHtml(level.toUpperCase()) + ']</span> '
+        + '<span class="log-msg">' + escapeHtml(msg) + '</span>';
+    }
+
+    logEl.appendChild(div);
+
+    // Cap at 500 entries
+    while (logEl.children.length > 500) {
+      logEl.removeChild(logEl.firstChild);
+    }
+
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function clearLogs() {
+    var logEl = $('logArea');
+    if (logEl) logEl.innerHTML = '';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  13. ACCESSIBILITY
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function handleAccessibilityToggle(type, checked) {
+    var body = document.body;
+    var className = 'a11y-' + type;
+
+    if (checked) {
+      body.classList.add(className);
+    } else {
+      body.classList.remove(className);
+    }
+
+    // Persist
+    try {
+      var prefs = JSON.parse(localStorage.getItem('nova_a11y') || '{}');
+      prefs[type] = checked;
+      localStorage.setItem('nova_a11y', JSON.stringify(prefs));
+    } catch (_) { /* ignore */ }
+  }
+
+  function restoreA11y() {
+    try {
+      var prefs = JSON.parse(localStorage.getItem('nova_a11y') || '{}');
+      Object.keys(prefs).forEach(function (type) {
+        if (prefs[type]) {
+          document.body.classList.add('a11y-' + type);
+          // Sync checkbox state
+          var idMap = {
+            'high-contrast': 'toggleHighContrast',
+            'large-text': 'toggleLargeText',
+            'tts': 'toggleTTS',
+          };
+          var el = $(idMap[type]);
+          if (el && el.type === 'checkbox') el.checked = true;
+        }
+      });
+    } catch (_) { /* ignore */ }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  14. RIGHT PANEL sections
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleRPSection(header) {
+    if (!header) return;
+    var section = header.closest('.rp-section') || header.parentElement;
+    if (section) section.classList.toggle('collapsed');
+
+    var icon = header.querySelector('.collapse-icon, .rp-toggle');
+    if (icon) {
+      icon.textContent = section.classList.contains('collapsed') ? '▸' : '▾';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  15. EVENT LISTENER WIRING
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function wireEvents() {
+
+    // ── Chat input ─────────────────────────────────────────────────────
+    var sendBtnEl = $('sendBtn');
+    var chatInputEl = $('chatInput');
+
+    if (sendBtnEl) {
+      sendBtnEl.addEventListener('click', function () { sendChat(); });
+    }
+
+    if (chatInputEl) {
+      chatInputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendChat();
+        }
+      });
+      // Auto-resize textarea
+      chatInputEl.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+      });
+    }
+
+    // ── Mic & Voice ───────────────────────────────────────────────────
+    var micBtnEl = $('micBtn');
+    var voiceBtnEl = $('voiceBtn');
+
+    if (micBtnEl) {
+      micBtnEl.addEventListener('click', function () { toggleMic(); });
+    }
+    if (voiceBtnEl) {
+      voiceBtnEl.addEventListener('click', function () { toggleVoice(); });
+    }
+
+    // ── Sidebar nav-items ─────────────────────────────────────────────
+    document.querySelectorAll('.nav-item').forEach(function (item) {
+      item.addEventListener('click', function (e) {
+        e.preventDefault();
+        switchPanel(this);
+      });
+    });
+
+    // ── Sidebar nav-category-toggles ──────────────────────────────────
+    document.querySelectorAll('.nav-category-toggle').forEach(function (toggle) {
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleCategory(this);
+      });
+    });
+
+    // ── Welcome cards & action buttons ────────────────────────────────
+    document.querySelectorAll('.welcome-card, .action-btn[data-action]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var action = this.dataset.action;
+        if (action) handleAction(action);
+      });
+    });
+
+    // ── Sidebar collapse button ────────────────────────────────────────
+    var collapseBtn = $('sidebarCollapseBtn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', function () {
+        var sidebar = $('sidebar');
+        if (sidebar) {
+          sidebar.classList.toggle('collapsed');
+          this.textContent = sidebar.classList.contains('collapsed') ? '▷' : '◁';
+        }
+      });
+    }
+
+    // ── New Chat button ────────────────────────────────────────────────
+    var newChatBtn = $('newChatBtn');
+    if (newChatBtn) {
+      newChatBtn.addEventListener('click', function () {
+        var chatMessages = $('chatMessages');
+        if (chatMessages) chatMessages.innerHTML = '';
+        hasMessages = false;
+        switchPanel('chat');
+      });
+    }
+
+    // ── Recent chats add button ────────────────────────────────────────
+    var recentAddBtn = document.querySelector('.recent-chats-add');
+    if (recentAddBtn) {
+      recentAddBtn.addEventListener('click', function () {
+        if (newChatBtn) newChatBtn.click();
+      });
+    }
+
+    // ── Accessibility toggles ─────────────────────────────────────────
+    var toggleHC = $('toggleHighContrast');
+    var toggleLT = $('toggleLargeText');
+    var toggleTTSEl = $('toggleTTS');
+
+    if (toggleHC) {
+      toggleHC.addEventListener('change', function () {
+        handleAccessibilityToggle('high-contrast', this.checked);
+      });
+    }
+    if (toggleLT) {
+      toggleLT.addEventListener('change', function () {
+        handleAccessibilityToggle('large-text', this.checked);
+      });
+    }
+    if (toggleTTSEl) {
+      toggleTTSEl.addEventListener('change', function () {
+        handleAccessibilityToggle('tts', this.checked);
+      });
+    }
+
+    // ── Form: Add Agent ───────────────────────────────────────────────
+    var addAgentFormEl = $('addAgentForm');
+    if (addAgentFormEl) {
+      addAgentFormEl.addEventListener('submit', function (e) { addAgent(e); });
+    }
+
+    // ── Form: Config ──────────────────────────────────────────────────
+    var configFormEl = $('configForm');
+    if (configFormEl) {
+      configFormEl.addEventListener('submit', function (e) { saveConfig(e); });
+    }
+
+    // ── Form: API Keys ────────────────────────────────────────────────
+    var apiKeysFormEl = $('apiKeysForm');
+    if (apiKeysFormEl) {
+      apiKeysFormEl.addEventListener('submit', function (e) { saveApiKeys(e); });
+    }
+
+    // ── Pipeline buttons ──────────────────────────────────────────────
+    var btnStart = $('btnStartPipeline');
+    var btnStop = $('btnStopPipeline');
+    var btnRestart = $('btnRestartPipeline');
+
+
+    if (btnStart) btnStart.addEventListener('click', function () { startPipeline(); });
+    if (btnStop) btnStop.addEventListener('click', function () { stopPipeline(); });
+    if (btnRestart) btnRestart.addEventListener('click', function () { restartPipeline(); });
+
+    // ── Skills reload ─────────────────────────────────────────────────
+    var btnReloadSkills = $('btnReloadSkills');
+    if (btnReloadSkills) {
+      btnReloadSkills.addEventListener('click', function () { reloadSkills(); });
+    }
+
+    // ── Vision analyze ────────────────────────────────────────────────
+    var btnAnalyze = $('btnAnalyzeVision');
+    if (btnAnalyze) {
+      btnAnalyze.addEventListener('click', function () { analyzeVision(); });
+    }
+
+    // ── Logs refresh / clear ──────────────────────────────────────────
+    var btnRefreshLogs = $('btnRefreshLogs');
+    var btnClearLogs = $('btnClearLogs');
+
+    if (btnRefreshLogs) btnRefreshLogs.addEventListener('click', function () { refreshLogs(); });
+    if (btnClearLogs) btnClearLogs.addEventListener('click', function () { clearLogs(); });
+
+    // ── Theme toggle (if a button exists) ─────────────────────────────
+    var themeBtn = document.querySelector('[data-action="toggle-theme"]');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () { toggleTheme(); });
+    }
+
+    // ── Right panel section collapse toggles ──────────────────────────
+    document.querySelectorAll('.rp-section-header, .rp-section-toggle').forEach(function (header) {
+      header.addEventListener('click', function () { toggleRPSection(this); });
+    });
+
+    // ── Model selector (right panel) ──────────────────────────────────
+    var modelSelectorEl = $('modelSelector');
+    if (modelSelectorEl) {
+      modelSelectorEl.addEventListener('change', function () {
+        setText('modelName', this.value);
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  16. INIT
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // Dynamic greeting based on time of day
+  function setDynamicGreeting() {
+    var titleEl = $('welcomeTitle');
+    var subEl = $('welcomeSubtitle');
+    if (!titleEl) return;
+
+    var hour = new Date().getHours();
+    var greeting, subtitle;
+
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+      subtitle = 'What will you create today?';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+      subtitle = 'Nova is ready. Let\u2019s build something.';
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good evening';
+      subtitle = 'Explore faster with Nova.';
+    } else {
+      greeting = 'Welcome back';
+      subtitle = 'Build something impossible.';
+    }
+
+    titleEl.innerHTML = greeting + ', <span class="accent">Escipion</span>';
+    if (subEl) subEl.textContent = subtitle;
+  }
+
+  function init() {
+    // Restore preferences
+    restoreTheme();
+    restoreA11y();
+
+    // Set dynamic greeting
+    setDynamicGreeting();
+
+    // Hide thinking bubble initially
+    hideThinking();
+
+    // Wire all event listeners
+    wireEvents();
+
+    // Default active panel: chat (ChatGPT-like — opens to chat with welcome screen)
+    switchPanel('chat');
+
+    // Load chat history (will hide welcome + show messages if history exists)
+    loadHistory();
+
+    // Connect WebSocket + fetch initial data
+    connectWS();
+    refreshStatus();
+    loadConfig();
+    loadAgents();
+    loadSkills();
+    loadSettingsApiKey();
+
+    // Periodic status refresh
+    setInterval(refreshStatus, 10000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  EXPOSE GLOBALS — callable from inline handlers or external scripts
+  // ═══════════════════════════════════════════════════════════════════════
+
+  window.sendChat        = sendChat;
+  window.appendChat      = appendChat;
+  window.loadHistory     = loadHistory;
+  window.showThinking    = showThinking;
+  window.hideThinking    = hideThinking;
+  window.toggleMic       = toggleMic;
+  window.toggleVoice     = toggleVoice;
+  window.toggleTheme     = toggleTheme;
+  window.handleAction    = handleAction;
+  window.switchPanel     = switchPanel;
+  window.toggleCategory  = toggleCategory;
+  window.refreshStatus   = refreshStatus;
+  window.startPipeline   = startPipeline;
+  window.stopPipeline    = stopPipeline;
+  window.restartPipeline = restartPipeline;
+  window.loadAgents      = loadAgents;
+  window.switchAgent     = switchAgent;
+  window.addAgent        = addAgent;
+  window.loadSkills      = loadSkills;
+  window.reloadSkills    = reloadSkills;
+  window.loadConfig      = loadConfig;
+  window.saveConfig      = saveConfig;
+  window.saveApiKeys     = saveApiKeys;
+  window.analyzeVision   = analyzeVision;
+  window.refreshLogs     = refreshLogs;
+  window.clearLogs       = clearLogs;
+  window.connectWS       = connectWS;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  BOOT
+  // ═══════════════════════════════════════════════════════════════════════
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+
+</script>
+</body>
+</html>
+
+<script>
+
+/* ═══════════════════════════════════════════════════════════════
+   Nova v5 — Navigation & Layout Patch
+   Runs AFTER the preserved v3 JS to adapt to the new 3-column layout.
+   Overrides switchPanel and adds new functionality.
+   ═══════════════════════════════════════════════════════════════ */
+
+(function() {
+  'use strict';
+
+  // Panel name mapping: new nav items → panel IDs
+  var panelMap = {
+    'chat':      'chat',
+    'explore':   'explore',
+    'memory':    'memory',
+    'tasks':     'tasks',
+    'knowledge': 'knowledge',
+    'settings':  'settings',
+    'status':    'status',
+    'agents':    'agents',
+    'skills':    'skills',
+    'vision':    'vision',
+    'logs':      'logs',
+    'help':      'help',
+    'scripts':   'scripts',
+    'projects':  'projects',
+  };
+
+  var hasMessages = false;
+
+  function $(id) { return document.getElementById(id); }
+
+  // Override switchPanel for v5 layout
+  window.switchPanel = function switchPanel(target) {
+    var panelName;
+    if (typeof target === 'string') {
+      panelName = target;
+    } else if (target && target.dataset) {
+      panelName = target.dataset.panel;
+    }
+    if (!panelName) return;
+
+    // Deactivate all nav items
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+      item.classList.remove('active');
+    });
+
+    // Activate clicked nav item
+    var activeNav = document.querySelector('.nav-item[data-panel="' + panelName + '"]');
+    if (activeNav) activeNav.classList.add('active');
+
+    // Hide all panels
+    document.querySelectorAll('.panel').forEach(function(p) {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+
+    var welcomeScreen = $('welcomeScreen');
+    var chatPanel = $('chatPanel');
+    var chatInputContainer = $('chatInputContainer');
+    var chatMessages = $('chatMessages');
+
+    if (panelName === 'chat') {
+      // Show chat view
+      if (welcomeScreen) welcomeScreen.style.display = '';
+      if (chatPanel) chatPanel.style.display = '';
+      if (chatInputContainer) chatInputContainer.style.display = '';
+      if (chatMessages) chatMessages.style.display = '';
+    } else {
+      // Hide chat, show panel
+      if (welcomeScreen) welcomeScreen.style.display = 'none';
+      if (chatPanel) chatPanel.style.display = 'none';
+
+      var panel = $('panel-' + panelName);
+      if (panel) {
+        panel.classList.add('active');
+        panel.style.display = '';
+      }
+    }
+  };
+
+  // Re-wire nav items for v5
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.switchPanel(this);
+    });
+  });
+
+  // Quick action cards
+  document.querySelectorAll('.quick-card[data-action]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var action = this.dataset.action;
+      var prefills = {
+        'create-image': 'Create an image of ',
+        'write': 'Help me write ',
+        'search': 'Explain ',
+        'code': 'Help me code ',
+      };
+      var prefill = prefills[action];
+      if (prefill) {
+        var welcomeMsg = $('welcomeMsg');
+        if (welcomeMsg) welcomeMsg.style.display = 'none';
+        var chatInput = $('chatInput');
+        if (chatInput) {
+          chatInput.value = prefill;
+          chatInput.focus();
+        }
+      }
+    });
+  });
+
+  // Clock update
+  function updateClock() {
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    var timeStr = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dateStr = months[now.getMonth()] + ' ' + now.getDate();
+
+    var clockTime = $('clockTime');
+    var clockDate = $('clockDate');
+    if (clockTime) clockTime.textContent = timeStr;
+    if (clockDate) clockDate.textContent = dateStr;
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // Initialize to chat view
+  window.switchPanel('chat');
+
+})();
+
+</script>
+</body>
+</html>
