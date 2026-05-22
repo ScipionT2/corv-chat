@@ -403,6 +403,126 @@ body::after{
 .panel-view{display:none;flex:1;min-height:0;overflow-y:auto;padding:40px 0}
 .panel-view h2{font-size:28px;font-weight:700;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px}
 .panel-view p{color:var(--text-mid);font-size:15px}
+.panel-view{padding:40px 30px}
+
+/* Panel cards */
+.panel-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.panel-card{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(10,15,35,.6);border:1px solid rgba(255,255,255,.05);
+  border-radius:12px;padding:16px;cursor:pointer;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.panel-card:hover{
+  background:rgba(10,15,35,.8);border-color:rgba(123,97,255,.12);
+  box-shadow:0 0 25px rgba(123,97,255,.03);transform:translateY(-2px);
+}
+.panel-card-icon{font-size:24px;flex-shrink:0}
+.panel-card strong{color:var(--text);font-size:14px}
+.text-dim{color:var(--text-dim)}
+
+/* Panel empty state */
+.panel-empty{
+  text-align:center;padding:48px 0;color:var(--text-mid);
+}
+.panel-empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+
+/* Panel loading */
+.panel-loading{text-align:center;padding:32px 0;color:var(--text-dim)}
+
+/* Chat list */
+.chat-list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.04);
+  background:rgba(10,15,35,.5);
+  margin-bottom:8px;cursor:pointer;
+  transition:all .2s;
+}
+.chat-list-item:hover{
+  background:rgba(10,15,35,.7);border-color:rgba(123,97,255,.1);
+}
+.chat-list-title{font-size:14px;font-weight:500;color:var(--text)}
+.chat-list-meta{font-size:11px;color:var(--text-dim)}
+.chat-list-actions{display:flex;gap:6px}
+.chat-list-delete{
+  background:none;border:none;color:var(--text-dim);cursor:pointer;
+  padding:4px 8px;border-radius:6px;font-size:12px;
+  transition:all .2s;
+}
+.chat-list-delete:hover{color:#EF4444;background:rgba(239,68,68,.1)}
+
+/* Settings styles */
+.settings-section{
+  background:rgba(10,15,35,.5);border:1px solid rgba(255,255,255,.05);
+  border-radius:12px;padding:20px;margin-bottom:16px;
+}
+.settings-section-title{
+  font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;
+  color:var(--text-dim);margin-bottom:14px;
+}
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;gap:12px;
+}
+.settings-label{font-size:13px;color:var(--text-mid);flex-shrink:0}
+.settings-input{
+  flex:1;max-width:280px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);border-radius:8px;
+  color:var(--text);font-size:13px;padding:8px 12px;outline:none;
+  font-family:inherit;transition:border-color .2s;
+}
+.settings-input:focus{border-color:rgba(123,97,255,.2)}
+.settings-select{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:8px;color:var(--text);font-size:13px;
+  padding:8px 12px;outline:none;cursor:pointer;
+  font-family:inherit;appearance:none;-webkit-appearance:none;
+}
+.settings-select option{background:#0a0e1c;color:var(--text)}
+.settings-select optgroup{color:var(--text-dim);font-weight:600}
+.settings-btn-save{
+  background:linear-gradient(135deg,#5B41DF,#7B61FF);color:#fff;
+  border:none;border-radius:8px;padding:8px 20px;cursor:pointer;
+  font-size:13px;font-family:'Orbitron',sans-serif;letter-spacing:.5px;
+  margin-top:8px;transition:all .2s;
+}
+.settings-btn-save:hover{box-shadow:0 0 20px rgba(123,97,255,.3)}
+.settings-btn-danger{
+  background:rgba(239,68,68,.1);color:#EF4444;
+  border:1px solid rgba(239,68,68,.2);border-radius:8px;
+  padding:8px 20px;cursor:pointer;font-size:13px;font-family:inherit;
+  transition:all .2s;
+}
+.settings-btn-danger:hover{background:rgba(239,68,68,.2)}
+
+/* Account card */
+.account-card{
+  display:flex;align-items:center;gap:14px;
+  padding:4px 0;
+}
+.account-avatar{
+  width:44px;height:44px;border-radius:50%;object-fit:cover;
+  background:linear-gradient(135deg,#6B51EF,#8B6BFF);
+}
+.account-info{flex:1}
+.account-name{font-size:15px;font-weight:600;color:var(--text)}
+.account-email{font-size:12px;color:var(--text-dim)}
+.account-actions{display:flex;gap:8px;margin-top:12px}
+.btn-sign-in{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:10px 18px;cursor:pointer;
+  color:var(--text);font-size:13px;font-family:inherit;transition:all .2s;
+}
+.btn-sign-in:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)}
+.btn-sign-in img{width:18px;height:18px}
+.btn-sign-out{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);
+  border-radius:8px;padding:6px 14px;cursor:pointer;
+  color:rgba(239,68,68,.8);font-size:12px;font-family:inherit;transition:all .2s;
+}
+.btn-sign-out:hover{background:rgba(239,68,68,.15)}
 
 /* ═══════════════ SCROLLBAR ═══════════════ */
 ::-webkit-scrollbar{width:5px}
@@ -957,26 +1077,123 @@ body::after{
     </div>
   </div>
 
-  <!-- Placeholder panels -->
+  <!-- ═══════ FUNCTIONAL PANELS ═══════ -->
+
+  <!-- EXPLORE -->
   <div class="panel-view" id="panel-explore">
     <h2>Explore</h2>
-    <p>Discover new topics, tools, and capabilities.</p>
+    <p style="margin-bottom:24px">Discover what Nova can do.</p>
+    <div class="panel-cards">
+      <div class="panel-card" onclick="switchPanel('chat');prefillChat('Explain quantum computing simply')">
+        <div class="panel-card-icon">💡</div>
+        <div><strong>Learn Something New</strong><br><span class="text-dim">Ask Nova to explain any topic</span></div>
+      </div>
+      <div class="panel-card" onclick="switchPanel('chat');prefillChat('Help me write a professional email')">
+        <div class="panel-card-icon">✍️</div>
+        <div><strong>Writing Assistant</strong><br><span class="text-dim">Emails, essays, code docs</span></div>
+      </div>
+      <div class="panel-card" onclick="switchPanel('chat');prefillChat('Help me debug this code')">
+        <div class="panel-card-icon">🔧</div>
+        <div><strong>Code Helper</strong><br><span class="text-dim">Debug, review, generate code</span></div>
+      </div>
+      <div class="panel-card" onclick="switchPanel('chat');prefillChat('Brainstorm startup ideas for AI')">
+        <div class="panel-card-icon">🚀</div>
+        <div><strong>Brainstorm</strong><br><span class="text-dim">Ideas, strategies, plans</span></div>
+      </div>
+    </div>
   </div>
+
+  <!-- MEMORY (Chat History) -->
   <div class="panel-view" id="panel-memory">
-    <h2>Memory</h2>
-    <p>Your conversation history and saved context.</p>
+    <h2>Conversations</h2>
+    <p style="margin-bottom:24px">Your chat history.</p>
+    <div id="chatListContainer">
+      <div class="panel-loading">Loading conversations...</div>
+    </div>
   </div>
+
+  <!-- TASKS -->
   <div class="panel-view" id="panel-tasks">
     <h2>Tasks</h2>
-    <p>Active tasks and automations.</p>
+    <p style="margin-bottom:24px">Active tasks and automations.</p>
+    <div class="panel-empty">
+      <div class="panel-empty-icon">📋</div>
+      <div>No active tasks yet.</div>
+      <div class="text-dim" style="font-size:13px;margin-top:4px">Tasks will appear here as Nova works on them.</div>
+    </div>
   </div>
+
+  <!-- KNOWLEDGE -->
   <div class="panel-view" id="panel-knowledge">
     <h2>Knowledge</h2>
-    <p>Your knowledge base and documents.</p>
+    <p style="margin-bottom:24px">Your knowledge base and documents.</p>
+    <div class="panel-empty">
+      <div class="panel-empty-icon">📚</div>
+      <div>No documents uploaded yet.</div>
+      <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Nova to reference in conversations.</div>
+    </div>
   </div>
+
+  <!-- SETTINGS -->
   <div class="panel-view" id="panel-settings">
     <h2>Settings</h2>
-    <p>Configure Nova to your preferences.</p>
+    <p style="margin-bottom:24px">Configure Nova to your preferences.</p>
+
+    <!-- Account Section -->
+    <div class="settings-section">
+      <div class="settings-section-title">ACCOUNT</div>
+      <div id="settingsAccountContent">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Model Defaults -->
+    <div class="settings-section">
+      <div class="settings-section-title">DEFAULT MODEL</div>
+      <div class="settings-row">
+        <label class="settings-label">Default Chat Model</label>
+        <select id="settingsDefaultModel" class="settings-select">
+          <optgroup label="Free Models">
+            <option value="llama-3.3-70b">Llama 3.3 70B</option>
+            <option value="llama-3.1-70b">Llama 3.1 70B</option>
+            <option value="deepseek-v3">DeepSeek V3.1</option>
+            <option value="deepseek-v3.2">DeepSeek V3.2</option>
+            <option value="llama-4-maverick">Llama 4 Maverick 17B</option>
+          </optgroup>
+          <optgroup label="Bring Your Key">
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="claude-sonnet">Claude Sonnet 4</option>
+            <option value="openrouter-auto">OpenRouter Auto</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <!-- API Keys -->
+    <div class="settings-section">
+      <div class="settings-section-title">API KEYS</div>
+      <p class="text-dim" style="font-size:12px;margin-bottom:12px">Keys are stored in your browser only — never on our servers.</p>
+      <div class="settings-row">
+        <label class="settings-label">OpenAI</label>
+        <input type="password" id="settingsKeyOpenAI" class="settings-input" placeholder="sk-..." autocomplete="off" />
+      </div>
+      <div class="settings-row">
+        <label class="settings-label">Anthropic</label>
+        <input type="password" id="settingsKeyAnthropic" class="settings-input" placeholder="sk-ant-..." autocomplete="off" />
+      </div>
+      <div class="settings-row">
+        <label class="settings-label">OpenRouter</label>
+        <input type="password" id="settingsKeyOpenRouter" class="settings-input" placeholder="sk-or-..." autocomplete="off" />
+      </div>
+      <button class="settings-btn-save" onclick="saveSettingsKeys()">Save Keys</button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section">
+      <div class="settings-section-title" style="color:#EF4444">DANGER ZONE</div>
+      <button class="settings-btn-danger" onclick="clearAllChats()">Clear All Conversations</button>
+    </div>
   </div>
 </main>
 
@@ -1002,11 +1219,7 @@ body::after{
   <!-- Recent -->
   <div class="widget">
     <div class="widget-label">RECENT CONVERSATIONS</div>
-    <div class="recent-item"><span class="recent-title">Building with AI agents</span><span class="recent-time">Today</span></div>
-    <div class="recent-item"><span class="recent-title">Multi-model orchestration</span><span class="recent-time">Yesterday</span></div>
-    <div class="recent-item"><span class="recent-title">Automation pipelines</span><span class="recent-time">2d ago</span></div>
-    <div class="recent-item"><span class="recent-title">Web scraping setup</span><span class="recent-time">3d ago</span></div>
-    <a class="view-all" href="#">View all ›</a>
+    <a class="view-all" href="#" onclick="event.preventDefault();switchPanel('memory')">View all ›</a>
   </div>
 
   <!-- Weather / Clock -->
@@ -1319,22 +1532,261 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 30000);
 
-/* ─── Load history ─── */
-async function loadHistory() {
+/* ═══════════════════════════════════════════════════
+   FUNCTIONAL FEATURES
+   Auth · Chat History · Settings · Profile
+   ═══════════════════════════════════════════════════ */
+
+let currentUser = null;
+let currentChatId = null;
+
+/* ─── Auth: Check login state ─── */
+async function checkAuth() {
   try {
-    const res = await fetch('/api/history');
+    const res = await fetch('/auth/me');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.user && !data.user.id.startsWith('anon_')) {
+        currentUser = data.user;
+        updateProfileUI(data.user);
+        updateSettingsAccount(data.user);
+        return;
+      }
+    }
+  } catch (_) {}
+  currentUser = null;
+  updateProfileUI(null);
+  updateSettingsAccount(null);
+}
+
+function updateProfileUI(user) {
+  const name = document.querySelector('.profile-name');
+  const role = document.querySelector('.profile-role');
+  const avatar = document.querySelector('.sidebar-profile .profile-avatar');
+  if (user) {
+    name.textContent = user.name || 'User';
+    role.textContent = user.email || 'Signed in';
+    if (user.avatar) {
+      avatar.style.background = 'none';
+      avatar.innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+    }
+  } else {
+    name.textContent = 'Guest';
+    role.textContent = 'Sign in for full features';
+    avatar.style.background = '';
+    avatar.innerHTML = '';
+  }
+}
+
+function updateSettingsAccount(user) {
+  const container = document.getElementById('settingsAccountContent');
+  if (user) {
+    container.innerHTML = `
+      <div class="account-card">
+        ${user.avatar ? `<img class="account-avatar" src="${user.avatar}">` : '<div class="account-avatar"></div>'}
+        <div class="account-info">
+          <div class="account-name">${user.name}</div>
+          <div class="account-email">${user.email}</div>
+        </div>
+      </div>
+      <div class="account-actions">
+        <button class="btn-sign-out" onclick="signOut()">Sign Out</button>
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <p class="text-dim" style="font-size:13px;margin-bottom:12px">Sign in to save your conversations across devices.</p>
+      <button class="btn-sign-in" onclick="window.location.href='/auth/login'">
+        <img src="https://www.google.com/favicon.ico" alt="G">
+        Sign in with Google
+      </button>`;
+  }
+}
+
+async function signOut() {
+  try {
+    await fetch('/auth/logout', { method: 'POST' });
+  } catch (_) {}
+  currentUser = null;
+  updateProfileUI(null);
+  updateSettingsAccount(null);
+}
+
+/* ─── Chat History ─── */
+async function loadChatList() {
+  const container = document.getElementById('chatListContainer');
+  try {
+    const res = await fetch('/api/chats');
+    if (!res.ok) {
+      container.innerHTML = '<div class="panel-empty"><div class="panel-empty-icon">💬</div><div>No conversations yet.</div></div>';
+      return;
+    }
+    const data = await res.json();
+    const chats = data.chats || data || [];
+    if (!chats.length) {
+      container.innerHTML = '<div class="panel-empty"><div class="panel-empty-icon">💬</div><div>No conversations yet.</div><div class="text-dim" style="font-size:13px;margin-top:4px">Start chatting to see your history here.</div></div>';
+      return;
+    }
+    container.innerHTML = chats.map(c => {
+      const date = c.updated_at ? new Date(c.updated_at * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+      return `
+        <div class="chat-list-item" onclick="loadChat(${c.id})">
+          <div>
+            <div class="chat-list-title">${escapeHtml(c.title || 'Chat')}</div>
+            <div class="chat-list-meta">${c.agent_name || 'Nova'} · ${date}</div>
+          </div>
+          <div class="chat-list-actions">
+            <button class="chat-list-delete" onclick="event.stopPropagation();deleteChat(${c.id})" title="Delete">✕</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="panel-loading">Error loading conversations.</div>';
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function loadChat(chatId) {
+  try {
+    const res = await fetch(`/api/chats/${chatId}/messages`);
     if (!res.ok) return;
     const data = await res.json();
-    if (!Array.isArray(data)) return;
-    data.forEach(m => {
+    const msgs = data.messages || data || [];
+    // Clear current chat
+    chatHistory = [];
+    const existing = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
+    existing.forEach(el => { if (!el.id) el.remove(); });
+    quickActions.style.display = 'none';
+    // Load messages
+    msgs.forEach(m => {
       if (m.role && m.content) {
         appendChat(m.role, m.content);
         chatHistory.push({ role: m.role, content: m.content });
       }
     });
+    currentChatId = chatId;
+    switchPanel('chat');
   } catch (_) {}
 }
-loadHistory();
+
+async function deleteChat(chatId) {
+  if (!confirm('Delete this conversation?')) return;
+  try {
+    await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
+    loadChatList();
+    loadRecentConversations();
+  } catch (_) {}
+}
+
+async function clearAllChats() {
+  if (!confirm('Delete ALL conversations? This cannot be undone.')) return;
+  try {
+    await fetch('/api/chat/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    loadChatList();
+    loadRecentConversations();
+  } catch (_) {}
+}
+
+/* ─── Recent Conversations Widget (right sidebar) ─── */
+async function loadRecentConversations() {
+  try {
+    const res = await fetch('/api/chats');
+    if (!res.ok) return;
+    const data = await res.json();
+    const chats = (data.chats || data || []).slice(0, 4);
+    const container = document.querySelector('.widget .recent-item')?.parentElement;
+    if (!container) return;
+    // Find all recent-items and replace
+    const items = container.querySelectorAll('.recent-item');
+    items.forEach(el => el.remove());
+    const viewAll = container.querySelector('.view-all');
+    chats.forEach(c => {
+      const date = c.updated_at ? timeAgo(c.updated_at * 1000) : '';
+      const div = document.createElement('div');
+      div.className = 'recent-item';
+      div.style.cursor = 'pointer';
+      div.onclick = () => loadChat(c.id);
+      div.innerHTML = `<span class="recent-title">${escapeHtml(c.title || 'Chat')}</span><span class="recent-time">${date}</span>`;
+      if (viewAll) container.insertBefore(div, viewAll);
+      else container.appendChild(div);
+    });
+    if (viewAll) {
+      viewAll.onclick = (e) => { e.preventDefault(); switchPanel('memory'); };
+    }
+  } catch (_) {}
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days + 'd ago';
+  return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/* ─── Settings: Save keys from settings page ─── */
+function saveSettingsKeys() {
+  const keys = getStoredKeys();
+  const fields = [
+    ['settingsKeyOpenAI', 'openai'],
+    ['settingsKeyAnthropic', 'anthropic'],
+    ['settingsKeyOpenRouter', 'openrouter'],
+  ];
+  for (const [id, prov] of fields) {
+    const val = document.getElementById(id).value.trim();
+    if (val && val !== '••••••••') keys[prov] = val;
+    else if (!val) delete keys[prov];
+  }
+  setStoredKeys(keys);
+  // Sync with modal fields
+  document.getElementById('keyOpenAI').value = keys.openai ? '••••••••' : '';
+  document.getElementById('keyAnthropic').value = keys.anthropic ? '••••••••' : '';
+  document.getElementById('keyOpenRouter').value = keys.openrouter ? '••••••••' : '';
+  alert('Keys saved!');
+}
+
+/* Pre-fill settings key fields on panel open */
+const origSwitch = switchPanel;
+window._switchPanel = function(name) {
+  origSwitch(name);
+  if (name === 'settings') {
+    const keys = getStoredKeys();
+    document.getElementById('settingsKeyOpenAI').value = keys.openai ? '••••••••' : '';
+    document.getElementById('settingsKeyAnthropic').value = keys.anthropic ? '••••••••' : '';
+    document.getElementById('settingsKeyOpenRouter').value = keys.openrouter ? '••••••••' : '';
+    // Restore default model
+    const saved = localStorage.getItem('nova_model');
+    if (saved) document.getElementById('settingsDefaultModel').value = saved;
+  }
+  if (name === 'memory') {
+    loadChatList();
+  }
+};
+// Override switchPanel globally
+switchPanel = window._switchPanel;
+
+// Default model change from settings
+document.getElementById('settingsDefaultModel')?.addEventListener('change', function() {
+  localStorage.setItem('nova_model', this.value);
+  document.getElementById('modelSelect').value = this.value;
+});
+
+// Profile click → settings
+document.querySelector('.sidebar-profile')?.addEventListener('click', () => switchPanel('settings'));
+
+/* ─── Init ─── */
+checkAuth();
+loadRecentConversations();
 </script>
 
 <!-- API Key Modal -->
