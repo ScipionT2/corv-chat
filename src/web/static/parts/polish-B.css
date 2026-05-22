@@ -1,0 +1,286 @@
+/* ============================================================
+   polish-B.css — Nova AI UI Refinement Layer
+   Scope: Sidebar, Typography, Feature Cards, Branding
+   Appended after base styles; overrides only.
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   1. SIDEBAR REFINEMENT
+   ------------------------------------------------------------ */
+
+/* — Nav items: more breathing room, smoother hover — */
+.nav-item {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  margin-bottom: 3px;
+  transition: background 0.25s ease-out,
+              color 0.25s ease-out,
+              transform 0.2s ease-out,
+              box-shadow 0.25s ease-out;
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* — Active item: premium gradient bg instead of flat rgba — */
+.nav-item.active {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.18) 0%,
+    rgba(99, 102, 241, 0.10) 100%
+  );
+  box-shadow: inset 0 0 16px rgba(139, 92, 246, 0.06);
+}
+
+.nav-item.active::before {
+  box-shadow: 0 0 8px 1px rgba(139, 92, 246, 0.5);
+}
+
+/* — Category labels: refined letter-spacing — */
+.category-label {
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+}
+
+.nav-category {
+  margin-top: 10px;
+}
+
+/* — Search bar: focus glow ring — */
+.sidebar-search input:focus,
+.sidebar-search input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35),
+              0 0 14px rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.5);
+  transition: box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+.sidebar-search {
+  transition: box-shadow 0.3s ease-out;
+}
+
+.sidebar-search:focus-within {
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.08);
+}
+
+/* — New chat button: enhanced hover with lift + intensified glow — */
+.new-chat-btn {
+  transition: transform 0.22s ease-out,
+              box-shadow 0.25s ease-out,
+              filter 0.25s ease-out;
+}
+
+.new-chat-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.35),
+              0 2px 8px rgba(139, 92, 246, 0.2);
+  filter: brightness(1.08);
+}
+
+.new-chat-btn:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25);
+}
+
+.new-chat-btn .btn-star {
+  transition: transform 0.3s ease-out;
+}
+
+.new-chat-btn:hover .btn-star {
+  transform: rotate(18deg) scale(1.15);
+}
+
+/* — User section: glowing separator line above — */
+.sidebar-user {
+  position: relative;
+}
+
+.sidebar-user::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.4) 30%,
+    rgba(168, 130, 255, 0.5) 50%,
+    rgba(139, 92, 246, 0.4) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.2);
+}
+
+/* — Recent chat items: smoother transitions — */
+.recent-chat-item {
+  transition: background 0.2s ease-out,
+              transform 0.2s ease-out;
+}
+
+.recent-chat-item:hover {
+  transform: translateX(2px);
+}
+
+
+/* ------------------------------------------------------------
+   2. TYPOGRAPHY POLISH
+   ------------------------------------------------------------ */
+
+/* — Welcome title: larger, tighter tracking — */
+.welcome-title {
+  font-size: 42px;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+/* — Welcome subtitle: roomier line-height — */
+.welcome-subtitle {
+  line-height: 1.7;
+  letter-spacing: 0.005em;
+}
+
+/* — Panel headings: subtle glow + tighter tracking — */
+.panel h2 {
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.panel h3 {
+  letter-spacing: -0.01em;
+}
+
+/* — Message labels: refined — */
+.msg-label {
+  letter-spacing: 0.04em;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* — Feature card titles: bumped to 14px — */
+.welcome-card-title {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+
+/* ------------------------------------------------------------
+   3. FEATURE CARDS ENHANCEMENT
+   ------------------------------------------------------------ */
+
+/* — Cards: more internal padding, stronger lift on hover — */
+.welcome-card {
+  padding: 26px;
+  transition: transform 0.28s ease-out,
+              box-shadow 0.28s ease-out,
+              border-color 0.35s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient border via pseudo-element */
+.welcome-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0) 0%,
+    rgba(139, 92, 246, 0) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  transition: background 0.4s ease-out;
+}
+
+.welcome-card:hover::after {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.6) 0%,
+    rgba(99, 102, 241, 0.4) 50%,
+    rgba(168, 130, 255, 0.6) 100%
+  );
+}
+
+/* Stronger lift + inner glow on hover */
+.welcome-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25),
+              inset 0 0 24px rgba(139, 92, 246, 0.06);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* — Card descriptions: better readability — */
+.welcome-card-desc {
+  line-height: 1.5;
+}
+
+/* — Icon containers: subtle pulse on card hover — */
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.08); opacity: 0.85; }
+}
+
+.welcome-card:hover .welcome-card-icon {
+  animation: iconPulse 1.8s ease-in-out infinite;
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
+}
+
+.welcome-card-icon {
+  transition: box-shadow 0.3s ease-out;
+}
+
+
+/* ------------------------------------------------------------
+   4. BRANDING CONSISTENCY
+   ------------------------------------------------------------ */
+
+/* — Sidebar brand name: glowing text — */
+.sidebar-brand-name {
+  text-shadow:
+    0 0 12px rgba(139, 92, 246, 0.4),
+    0 0 28px rgba(139, 92, 246, 0.15);
+}
+
+/* — Nova logo rings: increased border visibility — */
+.nova-logo::before,
+.nova-logo::after,
+.nova-logo .ring,
+.nova-logo [class*="ring"] {
+  border-color: rgba(139, 92, 246, 0.45);
+}
+
+/* Also boost any ring borders set via border shorthand */
+.nova-logo {
+  filter: brightness(1.12);
+}
+
+/* — Top bar model label: subtle glow behind it — */
+.top-bar-model,
+[class*="top-bar"] [class*="model"] {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.3),
+               0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+/* — Version tag: refined pill — */
+.sidebar-brand-tag {
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 6px rgba(139, 92, 246, 0.25);
+}
+
+/* — User avatar gradient: more vibrant — */
+.sidebar-user-avatar {
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+}

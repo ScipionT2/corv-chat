@@ -1,0 +1,468 @@
+/* ============================================================
+   polish-C.css — Input Bar Premium Polish, Motion Design,
+                  & Interaction Refinements
+   Nova AI · Next-Gen AI OS Layer
+   ============================================================ */
+
+
+/* ----------------------------------------------------------
+   1. INPUT BAR — Premium Glass & Animated Borders
+   ---------------------------------------------------------- */
+
+/* Deeper glass effect with stronger blur */
+.chat-input-bar {
+  background: rgba(8, 6, 22, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+  border-color: transparent !important;
+  position: relative;
+  overflow: visible;
+}
+
+/* Animated conic-gradient border via ::before pseudo-element */
+.chat-input-bar::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(139, 92, 246, 0.15),
+    rgba(99, 102, 241, 0.3),
+    rgba(168, 85, 247, 0.45),
+    rgba(59, 130, 246, 0.3),
+    rgba(139, 92, 246, 0.15)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: border-spin 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes border-spin {
+  to { --border-angle: 360deg; }
+}
+
+/* Register the custom property for animation (Houdini) */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Focus: breathing glow instead of static */
+.chat-input-bar:focus-within {
+  border-color: transparent !important;
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.25),
+    0 0 60px rgba(139, 92, 246, 0.08) !important;
+  animation: focus-breathe 3s ease-in-out infinite;
+}
+
+.chat-input-bar:focus-within::before {
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(139, 92, 246, 0.3),
+    rgba(99, 102, 241, 0.5),
+    rgba(168, 85, 247, 0.65),
+    rgba(59, 130, 246, 0.5),
+    rgba(139, 92, 246, 0.3)
+  );
+}
+
+@keyframes focus-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(139, 92, 246, 0.25),
+      0 0 60px rgba(139, 92, 246, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(139, 92, 246, 0.35),
+      0 0 80px rgba(139, 92, 246, 0.12);
+  }
+}
+
+
+/* --- Send Button: Layered Glow with Idle Pulse --- */
+
+.send-btn {
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.2),
+    0 0 12px rgba(139, 92, 246, 0.5),
+    0 0 30px rgba(139, 92, 246, 0.2) !important;
+  animation: send-idle-pulse 3s ease-in-out infinite;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow var(--nova-transition, 0.25s) ease !important;
+}
+
+@keyframes send-idle-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 8px rgba(255, 255, 255, 0.2),
+      0 0 12px rgba(139, 92, 246, 0.5),
+      0 0 30px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 12px rgba(255, 255, 255, 0.3),
+      0 0 18px rgba(139, 92, 246, 0.6),
+      0 0 44px rgba(139, 92, 246, 0.28);
+  }
+}
+
+.send-btn:hover {
+  transform: scale(1.08) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255, 255, 255, 0.35),
+    0 0 20px rgba(139, 92, 246, 0.7),
+    0 0 50px rgba(139, 92, 246, 0.3) !important;
+}
+
+.send-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Ring animation on send-btn when chat is active */
+.send-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  animation: send-ring-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes send-ring-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.15);
+  }
+}
+
+
+/* --- Input Tool Icons: Magnetic Hover --- */
+
+.input-tool-btn {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              color var(--nova-transition-fast, 0.15s) ease !important;
+}
+
+.input-tool-btn:hover {
+  transform: scale(1.12) !important;
+}
+
+.input-tool-btn:active {
+  transform: scale(0.95) !important;
+}
+
+
+/* --- Separator Between .input-tools and Textarea --- */
+
+.input-tools {
+  position: relative;
+  padding-right: 10px !important;
+}
+
+.input-tools::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.2),
+    rgba(99, 102, 241, 0.15),
+    transparent
+  );
+  pointer-events: none;
+}
+
+
+/* --- Action Pill Buttons: Lighter / Airier --- */
+
+.chat-action-buttons .action-btn {
+  background: rgba(139, 92, 246, 0.06) !important;
+  border: 1px solid rgba(139, 92, 246, 0.12) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.chat-action-buttons .action-btn:hover {
+  background: rgba(139, 92, 246, 0.14) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
+}
+
+.chat-action-buttons .action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+
+/* --- Placeholder Animated Fade on Focus --- */
+
+.chat-input::placeholder {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 0.45;
+}
+
+.chat-input-bar:focus-within .chat-input::placeholder {
+  opacity: 0.25;
+  transform: translateX(4px);
+}
+
+
+/* ----------------------------------------------------------
+   2. MOTION DESIGN — New Keyframes & Micro-interactions
+   ---------------------------------------------------------- */
+
+/* Float animation for ambient elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.welcome-planet {
+  animation: float 6s ease-in-out infinite !important;
+}
+
+/* Glow breathe for ambient glow elements */
+@keyframes glow-breathe {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+/* Improved message animation — scale up from 0.98 */
+@keyframes msg-fade-in-refined {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.msg {
+  animation: msg-fade-in-refined 0.35s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+/* Hover micro-interactions on cards */
+.status-card,
+.agent-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease !important;
+}
+
+.status-card:hover,
+.agent-card:hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12);
+}
+
+/* Top bar fade-in-down */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.top-bar {
+  animation: fade-in-down 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Subtle hover glow on control buttons */
+.ctrl-btn {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              box-shadow 0.25s ease !important;
+}
+
+.ctrl-btn:hover {
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.18);
+  background: rgba(139, 92, 246, 0.1) !important;
+}
+
+.ctrl-btn:active {
+  transform: scale(0.95) !important;
+}
+
+
+/* ----------------------------------------------------------
+   3. OVERALL INTERACTION POLISH
+   ---------------------------------------------------------- */
+
+/* Universal active press feedback */
+button:active,
+[role="button"]:active {
+  transform: scale(0.97);
+}
+
+/* Better text selection */
+::selection {
+  background: rgba(139, 92, 246, 0.35) !important;
+  color: #fff !important;
+}
+
+::-moz-selection {
+  background: rgba(139, 92, 246, 0.35) !important;
+  color: #fff !important;
+}
+
+/* Subtle side-glow borders on chat messages area */
+.chat-messages {
+  position: relative;
+}
+
+.chat-messages::before,
+.chat-messages::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-messages::before {
+  left: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.06) 30%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(139, 92, 246, 0.06) 70%,
+    transparent
+  );
+}
+
+.chat-messages::after {
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.06) 30%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(139, 92, 246, 0.06) 70%,
+    transparent
+  );
+}
+
+/* Thinking bubble dots — larger, more vivid glow */
+.thinking-bubble .dot,
+.thinking-dot {
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6),
+              0 0 20px rgba(139, 92, 246, 0.25) !important;
+}
+
+/* Input button (mic/voice) hover refinement */
+.input-btn {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              box-shadow 0.25s ease !important;
+}
+
+.input-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.input-btn:active {
+  transform: scale(0.94) !important;
+}
+
+/* Input hint text — subtler entrance */
+.input-hint {
+  animation: msg-fade-in-refined 0.5s ease both;
+}
+
+/* Smooth scroll behavior for chat area */
+.chat-messages {
+  scroll-behavior: smooth;
+}
+
+/* Welcome hero cards — bounce hover */
+.welcome-card,
+.suggestion-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease !important;
+}
+
+.welcome-card:hover,
+.suggestion-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.12);
+}
+
+.welcome-card:active,
+.suggestion-card:active {
+  transform: scale(0.98);
+}
+
+/* Sidebar items — smooth hover transitions */
+.sidebar-item {
+  transition: background 0.2s ease,
+              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              padding-left 0.2s ease !important;
+}
+
+.sidebar-item:hover {
+  padding-left: 4px;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-bar::before,
+  .send-btn,
+  .send-btn::after,
+  .welcome-planet,
+  .chat-input-bar:focus-within {
+    animation: none !important;
+  }
+
+  .msg {
+    animation-duration: 0.01ms !important;
+  }
+
+  .status-card:hover,
+  .agent-card:hover,
+  .welcome-card:hover,
+  .suggestion-card:hover {
+    transform: none !important;
+  }
+}
