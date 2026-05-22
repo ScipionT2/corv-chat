@@ -400,10 +400,13 @@ body::after{
 .weather-date{font-size:11px;color:var(--text-dim)}
 
 /* ═══════════════ PANELS (hidden by default) ═══════════════ */
-.panel-view{display:none;flex:1;min-height:0;overflow-y:auto;padding:40px 0}
+.panel-view{
+  display:none;flex:1;min-height:0;overflow-y:auto;padding:40px 30px;
+  background:rgba(10,15,35,.5);border:1px solid rgba(255,255,255,.04);
+  border-radius:16px;
+}
 .panel-view h2{font-size:28px;font-weight:700;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px}
 .panel-view p{color:var(--text-mid);font-size:15px}
-.panel-view{padding:40px 30px}
 
 /* Panel cards */
 .panel-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -847,12 +850,12 @@ body::after{
   to{opacity:1;transform:none}
 }
 
-/* Panel entrance */
-.panel-view[style*="display"]:not([style*="none"]){
+/* Panel entrance — use .active class instead of style sniffing */
+.panel-view[style*="block"]{
   animation:panelIn .35s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes panelIn{
-  from{opacity:0;transform:translateY(6px)}
+  from{opacity:0;transform:translateY(8px)}
   to{opacity:1;transform:none}
 }
 
@@ -1254,17 +1257,22 @@ function switchPanel(name) {
     n.classList.toggle('active', n.dataset.panel === name);
   });
 
+  // Hide everything first
+  ws.style.display = 'none';
+  cp.style.display = 'none';
+  panels.forEach(p => p.style.display = 'none');
+
   if (name === 'chat') {
-    ws.style.display = '';
-    cp.style.display = '';
-    panels.forEach(p => p.style.display = 'none');
+    ws.style.display = 'block';
+    cp.style.display = 'flex';
   } else {
-    ws.style.display = 'none';
-    cp.style.display = 'none';
-    panels.forEach(p => p.style.display = 'none');
     const target = document.getElementById('panel-' + name);
-    if (target) target.style.display = '';
+    if (target) target.style.display = 'block';
   }
+
+  // Trigger panel-specific loading
+  if (name === 'memory') loadChatList();
+  if (name === 'settings') loadSettingsState();
 }
 
 /* ─── Chat ─── */
@@ -1755,25 +1763,15 @@ function saveSettingsKeys() {
   alert('Keys saved!');
 }
 
-/* Pre-fill settings key fields on panel open */
-const origSwitch = switchPanel;
-window._switchPanel = function(name) {
-  origSwitch(name);
-  if (name === 'settings') {
-    const keys = getStoredKeys();
-    document.getElementById('settingsKeyOpenAI').value = keys.openai ? '••••••••' : '';
-    document.getElementById('settingsKeyAnthropic').value = keys.anthropic ? '••••••••' : '';
-    document.getElementById('settingsKeyOpenRouter').value = keys.openrouter ? '••••••••' : '';
-    // Restore default model
-    const saved = localStorage.getItem('nova_model');
-    if (saved) document.getElementById('settingsDefaultModel').value = saved;
-  }
-  if (name === 'memory') {
-    loadChatList();
-  }
-};
-// Override switchPanel globally
-switchPanel = window._switchPanel;
+/* Load settings state when settings panel opens */
+function loadSettingsState() {
+  const keys = getStoredKeys();
+  document.getElementById('settingsKeyOpenAI').value = keys.openai ? '••••••••' : '';
+  document.getElementById('settingsKeyAnthropic').value = keys.anthropic ? '••••••••' : '';
+  document.getElementById('settingsKeyOpenRouter').value = keys.openrouter ? '••••••••' : '';
+  const saved = localStorage.getItem('nova_model');
+  if (saved) document.getElementById('settingsDefaultModel').value = saved;
+}
 
 // Default model change from settings
 document.getElementById('settingsDefaultModel')?.addEventListener('change', function() {
