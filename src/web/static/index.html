@@ -534,382 +534,755 @@ body::after{
 ::-webkit-scrollbar-thumb:hover{background:rgba(123,97,255,.25)}
 
 /* ═══════════════════════════════════════════════════
-   DESI v2 — ENVIRONMENTAL LIGHTING SYSTEM
-   No galaxies. No stars. No space wallpaper.
-   The UI creates the atmosphere.
+   DESI v3 — LUXURY CINEMATIC REFINEMENT
+   Atmosphere · Panels · Icons · Motion · Depth
+   3-agent merged build
    ═══════════════════════════════════════════════════ */
 
-/* ─── 1. VOID BACKGROUND — pure dark, no stars ─── */
-body{
-  background:#050816;
+/* ============================================================
+   DESI-A  ·  Atmosphere + Environmental Glow
+   Nova AI Interface — Cinematic Environmental Lighting
+   ============================================================
+   Replaces the base star-field and nebula layers with rich,
+   Interstellar-grade indirect lighting.  Soft. Luxurious.
+   Nothing neon, nothing gamer — pure cinema.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1.  Body  —  Deep space canvas
+   ---------------------------------------------------------- */
+body {
+  background: #050816 !important;
 }
 
-/* Kill star field entirely */
-body::before{
-  background:none!important;
-  animation:none!important;
+/* ----------------------------------------------------------
+   2.  body::before  —  KILL stars
+   ---------------------------------------------------------- */
+body::before {
+  background: none !important;
+  background-image: none !important;
+  animation: none !important;
+  opacity: 0 !important;
 }
 
-/* Replace nebula/galaxy with pure environmental lighting */
-body::after{
+/* ----------------------------------------------------------
+   3.  body::after  —  Rich environmental lighting
+   ---------------------------------------------------------- */
+body::after {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+
   background:
-    /* Ambient purple diffusion — upper center */
-    radial-gradient(ellipse 60% 40% at 50% 8%,
-      rgba(123,97,255,.06) 0%,
-      rgba(100,75,220,.025) 40%,
-      transparent 70%),
-    /* Blue atmosphere — lower right */
-    radial-gradient(ellipse 45% 35% at 78% 75%,
-      rgba(94,235,255,.03) 0%,
-      transparent 60%),
-    /* Purple haze — left edge */
-    radial-gradient(ellipse 30% 50% at 5% 45%,
-      rgba(100,75,220,.025) 0%,
-      transparent 55%),
-    /* Cinematic vignette — edges darken inward */
-    radial-gradient(ellipse 75% 70% at 50% 50%,
-      transparent 40%,
-      rgba(3,5,14,.35) 75%,
-      rgba(2,3,10,.6) 100%),
-    /* Bottom atmospheric fade */
-    linear-gradient(to top,
-      rgba(5,8,22,.5) 0%,
-      transparent 20%);
-  animation:envBreathe 12s ease-in-out infinite alternate;
-}
-@keyframes envBreathe{
-  0%{opacity:.7}
-  100%{opacity:1}
+    /* — Large blurred purple radial — top center, ~60% width */
+    radial-gradient(
+      ellipse 60% 50% at 50% 8%,
+      rgba(123, 97, 255, .10) 0%,
+      transparent 70%
+    ),
+
+    /* — Blue atmospheric bloom — lower right */
+    radial-gradient(
+      ellipse 45% 55% at 82% 75%,
+      rgba(94, 235, 255, .06) 0%,
+      transparent 65%
+    ),
+
+    /* — Purple haze — left edge */
+    radial-gradient(
+      ellipse 35% 70% at 5% 50%,
+      rgba(100, 75, 220, .04) 0%,
+      transparent 60%
+    ),
+
+    /* — Warm purple bloom — bottom center, wider */
+    radial-gradient(
+      ellipse 80% 40% at 50% 95%,
+      rgba(123, 97, 255, .05) 0%,
+      transparent 65%
+    ),
+
+    /* — Deep cinematic vignette — edges darken */
+    radial-gradient(
+      ellipse 75% 70% at 50% 50%,
+      transparent 45%,
+      rgba(2, 3, 10, .25) 75%,
+      rgba(2, 3, 10, .50) 100%
+    ),
+
+    /* — Bottom atmospheric fog */
+    linear-gradient(
+      to top,
+      rgba(8, 6, 28, .35) 0%,
+      rgba(8, 6, 28, .12) 15%,
+      transparent 40%
+    ),
+
+    /* — Top edge subtle darkening */
+    linear-gradient(
+      to bottom,
+      rgba(2, 3, 10, .30) 0%,
+      transparent 18%
+    ) !important;
+
+  background-color: transparent !important;
+  animation: desi-atmosphere-breathe 14s ease-in-out infinite !important;
 }
 
-/* ─── 2. ATMOSPHERIC BORDER SYSTEM — the core upgrade ─── */
+@keyframes desi-atmosphere-breathe {
+  0%, 100% {
+    opacity: .75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 
-/* Sidebar — glowing atmospheric border */
-#sidebar{
-  background:rgba(10,15,35,.65)!important;
-  backdrop-filter:blur(32px) saturate(1.25)!important;
-  -webkit-backdrop-filter:blur(32px) saturate(1.25)!important;
-  border:1px solid rgba(123,97,255,.08)!important;
+/* ----------------------------------------------------------
+   4.  #mainContent::before  —  Workspace ambient glow
+   ---------------------------------------------------------- */
+#mainContent {
+  position: relative;
+}
+
+#mainContent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+
+  background:
+    /* — Purple diffusion at top */
+    radial-gradient(
+      ellipse 70% 35% at 50% 0%,
+      rgba(123, 97, 255, .05) 0%,
+      transparent 70%
+    ),
+
+    /* — Blue diffusion at right */
+    radial-gradient(
+      ellipse 40% 60% at 95% 45%,
+      rgba(94, 235, 255, .03) 0%,
+      transparent 65%
+    ),
+
+    /* — Purple diffusion at bottom-left */
+    radial-gradient(
+      ellipse 50% 45% at 12% 90%,
+      rgba(123, 97, 255, .025) 0%,
+      transparent 60%
+    );
+
+  animation: desi-workspace-ambient 10s ease-in-out infinite;
+}
+
+@keyframes desi-workspace-ambient {
+  0%, 100% {
+    opacity: .8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ----------------------------------------------------------
+   5.  .welcome-screen::before  —  Hero bloom behind title
+   ---------------------------------------------------------- */
+.welcome-screen {
+  position: relative;
+}
+
+.welcome-screen::before {
+  content: '';
+  position: absolute;
+  top: -15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 60%;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse 80% 70% at 50% 30%,
+      rgba(123, 97, 255, .07) 0%,
+      transparent 70%
+    );
+
+  animation: desi-hero-bloom 8s ease-in-out infinite;
+}
+
+@keyframes desi-hero-bloom {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+    opacity: .85;
+  }
+}
+/* ============================================================
+   desi-B-panels.css — PANELS · BORDERS · CARDS · GLASS DEPTH
+   Nova AI Interface  ·  Cinematic glassmorphism layer
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. #sidebar — Deep glass panel
+   ---------------------------------------------------------- */
+
+#sidebar {
+  background: rgba(10, 15, 35, .68) !important;
+  backdrop-filter: blur(32px) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(1.3) !important;
+  border: 1px solid rgba(123, 97, 255, .10) !important;
   box-shadow:
-    0 0 40px rgba(123,97,255,.04),
-    0 0 80px rgba(123,97,255,.015),
-    0 8px 32px rgba(0,0,0,.4),
-    inset 0 1px 0 rgba(255,255,255,.03),
-    inset 0 -1px 0 rgba(123,97,255,.02);
-  position:relative;
-}
-/* Sidebar edge bloom */
-#sidebar::after{
-  content:'';position:absolute;inset:-1px;border-radius:inherit;
-  background:linear-gradient(180deg,
-    rgba(123,97,255,.06) 0%,
-    transparent 25%,
-    transparent 75%,
-    rgba(94,235,255,.03) 100%);
-  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite:exclude;-webkit-mask-composite:xor;
-  padding:1px;pointer-events:none;z-index:10;
+    0 0 50px rgba(123, 97, 255, .06),
+    0 0 100px rgba(123, 97, 255, .02),
+    0 8px 36px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Chat panel — cinematic glass with border glow */
-.chat-panel{
-  background:rgba(10,15,35,.65)!important;
-  backdrop-filter:blur(28px) saturate(1.2)!important;
-  -webkit-backdrop-filter:blur(28px) saturate(1.2)!important;
-  border:1px solid rgba(123,97,255,.07)!important;
-  box-shadow:
-    0 0 50px rgba(123,97,255,.035),
-    0 0 100px rgba(123,97,255,.012),
-    0 12px 40px rgba(0,0,0,.4),
-    inset 0 1px 0 rgba(255,255,255,.03);
-  position:relative;
+#sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(123, 97, 255, .18) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(80, 140, 255, .10) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
 }
-/* Chat panel top-edge light */
-.chat-panel::before{
-  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
-  background:linear-gradient(90deg,
+
+/* ----------------------------------------------------------
+   2. .chat-panel — Cinematic glass
+   ---------------------------------------------------------- */
+
+.chat-panel {
+  background: rgba(10, 15, 35, .68) !important;
+  backdrop-filter: blur(32px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(1.25) !important;
+  border: 1px solid rgba(123, 97, 255, .08) !important;
+  box-shadow:
+    0 0 60px rgba(123, 97, 255, .05),
+    0 0 120px rgba(123, 97, 255, .015),
+    0 14px 44px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
     transparent,
-    rgba(123,97,255,.15),
-    rgba(94,235,255,.08),
-    rgba(123,97,255,.15),
-    transparent);
-  border-radius:inherit;pointer-events:none;z-index:10;
-}
-.chat-panel>*{position:relative;z-index:1}
-/* Chat panel inner ambient light */
-.chat-panel::after{
-  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:
-    radial-gradient(ellipse 50% 20% at 50% 0%,
-      rgba(123,97,255,.02) 0%, transparent 60%),
-    radial-gradient(ellipse 30% 30% at 50% 100%,
-      rgba(94,235,255,.01) 0%, transparent 50%);
-  z-index:0;
+    rgba(123, 97, 255, .35) 20%,
+    rgba(80, 140, 255, .25) 50%,
+    rgba(123, 97, 255, .35) 80%,
+    transparent
+  );
+  z-index: 2;
+  pointer-events: none;
 }
 
-/* Widget panels — floating in darkness */
-.widget{
-  background:rgba(10,15,35,.65)!important;
-  backdrop-filter:blur(28px) saturate(1.2)!important;
-  -webkit-backdrop-filter:blur(28px) saturate(1.2)!important;
-  border:1px solid rgba(123,97,255,.06)!important;
+/* ----------------------------------------------------------
+   3. .widget — Floating dark glass
+   ---------------------------------------------------------- */
+
+.widget {
+  background: rgba(10, 15, 35, .68) !important;
+  border: 1px solid rgba(123, 97, 255, .08) !important;
   box-shadow:
-    0 0 30px rgba(123,97,255,.025),
-    0 6px 24px rgba(0,0,0,.35),
-    inset 0 1px 0 rgba(255,255,255,.025);
-  transition:all .4s cubic-bezier(.4,0,.2,1);
-  position:relative;
+    0 0 40px rgba(123, 97, 255, .04),
+    0 0 80px rgba(123, 97, 255, .015),
+    0 6px 28px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .03) !important;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .3s ease, box-shadow .3s ease;
 }
-.widget:hover{
-  border-color:rgba(123,97,255,.12)!important;
+
+.widget:hover {
+  border-color: rgba(123, 97, 255, .16) !important;
   box-shadow:
-    0 0 40px rgba(123,97,255,.045),
-    0 0 80px rgba(123,97,255,.015),
-    0 8px 32px rgba(0,0,0,.4),
-    inset 0 1px 0 rgba(255,255,255,.035);
-}
-/* Widget top-edge glow line */
-.widget::after{
-  content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(123,97,255,.1),transparent);
-  pointer-events:none;
+    0 0 55px rgba(123, 97, 255, .08),
+    0 0 100px rgba(123, 97, 255, .03),
+    0 8px 34px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .04) !important;
 }
 
-/* Quick cards — deep glass with atmospheric border */
-.quick-card{
-  background:rgba(10,15,35,.6)!important;
-  backdrop-filter:blur(16px)!important;
-  -webkit-backdrop-filter:blur(16px)!important;
-  border:1px solid rgba(255,255,255,.05)!important;
+.widget::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(123, 97, 255, .28) 30%,
+    rgba(123, 97, 255, .28) 70%,
+    transparent
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------
+   4. .quick-card — Premium glass cards
+   ---------------------------------------------------------- */
+
+.quick-card {
+  background: rgba(10, 15, 35, .62) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, .06) !important;
   box-shadow:
-    0 4px 16px rgba(0,0,0,.25),
-    inset 0 1px 0 rgba(255,255,255,.025);
-  transition:all .35s cubic-bezier(.4,0,.2,1);
+    0 0 30px rgba(123, 97, 255, .03),
+    0 4px 24px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+  transition:
+    border-color .3s ease,
+    box-shadow .3s ease,
+    transform .3s ease;
 }
-.quick-card:hover{
-  border-color:rgba(123,97,255,.15)!important;
+
+.quick-card:hover {
+  border-color: rgba(123, 97, 255, .18) !important;
+  transform: translateY(-4px);
   box-shadow:
-    0 0 30px rgba(123,97,255,.04),
-    0 8px 28px rgba(0,0,0,.3),
-    inset 0 1px 0 rgba(255,255,255,.04);
-  transform:translateY(-3px);
+    0 0 40px rgba(123, 97, 255, .10),
+    0 0 80px rgba(123, 97, 255, .04),
+    0 12px 40px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
 }
 
-/* ─── 3. CENTER WORKSPACE — environmental depth ─── */
-#mainContent{position:relative}
-#mainContent>*{position:relative;z-index:1}
-
-/* Ambient workspace glow — hidden environmental color diffusion */
-#mainContent::before{
-  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:
-    /* Purple diffusion behind center */
-    radial-gradient(ellipse 55% 35% at 50% 15%,
-      rgba(123,97,255,.03) 0%, transparent 65%),
-    /* Blue diffusion lower-right */
-    radial-gradient(ellipse 35% 40% at 75% 60%,
-      rgba(94,235,255,.015) 0%, transparent 55%),
-    /* Deep ambient darken at edges */
-    radial-gradient(ellipse 80% 80% at 50% 50%,
-      transparent 30%,
-      rgba(5,8,22,.2) 100%);
-  animation:workspaceGlow 10s ease-in-out infinite alternate;
-}
-@keyframes workspaceGlow{
-  0%{opacity:.6}
-  100%{opacity:1}
+.quick-card-icon {
+  background: rgba(123, 97, 255, .12) !important;
+  border: 1px solid rgba(123, 97, 255, .10) !important;
+  box-shadow: 0 0 15px rgba(123, 97, 255, .08) !important;
 }
 
-/* ─── 4. HERO — emotional centerpiece ─── */
-.welcome-screen{position:relative}
-.welcome-screen::before{
-  content:'';position:absolute;
-  top:-40%;left:10%;right:10%;height:400px;
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 50%,
-      rgba(123,97,255,.05) 0%,
-      rgba(100,75,220,.02) 40%,
-      transparent 70%);
-  pointer-events:none;z-index:-1;
-  animation:heroPulse 8s ease-in-out infinite alternate;
-}
-@keyframes heroPulse{
-  0%{opacity:.5;transform:scale(1)}
-  100%{opacity:1;transform:scale(1.04)}
-}
+/* ----------------------------------------------------------
+   5. .message.assistant .msg-bubble — Glass with purple tint
+   ---------------------------------------------------------- */
 
-.welcome-screen h1{
-  font-size:44px;font-weight:700;letter-spacing:1px;font-family:'Orbitron',sans-serif;
-  text-shadow:0 0 60px rgba(123,97,255,.04);
-}
-.welcome-screen p{
-  font-size:19px;color:rgba(169,177,214,.8);font-weight:400;
-}
-
-/* ─── 5. SIDEBAR — refined depth ─── */
-.nav-item{
-  transition:all .3s cubic-bezier(.4,0,.2,1);
-  border:1px solid transparent;
-}
-.nav-item:hover{
-  background:rgba(255,255,255,.03);
-  border-color:rgba(123,97,255,.05);
-}
-.nav-item.active{
-  background:rgba(30,30,65,.8)!important;
-  border-color:rgba(123,97,255,.1);
+.message.assistant .msg-bubble {
+  background: rgba(10, 15, 35, .72) !important;
+  border: 1px solid rgba(123, 97, 255, .06) !important;
   box-shadow:
-    0 0 20px rgba(123,97,255,.08),
-    inset 0 0 18px rgba(123,97,255,.025);
-}
-.nav-item.active svg{opacity:1;filter:drop-shadow(0 0 3px rgba(123,97,255,.3))}
-
-/* Profile separator — gradient glow line */
-.sidebar-profile{position:relative}
-.sidebar-profile::before{
-  content:'';position:absolute;top:0;left:12%;right:12%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(123,97,255,.1),transparent);
+    0 0 30px rgba(123, 97, 255, .03),
+    0 4px 20px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .03) !important;
 }
 
-/* ─── 6. PLANET — ambient glow */
-.planet-container::before{
-  content:'';position:absolute;width:80%;height:80%;border-radius:50%;
-  background:radial-gradient(circle,rgba(123,97,255,.06),rgba(94,235,255,.02) 40%,transparent 65%);
-  animation:planetGlow 6s ease-in-out infinite alternate;
-}
-@keyframes planetGlow{0%{opacity:.4;transform:scale(.96)}100%{opacity:1;transform:scale(1.04)}}
+/* ----------------------------------------------------------
+   6. .message.user .msg-bubble — Purple-tinted glass
+   ---------------------------------------------------------- */
 
-/* ─── 7. SEND BUTTON — premium energized core ─── */
-#sendBtn{
-  background:linear-gradient(135deg,#5B41DF,#7B61FF,#8B71FF)!important;
+.message.user .msg-bubble {
+  background: rgba(123, 97, 255, .08) !important;
+  border: 1px solid rgba(123, 97, 255, .12) !important;
+  box-shadow: 0 0 25px rgba(123, 97, 255, .04) !important;
+}
+
+/* ----------------------------------------------------------
+   7. .panel-view — Settings / Memory / Explore panels
+   ---------------------------------------------------------- */
+
+.panel-view {
+  background: rgba(10, 15, 35, .60) !important;
+  border: 1px solid rgba(123, 97, 255, .06) !important;
   box-shadow:
-    0 0 18px rgba(123,97,255,.4),
-    0 0 45px rgba(123,97,255,.12),
-    inset 0 1px 2px rgba(255,255,255,.12);
-  animation:sendPulse 5s ease-in-out infinite;
+    0 0 50px rgba(123, 97, 255, .04),
+    0 0 100px rgba(123, 97, 255, .015),
+    0 10px 40px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .03) !important;
 }
-@keyframes sendPulse{
-  0%,100%{box-shadow:0 0 18px rgba(123,97,255,.4),0 0 45px rgba(123,97,255,.12),inset 0 1px 2px rgba(255,255,255,.12)}
-  50%{box-shadow:0 0 24px rgba(123,97,255,.5),0 0 55px rgba(123,97,255,.16),inset 0 1px 2px rgba(255,255,255,.16)}
-}
-#sendBtn:hover{
+
+/* ----------------------------------------------------------
+   8. .settings-section — Inner glass cards
+   ---------------------------------------------------------- */
+
+.settings-section {
+  background: rgba(10, 15, 35, .55) !important;
+  border: 1px solid rgba(123, 97, 255, .05) !important;
   box-shadow:
-    0 0 28px rgba(123,97,255,.55),
-    0 0 60px rgba(123,97,255,.2),
-    inset 0 1px 2px rgba(255,255,255,.18)!important;
+    0 2px 12px rgba(0, 0, 0, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .025) !important;
 }
 
-/* ─── 8. INPUT BAR — glowing command center ─── */
-.input-bar{
-  background:rgba(8,12,28,.75)!important;
-  backdrop-filter:blur(20px)!important;
-  -webkit-backdrop-filter:blur(20px)!important;
-  border:1px solid rgba(123,97,255,.06)!important;
+/* ----------------------------------------------------------
+   9. .nav-item.active — Stronger glow
+   ---------------------------------------------------------- */
+
+.nav-item.active {
+  background: rgba(30, 30, 65, .85) !important;
+  border-color: rgba(123, 97, 255, .14) !important;
   box-shadow:
-    0 0 25px rgba(123,97,255,.02),
-    0 4px 20px rgba(0,0,0,.25),
-    inset 0 1px 0 rgba(255,255,255,.025);
-  transition:all .35s cubic-bezier(.4,0,.2,1);
+    0 0 28px rgba(123, 97, 255, .12),
+    inset 0 0 22px rgba(123, 97, 255, .035) !important;
 }
-.input-bar:focus-within{
-  border-color:rgba(123,97,255,.18)!important;
+
+/* ----------------------------------------------------------
+   10. .nav-item:hover — Subtle glow hint
+   ---------------------------------------------------------- */
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, .04) !important;
+  border-color: rgba(123, 97, 255, .06) !important;
+}
+/* ============================================================
+   desi-C-details.css
+   Icons · Input Bar · Send Button · Motion · Nova Core
+   Premium cinematic layer — slow, expensive, minimal.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. SIDEBAR ICONS
+   ---------------------------------------------------------- */
+
+.nav-item svg {
+  opacity: 0.65;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.nav-item:hover svg {
+  opacity: 0.85;
+  filter: drop-shadow(0 0 6px rgba(123, 97, 255, 0.25));
+}
+
+.nav-item.active svg {
+  opacity: 1;
+  color: #9B8BFF !important;
+  filter: drop-shadow(0 0 8px rgba(123, 97, 255, 0.4));
+}
+
+/* ----------------------------------------------------------
+   2. QUICK CARD ICONS
+   ---------------------------------------------------------- */
+
+.quick-card-icon {
+  background: linear-gradient(135deg, rgba(123, 97, 255, 0.15), rgba(94, 235, 255, 0.08)) !important;
+  border: 1px solid rgba(123, 97, 255, 0.12) !important;
+  border-radius: 12px !important;
   box-shadow:
-    0 0 35px rgba(123,97,255,.045),
-    0 0 70px rgba(123,97,255,.015),
-    0 4px 24px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.03);
+    0 0 18px rgba(123, 97, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ─── 9. MESSAGE BUBBLES — atmospheric glass ─── */
-.message.assistant .msg-bubble{
-  background:rgba(10,15,35,.7);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(123,97,255,.05);
-  box-shadow:0 4px 18px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.02);
-}
-.message.user .msg-bubble{
-  border:1px solid rgba(123,97,255,.1);
-  box-shadow:0 0 20px rgba(123,97,255,.025);
+.quick-card:hover .quick-card-icon {
+  box-shadow:
+    0 0 25px rgba(123, 97, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform: scale(1.05);
+  animation: iconPulse 2s ease-in-out infinite;
 }
 
-/* ─── 10. AVATARS — soft depth ─── */
-.msg-avatar,.profile-avatar{
-  box-shadow:0 0 12px rgba(100,80,220,.2),0 0 30px rgba(80,60,200,.06);
+/* ----------------------------------------------------------
+   3. INPUT BAR
+   ---------------------------------------------------------- */
+
+.input-bar {
+  background: rgba(8, 12, 28, 0.78) !important;
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+  border: 1px solid rgba(123, 97, 255, 0.08) !important;
+  box-shadow:
+    0 0 30px rgba(123, 97, 255, 0.03),
+    0 4px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ─── 11. AMBIENT MOTION — minimal, expensive ─── */
-
-/* No floating particles — atmosphere comes from borders/lighting */
-#mainContent::after{display:none!important}
-
-/* Smoother message entrance */
-.message{animation:msgEnter .4s cubic-bezier(.22,1,.36,1) both!important}
-@keyframes msgEnter{
-  from{opacity:0;transform:translateY(10px) scale(.99)}
-  to{opacity:1;transform:none}
+.input-bar:focus-within {
+  border-color: rgba(123, 97, 255, 0.22) !important;
+  box-shadow:
+    0 0 45px rgba(123, 97, 255, 0.06),
+    0 0 90px rgba(123, 97, 255, 0.02),
+    0 4px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Panel entrance — use .active class instead of style sniffing */
-.panel-view[style*="block"]{
-  animation:panelIn .35s cubic-bezier(.22,1,.36,1) both;
-}
-@keyframes panelIn{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:none}
+.input-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Subtle press feedback */
-.nav-item:active,.quick-card:active,.input-btn:active{transform:scale(.97)}
-
-/* Status card hover */
-.recent-item{
-  transition:all .2s ease;
-  padding:10px 6px;border-radius:6px;margin:0 -6px;
-}
-.recent-item:hover{background:rgba(255,255,255,.025)}
-
-/* ─── 12. THINKING DOTS ─── */
-.thinking-dots span{
-  width:8px!important;height:8px!important;
-  background:var(--purple)!important;
-  box-shadow:0 0 6px rgba(123,97,255,.35);
+.input-btn:hover {
+  color: var(--purple) !important;
+  background: rgba(123, 97, 255, 0.08) !important;
+  box-shadow: 0 0 12px rgba(123, 97, 255, 0.1);
 }
 
-/* ─── 13. TYPOGRAPHY — premium ─── */
-.welcome-screen h1 .purple{
-  background:linear-gradient(135deg,#7B61FF,#9B8BFF);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
+/* ----------------------------------------------------------
+   4. SEND BUTTON
+   ---------------------------------------------------------- */
+
+#sendBtn {
+  background: linear-gradient(135deg, #5B41DF, #7B61FF, #9B81FF) !important;
+  box-shadow:
+    0 0 22px rgba(123, 97, 255, 0.5),
+    0 0 55px rgba(123, 97, 255, 0.15),
+    0 0 100px rgba(123, 97, 255, 0.05),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15) !important;
+  animation: sendPulse 4s ease-in-out infinite;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.sidebar-logo span{
-  letter-spacing:8px!important;font-weight:600;opacity:.95;
+#sendBtn:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 30px rgba(123, 97, 255, 0.6),
+    0 0 70px rgba(123, 97, 255, 0.2),
+    0 0 120px rgba(123, 97, 255, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2) !important;
 }
 
-.widget-label{letter-spacing:2.5px!important;font-size:10px!important}
-
-/* ─── 14. SELECTION ─── */
-::selection{background:rgba(123,97,255,.22);color:#fff}
-
-/* ─── 15. MODEL BAR — atmospheric ─── */
-.model-bar{
-  border-top:1px solid rgba(123,97,255,.05);
-  padding-top:10px;
+#sendBtn:active {
+  transform: scale(0.95);
 }
-#modelSelect{
-  border-color:rgba(123,97,255,.06);
-  background:rgba(10,15,35,.6);
-}
-#modelSelect:hover{background:rgba(10,15,35,.8);border-color:rgba(123,97,255,.1)}
-#modelSelect:focus{border-color:rgba(123,97,255,.2)}
-.settings-key-btn{
-  border-color:rgba(123,97,255,.06);
-  background:rgba(10,15,35,.6);
-}
-.settings-key-btn:hover{background:rgba(10,15,35,.8);border-color:rgba(123,97,255,.1);color:var(--text)}
 
-/* ─── 16. RESPONSIVE ─── */
+/* ----------------------------------------------------------
+   5. NOVA CORE
+   ---------------------------------------------------------- */
+
+.planet-container {
+  position: relative;
+}
+
+.planet-container img {
+  animation: planetFloat 6s ease-in-out infinite alternate;
+  filter:
+    drop-shadow(0 0 25px rgba(123, 97, 255, 0.35))
+    drop-shadow(0 0 50px rgba(123, 97, 255, 0.12));
+}
+
+.planet-container::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  height: 90%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(123, 97, 255, 0.10) 0%, transparent 70%);
+  animation: breatheGlow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.planet-container::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110%;
+  height: 110%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(123, 97, 255, 0.06);
+  border-radius: 50%;
+  animation: orbitSpin 20s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ----------------------------------------------------------
+   6. MOTION SYSTEM — KEYFRAMES
+   ---------------------------------------------------------- */
+
+@keyframes iconPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(123, 97, 255, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(123, 97, 255, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+}
+
+@keyframes sendPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 22px rgba(123, 97, 255, 0.5),
+      0 0 55px rgba(123, 97, 255, 0.15),
+      0 0 100px rgba(123, 97, 255, 0.05),
+      inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(123, 97, 255, 0.6),
+      0 0 65px rgba(123, 97, 255, 0.2),
+      0 0 110px rgba(123, 97, 255, 0.08),
+      inset 0 1px 2px rgba(255, 255, 255, 0.18);
+  }
+}
+
+@keyframes breatheGlow {
+  0% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}
+
+@keyframes orbitSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes planetFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ----------------------------------------------------------
+   6b. MOTION — AVATARS & THINKING DOTS
+   ---------------------------------------------------------- */
+
+.msg-avatar {
+  box-shadow:
+    0 0 14px rgba(100, 80, 220, 0.25),
+    0 0 35px rgba(80, 60, 200, 0.08);
+}
+
+.profile-avatar {
+  box-shadow:
+    0 0 14px rgba(100, 80, 220, 0.25),
+    0 0 35px rgba(80, 60, 200, 0.08);
+}
+
+.thinking-dots span {
+  width: 9px !important;
+  height: 9px !important;
+  background: var(--purple) !important;
+  box-shadow: 0 0 10px rgba(123, 97, 255, 0.45);
+}
+
+/* ----------------------------------------------------------
+   7. MODEL SELECTOR
+   ---------------------------------------------------------- */
+
+#modelSelect {
+  background: rgba(10, 15, 35, 0.65) !important;
+  border: 1px solid rgba(123, 97, 255, 0.08) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#modelSelect:hover {
+  border-color: rgba(123, 97, 255, 0.14) !important;
+  background: rgba(10, 15, 35, 0.8) !important;
+}
+
+#modelSelect:focus {
+  border-color: rgba(123, 97, 255, 0.22) !important;
+  box-shadow: 0 0 20px rgba(123, 97, 255, 0.04);
+  outline: none;
+}
+
+/* ----------------------------------------------------------
+   8. SETTINGS KEY BUTTON
+   ---------------------------------------------------------- */
+
+.settings-key-btn {
+  background: rgba(10, 15, 35, 0.65) !important;
+  border: 1px solid rgba(123, 97, 255, 0.08) !important;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.settings-key-btn:hover {
+  border-color: rgba(123, 97, 255, 0.18) !important;
+  background: rgba(10, 15, 35, 0.8) !important;
+  box-shadow: 0 0 16px rgba(123, 97, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   9. SCROLLBAR
+   ---------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(123, 97, 255, 0.18);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 97, 255, 0.3);
+}
+
+/* ----------------------------------------------------------
+   10. TYPOGRAPHY GLOW
+   ---------------------------------------------------------- */
+
+.welcome-screen h1 {
+  text-shadow:
+    0 0 80px rgba(123, 97, 255, 0.06),
+    0 0 40px rgba(123, 97, 255, 0.03);
+}
+
+.welcome-screen h1 .purple {
+  background: linear-gradient(135deg, #7B61FF, #A18BFF) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.widget-label {
+  letter-spacing: 2.5px !important;
+  font-size: 10px !important;
+}
+
+
+/* ─── RESPONSIVE ─── */
 @media(max-width:1100px){.widget-col{display:none}}
 @media(max-width:768px){
   body{padding:10px;gap:10px}
