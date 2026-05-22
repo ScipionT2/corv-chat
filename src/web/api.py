@@ -621,3 +621,66 @@ async def websocket_endpoint(ws: WebSocket):
     finally:
         _ws_clients.discard(ws)
         logger.info("WebSocket client disconnected (%d remaining)", len(_ws_clients))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  V2 API — Multi-Provider Chat System
+# ═══════════════════════════════════════════════════════════════════════
+
+from src.web.providers import get_available_models, chat_stream, MODELS
+
+
+class ChatV2Message(BaseModel):
+    """Body for POST /api/v2/chat."""
+    message: str
+    model: str = "gemini-2.0-flash"  # default to free model
+    history: list[dict] = []
+    api_key: Optional[str] = None  # BYOK key (never stored)
+
+
+@app.get("/api/v2/models")
+async def get_models():
+    """Return available models with their status."""
+    return JSONResponse({"models": get_available_models()})
+
+
+@app.post("/api/v2/chat")
+async def chat_v2(body: ChatV2Message):
+    """Multi-provider chat with SSE streaming.
+
+    Free models use server-side keys.
+    BYOK models require api_key in the request body.
+    API keys are NEVER stored — used for this request only.
+    """
+    from sse_starlette.sse import EventSourceResponse
+
+    _add_log("info", f"Chat v2 [{body.model}]: {body.message[:80]}")
+
+    # Build messages list
+    messages = []
+    for msg in body.history[-20:]:  # cap at last 20 messages
+        if msg.get("role") and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": body.message})
+
+    async def _stream():
+        accumulated = ""
+        try:
+            async for token in chat_stream(
+                model_key=body.model,
+                messages=messages,
+                user_api_key=body.api_key,
+            ):
+                accumulated += token
+                yield {"event": "token", "data": json.dumps({"token": token})}
+        except ValueError as e:
+            yield {"event": "error", "data": json.dumps({"error": str(e)})}
+            return
+        except Exception as e:
+            logger.error(f"Chat v2 error: {e}")
+            yield {"event": "error", "data": json.dumps({"error": "Something went wrong. Please try again."})}
+            return
+
+        yield {"event": "done", "data": json.dumps({"content": accumulated})}
+
+    return EventSourceResponse(_stream())
