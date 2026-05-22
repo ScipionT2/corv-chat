@@ -116,8 +116,8 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 
 /* ---------- Sidebar ---------- */
 .sidebar {
-  width: 260px;
-  min-width: 260px;
+  width: 270px;
+  min-width: 270px;
   background: var(--nova-bg-glass);
   backdrop-filter: var(--nova-glass-blur);
   -webkit-backdrop-filter: var(--nova-glass-blur);
@@ -128,28 +128,202 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
   overflow: hidden;
   position: relative;
   z-index: 10;
+  transition: width var(--nova-transition-slow), min-width var(--nova-transition-slow);
 }
 
-.sidebar-logo {
-  padding: 16px 18px;
+.sidebar.collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+
+.sidebar.collapsed .sidebar-brand-text,
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .sidebar-user-info,
+.sidebar.collapsed .sidebar-user-plan {
+  display: none;
+}
+
+/* --- Sidebar Header: Logo + Collapse --- */
+.sidebar-header {
+  padding: 16px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid var(--nova-border);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--nova-text-primary);
+}
+
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  letter-spacing: -0.3px;
 }
 
+/* Nova orbital logo */
+.nova-logo {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nova-logo-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  box-shadow: 0 0 12px rgba(160, 64, 255, 0.6), 0 0 24px rgba(160, 64, 255, 0.3);
+}
+
+.nova-logo-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.4);
+}
+
+.nova-logo-ring:nth-child(2) {
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%) rotate(20deg);
+  animation: orbit-spin 8s linear infinite;
+}
+
+.nova-logo-ring:nth-child(3) {
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  border-color: rgba(99, 102, 241, 0.25);
+  animation: orbit-spin 12s linear infinite reverse;
+}
+
+@keyframes orbit-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--nova-text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.sidebar-brand-tag {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  letter-spacing: 0.3px;
+}
+
+.sidebar-collapse-btn {
+  background: none;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: all var(--nova-transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--nova-text-primary);
+}
+
+/* --- Sidebar Actions: New Chat + Search --- */
+.sidebar-actions {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-gradient-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--nova-transition-fast);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.new-chat-btn:hover {
+  box-shadow: var(--nova-glow-md);
+  transform: translateY(-1px);
+}
+
+.new-chat-btn .btn-star {
+  font-size: 16px;
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  transition: border-color var(--nova-transition-fast);
+}
+
+.sidebar-search:focus-within {
+  border-color: var(--nova-accent-soft);
+}
+
+.sidebar-search-icon {
+  color: var(--nova-text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.sidebar-search input::placeholder {
+  color: var(--nova-text-muted);
+}
+
+/* --- Sidebar Nav --- */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px 10px;
 }
 
 .nav-category {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .nav-category-toggle {
@@ -166,10 +340,10 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 }
 
 .category-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   color: var(--nova-text-muted);
 }
 
@@ -187,9 +361,9 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 }
 
 .nav-item {
-  padding: 9px 14px;
+  padding: 8px 12px;
   border-radius: var(--nova-radius-sm);
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--nova-text-secondary);
   cursor: pointer;
   display: flex;
@@ -199,35 +373,201 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
 }
 
 .nav-item:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(139, 92, 246, 0.08);
   color: var(--nova-text-primary);
 }
 
 .nav-item.active {
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(139, 92, 246, 0.14);
   color: var(--nova-text-primary);
-  box-shadow: var(--nova-glow-sm);
+  box-shadow: inset 2px 0 0 var(--nova-accent);
 }
 
 .nav-item .nav-icon {
-  font-size: 16px;
+  font-size: 15px;
   flex-shrink: 0;
   width: 20px;
   text-align: center;
+  opacity: 0.8;
 }
 
-.sidebar-bottom {
-  border-top: 1px solid var(--nova-border);
-  padding: 12px 16px;
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+  opacity: 1;
 }
 
-.accessibility-toggles {
+/* --- Recent Chats Section --- */
+.recent-chats-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 4px;
+}
+
+.recent-chats-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--nova-text-muted);
+}
+
+.recent-chats-add {
+  background: none;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all var(--nova-transition-fast);
+}
+
+.recent-chats-add:hover {
+  color: var(--nova-accent);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.recent-chat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--nova-radius-sm);
+  cursor: pointer;
+  transition: all var(--nova-transition-fast);
+}
+
+.recent-chat-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.recent-chat-item.active {
+  background: rgba(139, 92, 246, 0.14);
+}
+
+.recent-chat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nova-text-muted);
+  flex-shrink: 0;
+}
+
+.recent-chat-item.active .recent-chat-dot {
+  background: var(--nova-accent);
+  box-shadow: 0 0 6px rgba(160, 64, 255, 0.4);
+}
+
+.recent-chat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-chat-name {
+  font-size: 13px;
+  color: var(--nova-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-chat-item.active .recent-chat-name,
+.recent-chat-item:hover .recent-chat-name {
+  color: var(--nova-text-primary);
+}
+
+.recent-chat-time {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  flex-shrink: 0;
+}
+
+.recent-chats-more {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: color var(--nova-transition-fast);
+}
+
+.recent-chats-more:hover {
+  color: var(--nova-accent);
+}
+
+/* --- Sidebar User Section --- */
+.sidebar-user {
+  border-top: 1px solid var(--nova-border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-plan {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-user-arrow {
+  color: var(--nova-text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: color var(--nova-transition-fast);
+}
+
+.sidebar-user:hover .sidebar-user-arrow {
+  color: var(--nova-text-primary);
+}
+
+/* --- Accessibility toggles (moved into user area popover later) --- */
+.accessibility-toggles {
+  display: none;
 }
 
 .toggle-row {
@@ -243,7 +583,7 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 }
 
 .toggle-row input[type="checkbox"] {
-  accent-color: #666;
+  accent-color: var(--nova-accent-soft);
 }
 
 /* ---------- Main Content ---------- */
@@ -946,23 +1286,46 @@ body,
 <!-- ─── LEFT SIDEBAR ─────────────────────────────────────────── -->
 <aside class="sidebar" id="sidebar">
 
-  <div class="sidebar-logo">
-    <span class="logo-icon">⚡</span>
-    <span class="logo-text">Nova <small>v1.0</small></span>
+  <!-- Header: Logo + Collapse -->
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="nova-logo">
+        <div class="nova-logo-core"></div>
+        <div class="nova-logo-ring"></div>
+        <div class="nova-logo-ring"></div>
+      </div>
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">NOVA AI</span>
+        <span class="sidebar-brand-tag">v1.0</span>
+      </div>
+    </div>
+    <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">◁</button>
   </div>
 
-  <!-- Nav: General -->
+  <!-- Actions: New Chat + Search -->
+  <div class="sidebar-actions">
+    <button class="new-chat-btn" id="newChatBtn" data-panel="chat">
+      <span class="btn-star">✦</span> New Chat
+    </button>
+    <div class="sidebar-search">
+      <span class="sidebar-search-icon">🔍</span>
+      <input type="text" placeholder="Search chats..." id="sidebarSearch" />
+    </div>
+  </div>
+
+  <!-- Nav -->
   <nav class="sidebar-nav">
+    <!-- Nav: General -->
     <div class="nav-category" data-category="general">
       <button class="nav-category-toggle" aria-expanded="true">
         <span class="category-label">General</span>
         <span class="category-arrow">▾</span>
       </button>
       <ul class="nav-list">
-        <li><button class="nav-item active" data-panel="status">🏠 Home / Status</button></li>
-        <li><button class="nav-item" data-panel="chat">💬 Chat</button></li>
-        <li><button class="nav-item" data-panel="scripts">📜 Scripts</button></li>
-        <li><button class="nav-item" data-panel="projects">📁 Projects</button></li>
+        <li><button class="nav-item active" data-panel="chat"><span class="nav-icon">💬</span> Chat</button></li>
+        <li><button class="nav-item" data-panel="status"><span class="nav-icon">📊</span> Status</button></li>
+        <li><button class="nav-item" data-panel="projects"><span class="nav-icon">📁</span> Projects</button></li>
+        <li><button class="nav-item" data-panel="scripts"><span class="nav-icon">📜</span> Scripts</button></li>
       </ul>
     </div>
 
@@ -973,9 +1336,9 @@ body,
         <span class="category-arrow">▾</span>
       </button>
       <ul class="nav-list">
-        <li><button class="nav-item" data-panel="agents">🤖 Agents</button></li>
-        <li><button class="nav-item" data-panel="skills">🧩 Skills</button></li>
-        <li><button class="nav-item" data-panel="memory">🧠 Memory</button></li>
+        <li><button class="nav-item" data-panel="agents"><span class="nav-icon">🤖</span> Agents</button></li>
+        <li><button class="nav-item" data-panel="skills"><span class="nav-icon">🧩</span> Skills</button></li>
+        <li><button class="nav-item" data-panel="memory"><span class="nav-icon">🧠</span> Memory</button></li>
       </ul>
     </div>
 
@@ -986,30 +1349,47 @@ body,
         <span class="category-arrow">▾</span>
       </button>
       <ul class="nav-list">
-        <li><button class="nav-item" data-panel="settings">⚙️ Settings</button></li>
-        <li><button class="nav-item" data-panel="vision">👁️ Vision</button></li>
-        <li><button class="nav-item" data-panel="logs">📋 Logs</button></li>
-        <li><button class="nav-item" data-panel="help">❓ Help</button></li>
+        <li><button class="nav-item" data-panel="settings"><span class="nav-icon">⚙️</span> Settings</button></li>
+        <li><button class="nav-item" data-panel="vision"><span class="nav-icon">👁️</span> Vision</button></li>
+        <li><button class="nav-item" data-panel="logs"><span class="nav-icon">📋</span> Logs</button></li>
+        <li><button class="nav-item" data-panel="help"><span class="nav-icon">❓</span> Help</button></li>
       </ul>
+    </div>
+
+    <!-- Recent Chats -->
+    <div class="nav-category" data-category="recent">
+      <div class="recent-chats-header">
+        <span class="recent-chats-title">Recent Chats</span>
+        <button class="recent-chats-add" title="New chat">+</button>
+      </div>
+      <div id="recentChatsList">
+        <div class="recent-chat-item active">
+          <span class="recent-chat-dot"></span>
+          <div class="recent-chat-info">
+            <span class="recent-chat-name">Welcome to Nova AI</span>
+          </div>
+          <span class="recent-chat-time">Now</span>
+        </div>
+      </div>
+      <button class="recent-chats-more" id="showMoreChats">Show more ↓</button>
     </div>
   </nav>
 
-  <!-- Sidebar Bottom: Accessibility -->
-  <div class="sidebar-bottom">
-    <div class="accessibility-toggles">
-      <label class="toggle-row">
-        <input type="checkbox" id="toggleHighContrast" />
-        <span>🔲 High Contrast</span>
-      </label>
-      <label class="toggle-row">
-        <input type="checkbox" id="toggleLargeText" />
-        <span>🔤 Large Text</span>
-      </label>
-      <label class="toggle-row">
-        <input type="checkbox" id="toggleTTS" />
-        <span>🔊 TTS</span>
-      </label>
+  <!-- User Profile -->
+  <div class="sidebar-user" id="sidebarUser">
+    <div class="sidebar-user-avatar">EP</div>
+    <div class="sidebar-user-info">
+      <div class="sidebar-user-name">Escipion Pedroza</div>
+      <div class="sidebar-user-plan">Free Plan</div>
     </div>
+    <span class="sidebar-user-arrow">›</span>
+  </div>
+
+  <!-- Hidden accessibility toggles (preserved for JS compatibility) -->
+  <div class="accessibility-toggles">
+    <label class="toggle-row"><input type="checkbox" id="toggleHighContrast" /> High Contrast</label>
+    <label class="toggle-row"><input type="checkbox" id="toggleLargeText" /> Large Text</label>
+    <label class="toggle-row"><input type="checkbox" id="toggleTTS" /> TTS</label>
   </div>
 
 </aside>
@@ -2917,6 +3297,37 @@ body,
         if (action) handleAction(action);
       });
     });
+
+    // ── Sidebar collapse button ────────────────────────────────────────
+    var collapseBtn = $('sidebarCollapseBtn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', function () {
+        var sidebar = $('sidebar');
+        if (sidebar) {
+          sidebar.classList.toggle('collapsed');
+          this.textContent = sidebar.classList.contains('collapsed') ? '▷' : '◁';
+        }
+      });
+    }
+
+    // ── New Chat button ────────────────────────────────────────────────
+    var newChatBtn = $('newChatBtn');
+    if (newChatBtn) {
+      newChatBtn.addEventListener('click', function () {
+        var chatMessages = $('chatMessages');
+        if (chatMessages) chatMessages.innerHTML = '';
+        hasMessages = false;
+        switchPanel('chat');
+      });
+    }
+
+    // ── Recent chats add button ────────────────────────────────────────
+    var recentAddBtn = document.querySelector('.recent-chats-add');
+    if (recentAddBtn) {
+      recentAddBtn.addEventListener('click', function () {
+        if (newChatBtn) newChatBtn.click();
+      });
+    }
 
     // ── Accessibility toggles ─────────────────────────────────────────
     var toggleHC = $('toggleHighContrast');
