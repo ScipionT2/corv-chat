@@ -627,39 +627,202 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
 }
 
 /* ---------- Welcome Screen ---------- */
+/* ---------- Welcome / Hero Screen ---------- */
 .welcome-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 24px;
-  padding: 24px;
+  gap: 40px;
+  padding: 40px 24px;
 }
 
 .welcome-hero {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
-.welcome-icon {
-  font-size: 48px;
+/* --- Animated Nova Planet --- */
+.welcome-planet {
+  width: 120px;
+  height: 120px;
+  position: relative;
   margin-bottom: 8px;
-  display: block;
 }
 
+.welcome-planet-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  box-shadow:
+    0 0 20px rgba(160, 64, 255, 0.5),
+    0 0 50px rgba(160, 64, 255, 0.25),
+    0 0 80px rgba(160, 64, 255, 0.1);
+  animation: planet-pulse 4s ease-in-out infinite;
+}
+
+@keyframes planet-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(160,64,255,0.5), 0 0 50px rgba(160,64,255,0.25), 0 0 80px rgba(160,64,255,0.1); transform: translate(-50%,-50%) scale(1); }
+  50% { box-shadow: 0 0 30px rgba(160,64,255,0.6), 0 0 60px rgba(160,64,255,0.3), 0 0 100px rgba(160,64,255,0.15); transform: translate(-50%,-50%) scale(1.05); }
+}
+
+.welcome-planet-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+.welcome-planet-ring:nth-child(2) {
+  width: 70px;
+  height: 70px;
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translate(-50%, -50%) rotate(25deg);
+  animation: orbit-spin 10s linear infinite;
+}
+
+.welcome-planet-ring:nth-child(3) {
+  width: 95px;
+  height: 95px;
+  border-color: rgba(99, 102, 241, 0.2);
+  transform: translate(-50%, -50%) rotate(-10deg);
+  animation: orbit-spin 16s linear infinite reverse;
+}
+
+.welcome-planet-ring:nth-child(4) {
+  width: 115px;
+  height: 115px;
+  border-color: rgba(56, 189, 248, 0.12);
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: orbit-spin 22s linear infinite;
+}
+
+/* Orbiting dot particle */
+.welcome-planet-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--nova-accent-bright);
+  box-shadow: 0 0 6px rgba(199, 64, 255, 0.6);
+}
+
+.welcome-planet-particle:nth-child(5) {
+  top: 12px;
+  left: 50%;
+  animation: particle-orbit-1 10s linear infinite;
+}
+
+.welcome-planet-particle:nth-child(6) {
+  bottom: 20px;
+  right: 15px;
+  animation: particle-orbit-2 16s linear infinite;
+}
+
+@keyframes particle-orbit-1 {
+  from { transform: rotate(0deg) translateX(35px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(35px) rotate(-360deg); }
+}
+
+@keyframes particle-orbit-2 {
+  from { transform: rotate(0deg) translateX(48px) rotate(0deg); }
+  to   { transform: rotate(-360deg) translateX(48px) rotate(360deg); }
+}
+
+/* --- Welcome Text --- */
 .welcome-title {
-  display: none;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--nova-text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.welcome-title .accent {
+  background: var(--nova-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .welcome-subtitle {
-  font-size: 28px;
-  font-weight: 500;
-  color: var(--nova-text-primary);
-  letter-spacing: -0.5px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--nova-text-secondary);
+  letter-spacing: 0.2px;
+  max-width: 400px;
 }
 
+/* --- Feature Cards --- */
 .welcome-cards {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 14px;
+  border-radius: var(--nova-radius-md);
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  cursor: pointer;
+  transition: all var(--nova-transition);
+  text-align: center;
+  font-family: inherit;
+  color: inherit;
+}
+
+.welcome-card:hover {
+  border-color: var(--nova-border-strong);
+  background: var(--nova-bg-elevated);
+  box-shadow: var(--nova-glow-md);
+  transform: translateY(-3px);
+}
+
+.welcome-card-icon {
+  font-size: 28px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nova-radius-md);
+  background: var(--nova-gradient-subtle);
+  border: 1px solid var(--nova-border);
+  transition: all var(--nova-transition);
+}
+
+.welcome-card:hover .welcome-card-icon {
+  box-shadow: var(--nova-glow-accent);
+  border-color: var(--nova-accent-soft);
+}
+
+.welcome-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+}
+
+.welcome-card-desc {
+  font-size: 12px;
+  color: var(--nova-text-muted);
+  line-height: 1.4;
 }
 
 /* ---------- Chat Messages ---------- */
@@ -1164,12 +1327,38 @@ a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
     padding: 12px 16px 16px;
   }
 
+  .welcome-title {
+    font-size: 26px;
+  }
+
   .welcome-subtitle {
-    font-size: 22px;
+    font-size: 14px;
+  }
+
+  .welcome-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .welcome-planet {
+    width: 90px;
+    height: 90px;
+  }
+
+  .welcome-planet-core {
+    width: 32px;
+    height: 32px;
   }
 
   .status-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-cards {
+    grid-template-columns: 1fr;
+    max-width: 280px;
   }
 }
 
@@ -1401,31 +1590,39 @@ body,
   <!-- ── WELCOME SCREEN (shown when no messages) ── -->
   <div class="welcome-screen" id="welcomeScreen">
     <div class="welcome-hero">
-      <div class="welcome-icon">⚡</div>
-      <h1 class="welcome-title">Nova</h1>
-      <p class="welcome-subtitle">How can I help you today?</p>
+      <!-- Animated Nova Planet -->
+      <div class="welcome-planet">
+        <div class="welcome-planet-core"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-particle"></div>
+        <div class="welcome-planet-particle"></div>
+      </div>
+      <h1 class="welcome-title" id="welcomeTitle">Welcome to <span class="accent">Nova AI</span></h1>
+      <p class="welcome-subtitle" id="welcomeSubtitle">Your intelligent partner. Limitless possibilities.</p>
     </div>
 
     <div class="welcome-cards">
       <button class="welcome-card" data-action="create-image">
-        <span class="welcome-card-icon">🎨</span>
+        <span class="welcome-card-icon">📷</span>
         <span class="welcome-card-title">Create an image</span>
-        <span class="welcome-card-desc">Generate art, photos, designs</span>
+        <span class="welcome-card-desc">Generate stunning visuals with AI</span>
       </button>
       <button class="welcome-card" data-action="write">
         <span class="welcome-card-icon">✏️</span>
         <span class="welcome-card-title">Write or edit</span>
-        <span class="welcome-card-desc">Draft, proofread, or rewrite text</span>
+        <span class="welcome-card-desc">Draft, rewrite, or polish any text</span>
+      </button>
+      <button class="welcome-card" data-action="code">
+        <span class="welcome-card-icon">&lt;/&gt;</span>
+        <span class="welcome-card-title">Code something</span>
+        <span class="welcome-card-desc">Build, debug, and ship faster</span>
       </button>
       <button class="welcome-card" data-action="search">
-        <span class="welcome-card-icon">🔍</span>
-        <span class="welcome-card-title">Look something up</span>
-        <span class="welcome-card-desc">Search the web for info</span>
-      </button>
-      <button class="welcome-card" data-action="projects">
-        <span class="welcome-card-icon">📁</span>
-        <span class="welcome-card-title">Projects</span>
-        <span class="welcome-card-desc">Manage your projects and code</span>
+        <span class="welcome-card-icon">🧠</span>
+        <span class="welcome-card-title">Analyze anything</span>
+        <span class="welcome-card-desc">Research, summarize, and explore</span>
       </button>
     </div>
   </div>
@@ -2583,6 +2780,7 @@ body,
     var prefills = {
       'create-image': 'Create an image of ',
       'write':        'Write ',
+      'code':         'Help me code ',
       'search':       'Search for ',
       'projects':     null,
     };
@@ -3421,10 +3619,40 @@ body,
   //  16. INIT
   // ═══════════════════════════════════════════════════════════════════════
 
+  // Dynamic greeting based on time of day
+  function setDynamicGreeting() {
+    var titleEl = $('welcomeTitle');
+    var subEl = $('welcomeSubtitle');
+    if (!titleEl) return;
+
+    var hour = new Date().getHours();
+    var greeting, subtitle;
+
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+      subtitle = 'What will you create today?';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+      subtitle = 'Nova is ready. Let\u2019s build something.';
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good evening';
+      subtitle = 'Explore faster with Nova.';
+    } else {
+      greeting = 'Welcome back';
+      subtitle = 'Build something impossible.';
+    }
+
+    titleEl.innerHTML = greeting + ', <span class="accent">Escipion</span>';
+    if (subEl) subEl.textContent = subtitle;
+  }
+
   function init() {
     // Restore preferences
     restoreTheme();
     restoreA11y();
+
+    // Set dynamic greeting
+    setDynamicGreeting();
 
     // Hide thinking bubble initially
     hideThinking();
