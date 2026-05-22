@@ -7,7 +7,8 @@ When you need the DESI/LESI/REDI pipeline, use this pattern:
 ```
 1. Spawn DESI subagent with the design brief + reference image
    - DESI reads agents/DESI.md for personality
-   - DESI produces CSS/HTML output
+   - DESI uses image_generate (GPT Image) to create visual concepts first
+   - DESI then produces CSS/HTML matching the visual concept
 
 2. Spawn LESI subagent with DESI's output + reference image
    - LESI reads agents/LESI.md for personality
@@ -22,13 +23,14 @@ When you need the DESI/LESI/REDI pipeline, use this pattern:
    - Repeat 2-3 until both reviewers give A+ grade
 ```
 
-### For image generation:
+### For image/visual generation:
 ```
-1. DESI writes the image prompt (style, mood, composition)
-2. Generate the image
-3. LESI reviews the image (technical accuracy)
-4. REDI reviews the image (cinematic feel)
-5. Refine prompt based on feedback, regenerate
+1. DESI uses image_generate with GPT Image to create the concept
+   - Prompt should include: style, mood, composition, color system, atmosphere
+   - Use Nova color system: #050816 bg, #7B61FF purple, #5EEBFF blue
+2. LESI reviews the image (technical accuracy, spacing, consistency)
+3. REDI reviews the image (cinematic feel, atmosphere, emotion)
+4. DESI refines via image_generate using feedback, regenerate
 ```
 
 ### For branding/concept work:

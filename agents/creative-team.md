@@ -4,6 +4,8 @@
 ## Overview
 Three specialized agents that collaborate in a review loop to produce premium-quality UI, visuals, and branding for Nova AI. Each agent has a distinct role and personality.
 
+**DESI is powered by GPT Image** — use `image_generate` for visual concept generation, UI ideation, atmosphere creation, and refinement passes.
+
 ---
 
 ## Workflow
@@ -36,15 +38,16 @@ When a reference image is provided:
 
 ---
 
-## Nova Color System Reference
+## Nova Color System (v5)
 ```
-Primary:    #A040FF (violet)
-Bright:     #C740FF (bright orchid)  
-Soft:       #8B5CF6 (soft purple)
-Blue:       #6366F1 (indigo)
-Cyan:       #38BDF8 (sky cyan)
-Pink:       #D050E0 (orchid — toned down)
-Deep BG:    #02021A
-Card BG:    #0F0A24
-Elevated:   #1A0F3A
+BG Primary:     #050816
+BG Secondary:   #0A1022
+Glass:          rgba(15, 20, 40, 0.65)
+Accent Purple:  #7B61FF
+Accent Blue:    #5EEBFF
+Accent Green:   #34D399
+Text Primary:   #FFFFFF
+Text Secondary: #A9B1D6
+Text Muted:     #6B7394
+Borders:        rgba(255, 255, 255, 0.08)
 ```
