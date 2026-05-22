@@ -1,0 +1,5453 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — AI Assistant</title>
+<style>
+/* ============================================
+   Nova v4 — Cosmic Futuristic Interface
+   ============================================ */
+
+/* ---------- CSS Custom Properties (Design Tokens) ---------- */
+:root {
+  /* Cosmic backgrounds */
+  --nova-bg-deep: #02021A;
+  --nova-bg-dark: #0A0A1A;
+  --nova-bg-card: #0F0A24;
+  --nova-bg-elevated: #1A0F3A;
+  --nova-bg-surface: rgba(15, 10, 36, 0.6);
+  --nova-bg-glass: rgba(10, 10, 26, 0.65);
+
+  /* Accent palette */
+  --nova-accent: #A040FF;
+  --nova-accent-bright: #C740FF;
+  --nova-accent-soft: #8B5CF6;
+  --nova-accent-blue: #6366F1;
+  --nova-accent-cyan: #38BDF8;
+  --nova-accent-pink: #F040F0;
+
+  /* Gradients */
+  --nova-gradient-primary: linear-gradient(135deg, #A040FF 0%, #F040F0 100%);
+  --nova-gradient-subtle: linear-gradient(135deg, rgba(160,64,255,0.15) 0%, rgba(240,64,240,0.08) 100%);
+  --nova-gradient-card: linear-gradient(145deg, rgba(139,92,246,0.12) 0%, rgba(99,102,241,0.06) 100%);
+  --nova-gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.08) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.06) 0%, transparent 50%),
+                      radial-gradient(ellipse at 50% 80%, rgba(56,189,248,0.04) 0%, transparent 50%);
+
+  /* Text */
+  --nova-text-primary: #FFFFFF;
+  --nova-text-secondary: #A0A0B8;
+  --nova-text-muted: #6B6B80;
+  --nova-text-accent: #C740FF;
+
+  /* Borders */
+  --nova-border: rgba(139, 92, 246, 0.15);
+  --nova-border-strong: rgba(139, 92, 246, 0.3);
+
+  /* Glow */
+  --nova-glow-sm: 0 0 10px rgba(160, 64, 255, 0.15);
+  --nova-glow-md: 0 0 20px rgba(160, 64, 255, 0.2);
+  --nova-glow-lg: 0 0 40px rgba(160, 64, 255, 0.25);
+  --nova-glow-accent: 0 0 15px rgba(199, 64, 255, 0.3);
+
+  /* Glass */
+  --nova-glass-blur: blur(16px);
+  --nova-glass-blur-sm: blur(8px);
+
+  /* Typography */
+  --nova-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --nova-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+
+  /* Transitions */
+  --nova-transition-fast: 0.15s ease;
+  --nova-transition: 0.25s ease;
+  --nova-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing */
+  --nova-radius-sm: 8px;
+  --nova-radius-md: 12px;
+  --nova-radius-lg: 16px;
+  --nova-radius-xl: 24px;
+  --nova-radius-full: 9999px;
+}
+
+/* ---------- Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  background: var(--nova-bg-deep);
+  color: var(--nova-text-primary);
+  font-family: var(--nova-font);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cosmic background layer on main content */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--nova-gradient-bg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+a { color: var(--nova-accent-cyan); text-decoration: none; }
+a:hover { text-decoration: underline; color: var(--nova-accent-bright); }
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.4); }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 270px;
+  min-width: 270px;
+  background: var(--nova-bg-glass);
+  backdrop-filter: var(--nova-glass-blur);
+  -webkit-backdrop-filter: var(--nova-glass-blur);
+  border-right: 1px solid var(--nova-border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  transition: width var(--nova-transition-slow), min-width var(--nova-transition-slow);
+}
+
+.sidebar.collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+
+.sidebar.collapsed .sidebar-brand-text,
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .sidebar-user-info,
+.sidebar.collapsed .sidebar-user-plan {
+  display: none;
+}
+
+/* --- Sidebar Header: Logo + Collapse --- */
+.sidebar-header {
+  padding: 16px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--nova-border);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Nova orbital logo */
+.nova-logo {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nova-logo-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  box-shadow: 0 0 12px rgba(160, 64, 255, 0.6), 0 0 24px rgba(160, 64, 255, 0.3);
+}
+
+.nova-logo-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.4);
+}
+
+.nova-logo-ring:nth-child(2) {
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%) rotate(20deg);
+  animation: orbit-spin 8s linear infinite;
+}
+
+.nova-logo-ring:nth-child(3) {
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  border-color: rgba(99, 102, 241, 0.25);
+  animation: orbit-spin 12s linear infinite reverse;
+}
+
+@keyframes orbit-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--nova-text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.sidebar-brand-tag {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  letter-spacing: 0.3px;
+}
+
+.sidebar-collapse-btn {
+  background: none;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: all var(--nova-transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--nova-text-primary);
+}
+
+/* --- Sidebar Actions: New Chat + Search --- */
+.sidebar-actions {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-gradient-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--nova-transition-fast);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.new-chat-btn:hover {
+  box-shadow: var(--nova-glow-md);
+  transform: translateY(-1px);
+}
+
+.new-chat-btn .btn-star {
+  font-size: 16px;
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  transition: border-color var(--nova-transition-fast);
+}
+
+.sidebar-search:focus-within {
+  border-color: var(--nova-accent-soft);
+}
+
+.sidebar-search-icon {
+  color: var(--nova-text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.sidebar-search input::placeholder {
+  color: var(--nova-text-muted);
+}
+
+/* --- Sidebar Nav --- */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+}
+
+.nav-category {
+  margin-bottom: 2px;
+}
+
+.nav-category-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  cursor: pointer;
+  user-select: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.category-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--nova-text-muted);
+}
+
+.category-arrow {
+  font-size: 10px;
+  color: var(--nova-text-muted);
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  padding: 8px 12px;
+  border-radius: var(--nova-radius-sm);
+  font-size: 13.5px;
+  color: var(--nova-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all var(--nova-transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--nova-text-primary);
+}
+
+.nav-item.active {
+  background: rgba(139, 92, 246, 0.14);
+  color: var(--nova-text-primary);
+}
+
+.nav-item .nav-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+  opacity: 1;
+}
+
+/* --- Recent Chats Section --- */
+.recent-chats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 4px;
+}
+
+.recent-chats-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--nova-text-muted);
+}
+
+.recent-chats-add {
+  background: none;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all var(--nova-transition-fast);
+}
+
+.recent-chats-add:hover {
+  color: var(--nova-accent);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.recent-chat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--nova-radius-sm);
+  cursor: pointer;
+  transition: all var(--nova-transition-fast);
+}
+
+.recent-chat-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.recent-chat-item.active {
+  background: rgba(139, 92, 246, 0.14);
+}
+
+.recent-chat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nova-text-muted);
+  flex-shrink: 0;
+}
+
+.recent-chat-item.active .recent-chat-dot {
+  background: var(--nova-accent);
+  box-shadow: 0 0 6px rgba(160, 64, 255, 0.4);
+}
+
+.recent-chat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-chat-name {
+  font-size: 13px;
+  color: var(--nova-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-chat-item.active .recent-chat-name,
+.recent-chat-item:hover .recent-chat-name {
+  color: var(--nova-text-primary);
+}
+
+.recent-chat-time {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  flex-shrink: 0;
+}
+
+.recent-chats-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: color var(--nova-transition-fast);
+}
+
+.recent-chats-more:hover {
+  color: var(--nova-accent);
+}
+
+/* --- Sidebar User Section --- */
+.sidebar-user {
+  border-top: 1px solid var(--nova-border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-plan {
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-user-arrow {
+  color: var(--nova-text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: color var(--nova-transition-fast);
+}
+
+.sidebar-user:hover .sidebar-user-arrow {
+  color: var(--nova-text-primary);
+}
+
+/* --- Accessibility toggles (moved into user area popover later) --- */
+.accessibility-toggles {
+  display: none;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--nova-text-muted);
+}
+
+.toggle-row label {
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+  accent-color: var(--nova-accent-soft);
+}
+
+/* ---------- Main Content ---------- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--nova-bg-deep);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* ---------- Top Bar ---------- */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  position: relative;
+  min-height: 50px;
+  background: rgba(2, 2, 26, 0.5);
+  backdrop-filter: var(--nova-glass-blur-sm);
+  -webkit-backdrop-filter: var(--nova-glass-blur-sm);
+  border-bottom: 1px solid var(--nova-border);
+  z-index: 5;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar-model {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--nova-radius-sm);
+  cursor: pointer;
+  transition: all var(--nova-transition-fast);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+}
+
+.top-bar-model:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.top-bar-model .model-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+}
+
+.top-bar-model .dropdown-arrow {
+  font-size: 10px;
+  color: var(--nova-text-muted);
+  margin-left: 2px;
+}
+
+.top-bar-status {
+  font-size: 12px;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar-upgrade {
+  padding: 6px 14px;
+  border-radius: var(--nova-radius-full);
+  background: var(--nova-gradient-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--nova-transition-fast);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.top-bar-upgrade:hover {
+  box-shadow: var(--nova-glow-md);
+  transform: translateY(-1px);
+}
+
+.top-bar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--nova-bg-elevated);
+  border: 1px solid var(--nova-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nova-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--nova-transition-fast);
+}
+
+.top-bar-avatar:hover {
+  border-color: var(--nova-accent-soft);
+}
+
+/* Legacy compat */
+.top-bar-title,
+.top-bar .model-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.top-bar-title .dropdown-arrow,
+.top-bar .model-name .dropdown-arrow {
+  font-size: 10px;
+  opacity: 0.5;
+  color: var(--nova-text-muted);
+}
+
+/* ---------- Welcome Screen ---------- */
+/* ---------- Welcome / Hero Screen ---------- */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 40px;
+  padding: 40px 24px;
+}
+
+.welcome-hero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* --- Animated Nova Planet --- */
+.welcome-planet {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.welcome-planet-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  box-shadow:
+    0 0 20px rgba(160, 64, 255, 0.5),
+    0 0 50px rgba(160, 64, 255, 0.25),
+    0 0 80px rgba(160, 64, 255, 0.1);
+  animation: planet-pulse 4s ease-in-out infinite;
+}
+
+@keyframes planet-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(160,64,255,0.5), 0 0 50px rgba(160,64,255,0.25), 0 0 80px rgba(160,64,255,0.1); transform: translate(-50%,-50%) scale(1); }
+  50% { box-shadow: 0 0 30px rgba(160,64,255,0.6), 0 0 60px rgba(160,64,255,0.3), 0 0 100px rgba(160,64,255,0.15); transform: translate(-50%,-50%) scale(1.05); }
+}
+
+.welcome-planet-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+.welcome-planet-ring:nth-child(2) {
+  width: 70px;
+  height: 70px;
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translate(-50%, -50%) rotate(25deg);
+  animation: orbit-spin 10s linear infinite;
+}
+
+.welcome-planet-ring:nth-child(3) {
+  width: 95px;
+  height: 95px;
+  border-color: rgba(99, 102, 241, 0.2);
+  transform: translate(-50%, -50%) rotate(-10deg);
+  animation: orbit-spin 16s linear infinite reverse;
+}
+
+.welcome-planet-ring:nth-child(4) {
+  width: 115px;
+  height: 115px;
+  border-color: rgba(56, 189, 248, 0.12);
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: orbit-spin 22s linear infinite;
+}
+
+/* Orbiting dot particle */
+.welcome-planet-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--nova-accent-bright);
+  box-shadow: 0 0 6px rgba(199, 64, 255, 0.6);
+}
+
+.welcome-planet-particle:nth-child(5) {
+  top: 12px;
+  left: 50%;
+  animation: particle-orbit-1 10s linear infinite;
+}
+
+.welcome-planet-particle:nth-child(6) {
+  bottom: 20px;
+  right: 15px;
+  animation: particle-orbit-2 16s linear infinite;
+}
+
+@keyframes particle-orbit-1 {
+  from { transform: rotate(0deg) translateX(35px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(35px) rotate(-360deg); }
+}
+
+@keyframes particle-orbit-2 {
+  from { transform: rotate(0deg) translateX(48px) rotate(0deg); }
+  to   { transform: rotate(-360deg) translateX(48px) rotate(360deg); }
+}
+
+/* --- Welcome Text --- */
+.welcome-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--nova-text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.welcome-title .accent {
+  background: var(--nova-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--nova-text-secondary);
+  letter-spacing: 0.2px;
+  max-width: 400px;
+}
+
+/* --- Feature Cards --- */
+.welcome-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 14px;
+  border-radius: var(--nova-radius-md);
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  cursor: pointer;
+  transition: all var(--nova-transition);
+  text-align: center;
+  font-family: inherit;
+  color: inherit;
+}
+
+.welcome-card:hover {
+  border-color: var(--nova-border-strong);
+  background: var(--nova-bg-elevated);
+  box-shadow: var(--nova-glow-md);
+  transform: translateY(-3px);
+}
+
+.welcome-card-icon {
+  font-size: 28px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--nova-radius-md);
+  background: var(--nova-gradient-subtle);
+  border: 1px solid var(--nova-border);
+  transition: all var(--nova-transition);
+}
+
+.welcome-card:hover .welcome-card-icon {
+  box-shadow: var(--nova-glow-accent);
+  border-color: var(--nova-accent-soft);
+}
+
+.welcome-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+}
+
+.welcome-card-desc {
+  font-size: 12px;
+  color: var(--nova-text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- Chat Messages ---------- */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  max-width: 768px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.msg {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.msg.user {
+  flex-direction: row-reverse;
+}
+
+.msg.user .msg-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.msg.user .msg-body {
+  background: var(--nova-bg-elevated);
+  border: 1px solid var(--nova-border);
+  padding: 10px 16px;
+  border-radius: 20px;
+  display: inline-block;
+  max-width: 85%;
+}
+
+.msg.user .msg-avatar {
+  display: none;
+}
+
+.msg.assistant {
+  flex-direction: row;
+}
+
+.msg-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: var(--nova-gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: var(--nova-glow-sm);
+}
+
+.msg-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nova-text-accent);
+  margin-bottom: 4px;
+}
+
+.msg.user .msg-label {
+  display: none;
+}
+
+.msg-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--nova-text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.msg-body p { margin-bottom: 12px; }
+.msg-body p:last-child { margin-bottom: 0; }
+.msg-body code {
+  background: var(--nova-bg-card);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--nova-font-mono);
+  font-size: 13px;
+  border: 1px solid var(--nova-border);
+}
+.msg-body pre {
+  background: rgba(2, 2, 26, 0.8);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  padding: 16px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.msg-body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+}
+.msg-body ul, .msg-body ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+.msg-body li { margin-bottom: 4px; }
+.msg-body blockquote {
+  border-left: 3px solid var(--nova-accent-soft);
+  padding-left: 12px;
+  color: var(--nova-text-secondary);
+  margin: 12px 0;
+}
+
+/* ---------- Chat Input ---------- */
+/* ---------- Chat Input Area ---------- */
+.chat-input-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 24px 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- Main input bar: floating glass with glow border --- */
+.chat-input-bar {
+  display: flex;
+  align-items: flex-end;
+  background: rgba(10, 10, 30, 0.7);
+  backdrop-filter: var(--nova-glass-blur);
+  -webkit-backdrop-filter: var(--nova-glass-blur);
+  border: 1.5px solid var(--nova-border);
+  border-radius: 20px;
+  padding: 6px 8px 6px 6px;
+  gap: 2px;
+  order: 1;
+  transition: border-color var(--nova-transition), box-shadow var(--nova-transition);
+  position: relative;
+}
+
+/* Outer glow ring — animated on focus */
+.chat-input-bar::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(160,64,255,0.12) 0%, rgba(99,102,241,0.06) 50%, rgba(56,189,248,0.08) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--nova-transition);
+}
+
+.chat-input-bar:focus-within {
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow:
+    0 0 15px rgba(160, 64, 255, 0.15),
+    0 0 30px rgba(160, 64, 255, 0.08),
+    inset 0 0 20px rgba(139, 92, 246, 0.04);
+}
+
+.chat-input-bar:focus-within::before {
+  opacity: 1;
+}
+
+/* --- Left tool icons row --- */
+.input-tools {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.input-tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: all var(--nova-transition-fast);
+}
+
+.input-tool-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--nova-text-primary);
+}
+
+.input-tool-btn.active {
+  color: var(--nova-accent);
+}
+
+/* --- Text input --- */
+.chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-primary);
+  font-size: 15px;
+  padding: 10px 8px;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+  min-height: 24px;
+  max-height: 200px;
+}
+
+.chat-input::placeholder {
+  color: var(--nova-text-muted);
+}
+
+/* --- Right action buttons (mic + send) --- */
+.input-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+.input-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--nova-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  transition: all var(--nova-transition-fast);
+}
+
+.input-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--nova-text-primary);
+}
+
+/* Send button — gradient circle with glow */
+.send-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--nova-gradient-primary);
+  color: #fff;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow:
+    0 0 12px rgba(160, 64, 255, 0.35),
+    0 0 24px rgba(160, 64, 255, 0.15);
+  transition: all var(--nova-transition-fast);
+}
+
+.send-btn:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 18px rgba(160, 64, 255, 0.5),
+    0 0 36px rgba(160, 64, 255, 0.2);
+}
+
+.send-btn:active {
+  transform: scale(0.96);
+}
+
+/* Mic listening state */
+.input-btn.listening {
+  background: #ef4444;
+  color: #fff;
+  animation: pulse-mic 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-mic {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* --- Quick action pills below input --- */
+.chat-action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  order: 2;
+}
+
+.action-btn {
+  border: 1px solid var(--nova-border);
+  background: rgba(15, 10, 36, 0.5);
+  backdrop-filter: var(--nova-glass-blur-sm);
+  color: var(--nova-text-secondary);
+  padding: 7px 14px;
+  border-radius: var(--nova-radius-full);
+  font-size: 12.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: inherit;
+  transition: all var(--nova-transition-fast);
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--nova-border-strong);
+  color: var(--nova-text-primary);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.action-btn .btn-icon {
+  font-size: 13px;
+}
+
+/* --- Input hint text --- */
+.input-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--nova-text-muted);
+  opacity: 0.6;
+  order: 3;
+}
+
+/* ---------- Thinking Bubble ---------- */
+.thinking-bubble {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  max-width: 768px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.thinking-bubble .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--nova-accent-soft);
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.thinking-bubble .dot:nth-child(1) { animation-delay: 0s; }
+.thinking-bubble .dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-bubble .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.thinking-bubble[hidden] {
+  display: none;
+}
+
+/* ---------- Panels (non-chat views) ---------- */
+.panel {
+  display: none;
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.panel.active {
+  display: block;
+}
+
+.panel h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--nova-text-primary);
+}
+
+.panel h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--nova-text-secondary);
+}
+
+/* ---------- Status Grid ---------- */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.status-card {
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-md);
+  padding: 16px;
+  transition: all var(--nova-transition-fast);
+}
+
+.status-card:hover {
+  border-color: var(--nova-border-strong);
+  box-shadow: var(--nova-glow-sm);
+}
+
+.status-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--nova-text-muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.status-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nova-text-primary);
+}
+
+/* ---------- Control Buttons ---------- */
+.ctrl-btn {
+  background: var(--nova-bg-surface);
+  color: var(--nova-text-primary);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all var(--nova-transition-fast);
+}
+
+.ctrl-btn:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: var(--nova-border-strong);
+  box-shadow: var(--nova-glow-sm);
+}
+
+/* ---------- Forms ---------- */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--nova-text-muted);
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  padding: 8px 12px;
+  color: var(--nova-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--nova-accent-soft);
+  outline: none;
+  box-shadow: var(--nova-glow-sm);
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6B80' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* ---------- Placeholder Text ---------- */
+.placeholder-text {
+  color: var(--nova-text-muted);
+  font-style: italic;
+}
+
+/* ---------- Sections ---------- */
+.settings-section,
+.agent-section,
+.status-section,
+.status-controls {
+  margin-bottom: 24px;
+}
+
+/* ---------- Agent Cards ---------- */
+.agent-card {
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.skills-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.stat-item {
+  color: var(--nova-text-secondary);
+  font-size: 13px;
+}
+
+/* ---------- Log Area ---------- */
+.log-area {
+  background: rgba(2, 2, 26, 0.8);
+  color: var(--nova-text-secondary);
+  font-family: var(--nova-font-mono);
+  font-size: 13px;
+  padding: 16px;
+  border-radius: var(--nova-radius-sm);
+  max-height: 500px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--nova-border);
+}
+
+/* ---------- Vision Result ---------- */
+.vision-result {
+  background: var(--nova-bg-card);
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  padding: 16px;
+  min-height: 100px;
+}
+
+/* ---------- Right Panel ---------- */
+.right-panel {
+  width: 280px;
+  background: var(--nova-bg-glass);
+  backdrop-filter: var(--nova-glass-blur);
+  -webkit-backdrop-filter: var(--nova-glass-blur);
+  border-left: 1px solid var(--nova-border);
+  display: none;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.right-panel.visible {
+  display: flex;
+}
+
+/* ---------- Light Theme (disabled — cosmic dark only) ---------- */
+/* Light theme overrides removed for Nova cosmic redesign.
+   Will be re-added as a cosmic light variant post-launch. */
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+
+  .right-panel {
+    display: none !important;
+  }
+
+  .chat-messages {
+    padding: 16px;
+  }
+
+  .chat-input-container {
+    padding: 12px 16px 16px;
+  }
+
+  .welcome-title {
+    font-size: 26px;
+  }
+
+  .welcome-subtitle {
+    font-size: 14px;
+  }
+
+  .welcome-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .welcome-planet {
+    width: 90px;
+    height: 90px;
+  }
+
+  .welcome-planet-core {
+    width: 32px;
+    height: 32px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-cards {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+  }
+
+  .chat-action-buttons {
+    gap: 5px;
+  }
+
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 11.5px;
+  }
+
+  .input-tools {
+    display: none;
+  }
+
+  .input-hint {
+    display: none;
+  }
+}
+
+/* ---------- Utility / Misc ---------- */
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Smooth transitions */
+body,
+.sidebar,
+.main-content,
+.chat-input-bar,
+.status-card,
+.agent-card,
+.ctrl-btn,
+.nav-item,
+.form-group input,
+.form-group textarea,
+.form-group select {
+  transition: background-color var(--nova-transition), color var(--nova-transition), border-color var(--nova-transition);
+}
+
+/* ---------- Animated Cosmic Background ---------- */
+@keyframes cosmic-drift {
+  0%, 100% { opacity: 0.6; transform: translate(0, 0) scale(1); }
+  33% { opacity: 0.8; transform: translate(10px, -15px) scale(1.02); }
+  66% { opacity: 0.5; transform: translate(-8px, 10px) scale(0.98); }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Stars background on main content */
+.main-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50% 10%, rgba(139,92,246,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 20% 90%, rgba(99,102,241,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 75%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 65% 55%, rgba(56,189,248,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 45%, rgba(255,255,255,0.35) 0%, transparent 100%);
+  animation: star-twinkle 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Cosmic nebula glow */
+.main-content::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 50%, rgba(139,92,246,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 85% 25%, rgba(99,102,241,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 50% 85%, rgba(56,189,248,0.04) 0%, transparent 70%);
+  animation: cosmic-drift 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content sits above cosmic background */
+.welcome-screen,
+.chat-messages,
+.chat-input-container,
+.thinking-bubble,
+.panel,
+.top-bar {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   STEP 5 — Typography, Motion & Glow Polish
+   ============================================ */
+
+/* ---------- Typography Scale ---------- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--nova-font);
+  color: var(--nova-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.panel h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel h3 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--nova-text-secondary);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: var(--nova-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---------- Message Animations ---------- */
+@keyframes msg-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg {
+  animation: msg-fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger messages slightly */
+.msg:nth-last-child(1) { animation-delay: 0s; }
+.msg:nth-last-child(2) { animation-delay: 0.02s; }
+
+/* ---------- Panel Transitions ---------- */
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel.active {
+  animation: panel-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Welcome Screen Entrance ---------- */
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.welcome-hero {
+  animation: hero-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+@keyframes cards-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-cards {
+  animation: cards-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+/* Staggered card entrance */
+.welcome-card:nth-child(1) { animation: cards-fade-in 0.4s cubic-bezier(0.22,1,0.36,1) 0.3s both; }
+.welcome-card:nth-child(2) { animation: cards-fade-in 0.4s cubic-bezier(0.22,1,0.36,1) 0.4s both; }
+.welcome-card:nth-child(3) { animation: cards-fade-in 0.4s cubic-bezier(0.22,1,0.36,1) 0.5s both; }
+.welcome-card:nth-child(4) { animation: cards-fade-in 0.4s cubic-bezier(0.22,1,0.36,1) 0.6s both; }
+
+/* ---------- Sidebar Slide Animation ---------- */
+@keyframes sidebar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar {
+  animation: sidebar-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Hover Micro-Interactions ---------- */
+
+/* Magnetic button effect */
+.new-chat-btn:active,
+.send-btn:active,
+.top-bar-upgrade:active {
+  transform: scale(0.96);
+}
+
+/* Nav item indicator slide */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: var(--nova-accent);
+  box-shadow: 0 0 8px rgba(160, 64, 255, 0.4);
+}
+
+.nav-item {
+  position: relative;
+}
+
+/* Status card hover lift */
+.status-card {
+  transition: all var(--nova-transition);
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ---------- Thinking / Loading Animations ---------- */
+@keyframes thinking-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.6); }
+}
+
+.thinking-bubble .dot {
+  animation: bounce 1.4s infinite ease-in-out both, thinking-glow 2s infinite ease-in-out;
+}
+
+/* Shimmer loading effect utility */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg,
+    var(--nova-bg-card) 25%,
+    rgba(139, 92, 246, 0.08) 50%,
+    var(--nova-bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ---------- Glow Accents ---------- */
+
+/* Ambient glow behind welcome planet */
+.welcome-planet::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,64,255,0.15) 0%, rgba(99,102,241,0.06) 40%, transparent 70%);
+  animation: planet-pulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Input bar ambient glow (always visible, subtle) */
+.chat-input-bar {
+  box-shadow: 0 2px 20px rgba(2, 2, 26, 0.5), 0 0 40px rgba(139, 92, 246, 0.03);
+}
+
+/* Feature card animated border on hover */
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(160,64,255,0.3), rgba(99,102,241,0.1), rgba(56,189,248,0.2));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--nova-transition);
+}
+
+.welcome-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-card:hover::before {
+  opacity: 1;
+}
+
+/* Nova logo glow in sidebar */
+.nova-logo::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,64,255,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ---------- Enhanced Code Blocks ---------- */
+.msg-body pre {
+  position: relative;
+  border-color: rgba(139, 92, 246, 0.1);
+}
+
+.msg-body pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
+}
+
+/* ---------- Selection Color ---------- */
+::selection {
+  background: rgba(160, 64, 255, 0.3);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: rgba(160, 64, 255, 0.3);
+  color: #fff;
+}
+
+/* ---------- Focus Visible for Accessibility ---------- */
+:focus-visible {
+  outline: 2px solid var(--nova-accent-soft);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--nova-accent-soft);
+  outline-offset: 2px;
+}
+
+/* ---------- Top Bar Responsive ---------- */
+@media (max-width: 768px) {
+  .top-bar {
+    padding: 8px 14px;
+    min-height: 44px;
+  }
+
+  .top-bar-model {
+    font-size: 13px;
+  }
+
+  .top-bar-upgrade {
+    display: none;
+  }
+}
+
+</style>
+</head>
+<!-- ═══ POLISH PASS — Refinement Layer ═══ -->
+<style>
+/* ============ POLISH A: Cosmic Depth & Tokens ============ */
+/* ============================================================
+   polish-A.css — Design Token Refinement & Cosmic Depth
+   Appended after base styles. Overrides only.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. REFINED DESIGN TOKENS
+   ---------------------------------------------------------- */
+:root {
+  /* Toned-down pink — less neon, more elegant orchid */
+  --nova-accent-pink: #D050E0;
+
+  /* Primary gradient: richer transition, less aggressive */
+  --nova-gradient-primary: linear-gradient(135deg, #9B40F0 0%, #C050D8 50%, #7C6BF0 100%);
+
+  /* Intermediate background tones for layered depth */
+  --nova-bg-mid: #0D0820;
+  --nova-bg-recessed: #060414;
+  --nova-bg-overlay: rgba(8, 6, 20, 0.55);
+
+  /* Richer glass tokens — more depth, more blur */
+  --nova-bg-glass: rgba(10, 8, 28, 0.72);
+  --nova-bg-glass-light: rgba(20, 14, 50, 0.45);
+  --nova-bg-glass-heavy: rgba(6, 4, 18, 0.82);
+  --nova-glass-blur: blur(20px);
+  --nova-glass-blur-sm: blur(10px);
+  --nova-glass-blur-lg: blur(32px);
+
+  /* Extended glow scale */
+  --nova-glow-xs: 0 0 6px rgba(155, 64, 240, 0.08);
+  --nova-glow-sm: 0 0 10px rgba(155, 64, 240, 0.12);
+  --nova-glow-md: 0 0 20px rgba(155, 64, 240, 0.16);
+  --nova-glow-lg: 0 0 40px rgba(155, 64, 240, 0.22);
+  --nova-glow-xl: 0 0 70px rgba(140, 60, 230, 0.18);
+  --nova-glow-ambient: 0 0 120px rgba(130, 50, 220, 0.10);
+  --nova-glow-accent: 0 0 15px rgba(192, 80, 216, 0.25);
+
+  /* Refined border tokens */
+  --nova-border: rgba(130, 90, 230, 0.12);
+  --nova-border-strong: rgba(130, 90, 230, 0.25);
+  --nova-border-glow: rgba(155, 64, 240, 0.35);
+
+  /* Slightly warmer secondary text for readability */
+  --nova-text-secondary: #9898B4;
+  --nova-text-muted: #5E5E78;
+
+  /* Surface highlight for inner glows */
+  --nova-surface-highlight: rgba(155, 100, 240, 0.04);
+  --nova-surface-highlight-strong: rgba(155, 100, 240, 0.08);
+}
+
+
+/* ----------------------------------------------------------
+   2. ENHANCED COSMIC STARFIELD — .main-content::before
+   20+ star dots, varied sizes (1px–2px), warm/cool colors
+   ---------------------------------------------------------- */
+.main-content::before {
+  background-image:
+    /* Large bright stars — cool blue/white */
+    radial-gradient(2px 2px at 12% 8%,   rgba(200, 210, 255, 0.90), transparent),
+    radial-gradient(2px 2px at 67% 5%,   rgba(180, 195, 255, 0.80), transparent),
+    radial-gradient(2px 2px at 91% 32%,  rgba(220, 225, 255, 0.85), transparent),
+    radial-gradient(2px 2px at 35% 72%,  rgba(190, 200, 255, 0.75), transparent),
+    radial-gradient(2px 2px at 78% 88%,  rgba(200, 215, 255, 0.70), transparent),
+    radial-gradient(1.5px 1.5px at 4% 45%, rgba(210, 200, 255, 0.80), transparent),
+    radial-gradient(1.5px 1.5px at 52% 18%, rgba(175, 190, 255, 0.75), transparent),
+
+    /* Medium stars — purple/lilac tint */
+    radial-gradient(1.5px 1.5px at 23% 35%, rgba(180, 160, 240, 0.65), transparent),
+    radial-gradient(1.5px 1.5px at 56% 62%, rgba(170, 155, 235, 0.60), transparent),
+    radial-gradient(1.5px 1.5px at 82% 15%, rgba(190, 170, 245, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 44% 91%, rgba(175, 165, 240, 0.60), transparent),
+    radial-gradient(1.5px 1.5px at 8%  78%, rgba(185, 170, 245, 0.50), transparent),
+
+    /* Small dim stars — scattered dust */
+    radial-gradient(1px 1px at 15% 22%, rgba(160, 160, 200, 0.50), transparent),
+    radial-gradient(1px 1px at 38% 48%, rgba(150, 150, 195, 0.45), transparent),
+    radial-gradient(1px 1px at 72% 38%, rgba(165, 160, 205, 0.40), transparent),
+    radial-gradient(1px 1px at 95% 55%, rgba(160, 155, 200, 0.50), transparent),
+    radial-gradient(1px 1px at 28% 85%, rgba(155, 150, 195, 0.45), transparent),
+    radial-gradient(1px 1px at 60% 42%, rgba(148, 148, 190, 0.40), transparent),
+    radial-gradient(1px 1px at 85% 70%, rgba(155, 155, 200, 0.35), transparent),
+    radial-gradient(1px 1px at 48% 12%, rgba(160, 158, 205, 0.42), transparent),
+
+    /* Warm accent stars — faint gold/pink */
+    radial-gradient(1px 1px at 18% 58%, rgba(240, 200, 180, 0.30), transparent),
+    radial-gradient(1px 1px at 75% 25%, rgba(230, 180, 200, 0.25), transparent),
+    radial-gradient(1px 1px at 42% 78%, rgba(235, 195, 175, 0.28), transparent),
+    radial-gradient(1px 1px at 88% 48%, rgba(225, 185, 195, 0.22), transparent);
+
+  animation: star-twinkle 6s ease-in-out infinite alternate;
+}
+
+
+/* ----------------------------------------------------------
+   3. SECOND STAR LAYER — deeper field, different timing
+   ---------------------------------------------------------- */
+.main-content > *:first-child {
+  position: relative;
+}
+
+/* We use a wrapper approach: add a star layer via box-shadow on main-content */
+.main-content {
+  position: relative;
+}
+
+/* Deep-field star layer as a separate pseudo or via an additional animation layer.
+   Since ::before and ::after are taken, we layer onto body with a second gradient set. */
+body::before {
+  background:
+    /* Keep existing gradient-bg from base */
+    var(--nova-gradient-bg, linear-gradient(180deg, #02021A 0%, #0A0A2A 40%, #12082E 70%, #0A0A1A 100%));
+}
+
+/* Extra starfield on body level — faint deep-space dust */
+body {
+  background-color: var(--nova-bg-recessed);
+  background-image:
+    radial-gradient(1px 1px at 5% 15%,  rgba(140, 145, 185, 0.25), transparent),
+    radial-gradient(1px 1px at 22% 42%, rgba(135, 140, 180, 0.20), transparent),
+    radial-gradient(1px 1px at 40% 8%,  rgba(145, 148, 190, 0.22), transparent),
+    radial-gradient(1px 1px at 58% 55%, rgba(130, 135, 175, 0.18), transparent),
+    radial-gradient(1px 1px at 73% 20%, rgba(140, 142, 185, 0.24), transparent),
+    radial-gradient(1px 1px at 88% 65%, rgba(135, 138, 180, 0.20), transparent),
+    radial-gradient(1px 1px at 33% 80%, rgba(142, 140, 188, 0.22), transparent),
+    radial-gradient(1px 1px at 65% 92%, rgba(138, 135, 182, 0.18), transparent),
+    radial-gradient(0.5px 0.5px at 10% 70%, rgba(150, 150, 190, 0.15), transparent),
+    radial-gradient(0.5px 0.5px at 50% 30%, rgba(145, 145, 185, 0.12), transparent),
+    radial-gradient(0.5px 0.5px at 80% 85%, rgba(140, 140, 180, 0.14), transparent),
+    radial-gradient(0.5px 0.5px at 28% 55%, rgba(148, 148, 188, 0.13), transparent);
+  background-size: 100% 100%;
+}
+
+
+/* ----------------------------------------------------------
+   4. ENHANCED NEBULA + FOG — .main-content::after
+   Deeper colors, added fog layer, cinematic drift
+   ---------------------------------------------------------- */
+.main-content::after {
+  background:
+    /* Primary nebula — deep violet, large and soft */
+    radial-gradient(ellipse 55% 45% at 20% 30%,
+      rgba(100, 40, 180, 0.08) 0%,
+      rgba(80, 30, 160, 0.04) 40%,
+      transparent 70%),
+
+    /* Secondary nebula — blue-indigo, offset */
+    radial-gradient(ellipse 50% 40% at 75% 60%,
+      rgba(60, 50, 200, 0.07) 0%,
+      rgba(50, 40, 170, 0.03) 45%,
+      transparent 70%),
+
+    /* Tertiary nebula — cyan wisp, subtle */
+    radial-gradient(ellipse 35% 50% at 60% 20%,
+      rgba(50, 120, 200, 0.05) 0%,
+      rgba(40, 100, 180, 0.02) 40%,
+      transparent 65%),
+
+    /* Warm accent nebula — faint orchid */
+    radial-gradient(ellipse 40% 35% at 40% 75%,
+      rgba(140, 50, 160, 0.05) 0%,
+      rgba(120, 40, 140, 0.02) 40%,
+      transparent 65%),
+
+    /* Fog layer — ultra-subtle, full width */
+    radial-gradient(ellipse 100% 40% at 50% 100%,
+      rgba(15, 10, 40, 0.40) 0%,
+      rgba(10, 8, 30, 0.15) 50%,
+      transparent 80%),
+
+    /* Upper atmospheric haze */
+    radial-gradient(ellipse 80% 25% at 50% 0%,
+      rgba(8, 6, 25, 0.30) 0%,
+      transparent 70%);
+
+  opacity: 0.9;
+  animation: cosmic-drift 25s ease-in-out infinite alternate;
+}
+
+
+/* ----------------------------------------------------------
+   5. VIGNETTE — body::after
+   Cinematic edge darkening
+   ---------------------------------------------------------- */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    /* Corner vignette — all four corners */
+    radial-gradient(ellipse 70% 70% at 50% 50%,
+      transparent 55%,
+      rgba(2, 2, 18, 0.35) 80%,
+      rgba(2, 2, 12, 0.55) 100%),
+
+    /* Bottom edge emphasis */
+    linear-gradient(to top,
+      rgba(2, 2, 14, 0.30) 0%,
+      transparent 25%),
+
+    /* Top edge — subtle */
+    linear-gradient(to bottom,
+      rgba(2, 2, 14, 0.15) 0%,
+      transparent 15%);
+}
+
+
+/* ----------------------------------------------------------
+   6. SIDEBAR — deeper glass effect + inner glow
+   ---------------------------------------------------------- */
+.sidebar {
+  background: var(--nova-bg-glass-heavy) !important;
+  backdrop-filter: var(--nova-glass-blur-lg) !important;
+  -webkit-backdrop-filter: var(--nova-glass-blur-lg) !important;
+  border-right-color: var(--nova-border) !important;
+  box-shadow:
+    inset 1px 0 0 0 var(--nova-surface-highlight),
+    inset 0 0 40px rgba(100, 50, 200, 0.02),
+    var(--nova-glow-xs);
+}
+
+/* Sidebar nav items — subtle hover glow */
+.sidebar a:hover,
+.sidebar .nav-item:hover,
+.sidebar [class*="nav"] a:hover {
+  background: var(--nova-surface-highlight-strong) !important;
+  box-shadow: inset 0 0 20px rgba(155, 100, 240, 0.03);
+}
+
+/* Sidebar active state */
+.sidebar a.active,
+.sidebar .nav-item.active,
+.sidebar [class*="nav"] a.active,
+.sidebar .active {
+  background: rgba(155, 64, 240, 0.08) !important;
+  border-left: 2px solid rgba(155, 64, 240, 0.4);
+  box-shadow:
+    inset 0 0 30px rgba(155, 64, 240, 0.04),
+    var(--nova-glow-xs);
+}
+
+
+/* ----------------------------------------------------------
+   7. CARDS & PANELS — layered glass depth
+   ---------------------------------------------------------- */
+.status-card,
+.agent-card,
+.panel,
+.card,
+[class*="-card"],
+[class*="-panel"] {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(20, 14, 48, 0.50) 0%,
+      rgba(12, 8, 32, 0.65) 100%
+    ) !important;
+  backdrop-filter: var(--nova-glass-blur) !important;
+  -webkit-backdrop-filter: var(--nova-glass-blur) !important;
+  border: 1px solid var(--nova-border) !important;
+  box-shadow:
+    0 1px 0 0 rgba(155, 100, 240, 0.04) inset,
+    0 -1px 0 0 rgba(0, 0, 0, 0.15) inset,
+    var(--nova-glow-xs),
+    0 4px 20px rgba(0, 0, 0, 0.20);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Card hover — lift + glow */
+.status-card:hover,
+.agent-card:hover,
+.panel:hover,
+.card:hover {
+  border-color: var(--nova-border-strong) !important;
+  box-shadow:
+    0 1px 0 0 rgba(155, 100, 240, 0.06) inset,
+    0 -1px 0 0 rgba(0, 0, 0, 0.15) inset,
+    var(--nova-glow-sm),
+    0 8px 32px rgba(0, 0, 0, 0.28);
+}
+
+/* Elevated card variant — for focused/active cards */
+.status-card.active,
+.agent-card.active,
+.card.active,
+.panel.active {
+  border-color: var(--nova-border-glow) !important;
+  box-shadow:
+    0 1px 0 0 rgba(155, 100, 240, 0.08) inset,
+    var(--nova-glow-md),
+    0 8px 40px rgba(0, 0, 0, 0.30);
+}
+
+
+/* ----------------------------------------------------------
+   8. SCROLLBAR — refined, glass-consistent
+   ---------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(6, 4, 18, 0.40);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(130, 90, 230, 0.18);
+  border-radius: 3px;
+  border: 1px solid rgba(130, 90, 230, 0.06);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(130, 90, 230, 0.30);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(155, 64, 240, 0.40);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(130, 90, 230, 0.18) rgba(6, 4, 18, 0.40);
+}
+
+
+/* ----------------------------------------------------------
+   9. AMBIENT GLOW PULSE — subtle breathing light
+   Applied to main content area for cinematic ambiance
+   ---------------------------------------------------------- */
+@keyframes ambient-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Ambient glow spot — attaches to main content */
+.main-content {
+  box-shadow:
+    inset 0 0 150px rgba(80, 40, 160, 0.02),
+    inset 0 0 300px rgba(50, 30, 120, 0.01);
+}
+
+
+/* ----------------------------------------------------------
+   10. REFINED FOCUS STATES — accessible, on-brand
+   ---------------------------------------------------------- */
+:focus-visible {
+  outline: 1.5px solid rgba(155, 64, 240, 0.50);
+  outline-offset: 2px;
+  box-shadow: var(--nova-glow-sm);
+}
+
+/* Input fields — glass treatment */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  background: var(--nova-bg-glass) !important;
+  border-color: var(--nova-border) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(155, 64, 240, 0.35) !important;
+  box-shadow:
+    var(--nova-glow-sm),
+    inset 0 0 20px rgba(155, 64, 240, 0.03);
+}
+
+
+/* ----------------------------------------------------------
+   11. COSMIC DRIFT OVERRIDE — slower, more cinematic
+   ---------------------------------------------------------- */
+@keyframes cosmic-drift {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0.85;
+  }
+  33% {
+    transform: translateX(-8px) translateY(4px) scale(1.02);
+    opacity: 0.90;
+  }
+  66% {
+    transform: translateX(5px) translateY(-6px) scale(0.98);
+    opacity: 0.80;
+  }
+  100% {
+    transform: translateX(-3px) translateY(2px) scale(1.01);
+    opacity: 0.88;
+  }
+}
+
+@keyframes star-twinkle {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  75% {
+    opacity: 0.9;
+  }
+}
+
+
+/* ----------------------------------------------------------
+   12. SELECTION COLOR — on-brand highlight
+   ---------------------------------------------------------- */
+::selection {
+  background: rgba(155, 64, 240, 0.25);
+  color: var(--nova-text-primary);
+}
+
+::-moz-selection {
+  background: rgba(155, 64, 240, 0.25);
+  color: var(--nova-text-primary);
+}
+
+/* ============ POLISH B: Sidebar, Typography, Cards ============ */
+/* ============================================================
+   polish-B.css — Nova AI UI Refinement Layer
+   Scope: Sidebar, Typography, Feature Cards, Branding
+   Appended after base styles; overrides only.
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   1. SIDEBAR REFINEMENT
+   ------------------------------------------------------------ */
+
+/* — Nav items: more breathing room, smoother hover — */
+.nav-item {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  margin-bottom: 3px;
+  transition: background 0.25s ease-out,
+              color 0.25s ease-out,
+              transform 0.2s ease-out,
+              box-shadow 0.25s ease-out;
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* — Active item: premium gradient bg instead of flat rgba — */
+.nav-item.active {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.18) 0%,
+    rgba(99, 102, 241, 0.10) 100%
+  );
+  box-shadow: inset 0 0 16px rgba(139, 92, 246, 0.06);
+}
+
+.nav-item.active::before {
+  box-shadow: 0 0 8px 1px rgba(139, 92, 246, 0.5);
+}
+
+/* — Category labels: refined letter-spacing — */
+.category-label {
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+}
+
+.nav-category {
+  margin-top: 10px;
+}
+
+/* — Search bar: focus glow ring — */
+.sidebar-search input:focus,
+.sidebar-search input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35),
+              0 0 14px rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.5);
+  transition: box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+.sidebar-search {
+  transition: box-shadow 0.3s ease-out;
+}
+
+.sidebar-search:focus-within {
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.08);
+}
+
+/* — New chat button: enhanced hover with lift + intensified glow — */
+.new-chat-btn {
+  transition: transform 0.22s ease-out,
+              box-shadow 0.25s ease-out,
+              filter 0.25s ease-out;
+}
+
+.new-chat-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.35),
+              0 2px 8px rgba(139, 92, 246, 0.2);
+  filter: brightness(1.08);
+}
+
+.new-chat-btn:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25);
+}
+
+.new-chat-btn .btn-star {
+  transition: transform 0.3s ease-out;
+}
+
+.new-chat-btn:hover .btn-star {
+  transform: rotate(18deg) scale(1.15);
+}
+
+/* — User section: glowing separator line above — */
+.sidebar-user {
+  position: relative;
+}
+
+.sidebar-user::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.4) 30%,
+    rgba(168, 130, 255, 0.5) 50%,
+    rgba(139, 92, 246, 0.4) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.2);
+}
+
+/* — Recent chat items: smoother transitions — */
+.recent-chat-item {
+  transition: background 0.2s ease-out,
+              transform 0.2s ease-out;
+}
+
+.recent-chat-item:hover {
+  transform: translateX(2px);
+}
+
+
+/* ------------------------------------------------------------
+   2. TYPOGRAPHY POLISH
+   ------------------------------------------------------------ */
+
+/* — Welcome title: larger, tighter tracking — */
+.welcome-title {
+  font-size: 42px;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+/* — Welcome subtitle: roomier line-height — */
+.welcome-subtitle {
+  line-height: 1.7;
+  letter-spacing: 0.005em;
+}
+
+/* — Panel headings: subtle glow + tighter tracking — */
+.panel h2 {
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.panel h3 {
+  letter-spacing: -0.01em;
+}
+
+/* — Message labels: refined — */
+.msg-label {
+  letter-spacing: 0.04em;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* — Feature card titles: bumped to 14px — */
+.welcome-card-title {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+
+/* ------------------------------------------------------------
+   3. FEATURE CARDS ENHANCEMENT
+   ------------------------------------------------------------ */
+
+/* — Cards: more internal padding, stronger lift on hover — */
+.welcome-card {
+  padding: 26px;
+  transition: transform 0.28s ease-out,
+              box-shadow 0.28s ease-out,
+              border-color 0.35s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient border via pseudo-element */
+.welcome-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0) 0%,
+    rgba(139, 92, 246, 0) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  transition: background 0.4s ease-out;
+}
+
+.welcome-card:hover::after {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.6) 0%,
+    rgba(99, 102, 241, 0.4) 50%,
+    rgba(168, 130, 255, 0.6) 100%
+  );
+}
+
+/* Stronger lift + inner glow on hover */
+.welcome-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25),
+              inset 0 0 24px rgba(139, 92, 246, 0.06);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* — Card descriptions: better readability — */
+.welcome-card-desc {
+  line-height: 1.5;
+}
+
+/* — Icon containers: subtle pulse on card hover — */
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.08); opacity: 0.85; }
+}
+
+.welcome-card:hover .welcome-card-icon {
+  animation: iconPulse 1.8s ease-in-out infinite;
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
+}
+
+.welcome-card-icon {
+  transition: box-shadow 0.3s ease-out;
+}
+
+
+/* ------------------------------------------------------------
+   4. BRANDING CONSISTENCY
+   ------------------------------------------------------------ */
+
+/* — Sidebar brand name: glowing text — */
+.sidebar-brand-name {
+  text-shadow:
+    0 0 12px rgba(139, 92, 246, 0.4),
+    0 0 28px rgba(139, 92, 246, 0.15);
+}
+
+/* — Nova logo rings: increased border visibility — */
+.nova-logo::before,
+.nova-logo::after,
+.nova-logo .ring,
+.nova-logo [class*="ring"] {
+  border-color: rgba(139, 92, 246, 0.45);
+}
+
+/* Also boost any ring borders set via border shorthand */
+.nova-logo {
+  filter: brightness(1.12);
+}
+
+/* — Top bar model label: subtle glow behind it — */
+.top-bar-model,
+[class*="top-bar"] [class*="model"] {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.3),
+               0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+/* — Version tag: refined pill — */
+.sidebar-brand-tag {
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 6px rgba(139, 92, 246, 0.25);
+}
+
+/* — User avatar gradient: more vibrant — */
+.sidebar-user-avatar {
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+}
+
+/* ============ POLISH C: Input Bar, Motion, Interaction ============ */
+/* ============================================================
+   polish-C.css — Input Bar Premium Polish, Motion Design,
+                  & Interaction Refinements
+   Nova AI · Next-Gen AI OS Layer
+   ============================================================ */
+
+
+/* ----------------------------------------------------------
+   1. INPUT BAR — Premium Glass & Animated Borders
+   ---------------------------------------------------------- */
+
+/* Deeper glass effect with stronger blur */
+.chat-input-bar {
+  background: rgba(8, 6, 22, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+  border-color: transparent !important;
+  position: relative;
+  overflow: visible;
+}
+
+/* Animated conic-gradient border via ::before pseudo-element */
+.chat-input-bar::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(139, 92, 246, 0.15),
+    rgba(99, 102, 241, 0.3),
+    rgba(168, 85, 247, 0.45),
+    rgba(59, 130, 246, 0.3),
+    rgba(139, 92, 246, 0.15)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: border-spin 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes border-spin {
+  to { --border-angle: 360deg; }
+}
+
+/* Register the custom property for animation (Houdini) */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Focus: breathing glow instead of static */
+.chat-input-bar:focus-within {
+  border-color: transparent !important;
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.25),
+    0 0 60px rgba(139, 92, 246, 0.08) !important;
+  animation: focus-breathe 3s ease-in-out infinite;
+}
+
+.chat-input-bar:focus-within::before {
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(139, 92, 246, 0.3),
+    rgba(99, 102, 241, 0.5),
+    rgba(168, 85, 247, 0.65),
+    rgba(59, 130, 246, 0.5),
+    rgba(139, 92, 246, 0.3)
+  );
+}
+
+@keyframes focus-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(139, 92, 246, 0.25),
+      0 0 60px rgba(139, 92, 246, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(139, 92, 246, 0.35),
+      0 0 80px rgba(139, 92, 246, 0.12);
+  }
+}
+
+
+/* --- Send Button: Layered Glow with Idle Pulse --- */
+
+.send-btn {
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.2),
+    0 0 12px rgba(139, 92, 246, 0.5),
+    0 0 30px rgba(139, 92, 246, 0.2) !important;
+  animation: send-idle-pulse 3s ease-in-out infinite;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow var(--nova-transition, 0.25s) ease !important;
+}
+
+@keyframes send-idle-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 8px rgba(255, 255, 255, 0.2),
+      0 0 12px rgba(139, 92, 246, 0.5),
+      0 0 30px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 12px rgba(255, 255, 255, 0.3),
+      0 0 18px rgba(139, 92, 246, 0.6),
+      0 0 44px rgba(139, 92, 246, 0.28);
+  }
+}
+
+.send-btn:hover {
+  transform: scale(1.08) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255, 255, 255, 0.35),
+    0 0 20px rgba(139, 92, 246, 0.7),
+    0 0 50px rgba(139, 92, 246, 0.3) !important;
+}
+
+.send-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Ring animation on send-btn when chat is active */
+.send-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  animation: send-ring-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes send-ring-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.15);
+  }
+}
+
+
+/* --- Input Tool Icons: Magnetic Hover --- */
+
+.input-tool-btn {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              color var(--nova-transition-fast, 0.15s) ease !important;
+}
+
+.input-tool-btn:hover {
+  transform: scale(1.12) !important;
+}
+
+.input-tool-btn:active {
+  transform: scale(0.95) !important;
+}
+
+
+/* --- Separator Between .input-tools and Textarea --- */
+
+.input-tools {
+  position: relative;
+  padding-right: 10px !important;
+}
+
+.input-tools::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.2),
+    rgba(99, 102, 241, 0.15),
+    transparent
+  );
+  pointer-events: none;
+}
+
+
+/* --- Action Pill Buttons: Lighter / Airier --- */
+
+.chat-action-buttons .action-btn {
+  background: rgba(139, 92, 246, 0.06) !important;
+  border: 1px solid rgba(139, 92, 246, 0.12) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.chat-action-buttons .action-btn:hover {
+  background: rgba(139, 92, 246, 0.14) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
+}
+
+.chat-action-buttons .action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+
+/* --- Placeholder Animated Fade on Focus --- */
+
+.chat-input::placeholder {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 0.45;
+}
+
+.chat-input-bar:focus-within .chat-input::placeholder {
+  opacity: 0.25;
+  transform: translateX(4px);
+}
+
+
+/* ----------------------------------------------------------
+   2. MOTION DESIGN — New Keyframes & Micro-interactions
+   ---------------------------------------------------------- */
+
+/* Float animation for ambient elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.welcome-planet {
+  animation: float 6s ease-in-out infinite !important;
+}
+
+/* Glow breathe for ambient glow elements */
+@keyframes glow-breathe {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+/* Improved message animation — scale up from 0.98 */
+@keyframes msg-fade-in-refined {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.msg {
+  animation: msg-fade-in-refined 0.35s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+/* Hover micro-interactions on cards */
+.status-card,
+.agent-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease !important;
+}
+
+.status-card:hover,
+.agent-card:hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12);
+}
+
+/* Top bar fade-in-down */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.top-bar {
+  animation: fade-in-down 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Subtle hover glow on control buttons */
+.ctrl-btn {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              box-shadow 0.25s ease !important;
+}
+
+.ctrl-btn:hover {
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.18);
+  background: rgba(139, 92, 246, 0.1) !important;
+}
+
+.ctrl-btn:active {
+  transform: scale(0.95) !important;
+}
+
+
+/* ----------------------------------------------------------
+   3. OVERALL INTERACTION POLISH
+   ---------------------------------------------------------- */
+
+/* Universal active press feedback */
+button:active,
+[role="button"]:active {
+  transform: scale(0.97);
+}
+
+/* Better text selection */
+::selection {
+  background: rgba(139, 92, 246, 0.35) !important;
+  color: #fff !important;
+}
+
+::-moz-selection {
+  background: rgba(139, 92, 246, 0.35) !important;
+  color: #fff !important;
+}
+
+/* Subtle side-glow borders on chat messages area */
+.chat-messages {
+  position: relative;
+}
+
+.chat-messages::before,
+.chat-messages::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-messages::before {
+  left: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.06) 30%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(139, 92, 246, 0.06) 70%,
+    transparent
+  );
+}
+
+.chat-messages::after {
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.06) 30%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(139, 92, 246, 0.06) 70%,
+    transparent
+  );
+}
+
+/* Thinking bubble dots — larger, more vivid glow */
+.thinking-bubble .dot,
+.thinking-dot {
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6),
+              0 0 20px rgba(139, 92, 246, 0.25) !important;
+}
+
+/* Input button (mic/voice) hover refinement */
+.input-btn {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background var(--nova-transition-fast, 0.15s) ease,
+              box-shadow 0.25s ease !important;
+}
+
+.input-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.input-btn:active {
+  transform: scale(0.94) !important;
+}
+
+/* Input hint text — subtler entrance */
+.input-hint {
+  animation: msg-fade-in-refined 0.5s ease both;
+}
+
+/* Smooth scroll behavior for chat area */
+.chat-messages {
+  scroll-behavior: smooth;
+}
+
+/* Welcome hero cards — bounce hover */
+.welcome-card,
+.suggestion-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease !important;
+}
+
+.welcome-card:hover,
+.suggestion-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.12);
+}
+
+.welcome-card:active,
+.suggestion-card:active {
+  transform: scale(0.98);
+}
+
+/* Sidebar items — smooth hover transitions */
+.sidebar-item {
+  transition: background 0.2s ease,
+              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              padding-left 0.2s ease !important;
+}
+
+.sidebar-item:hover {
+  padding-left: 4px;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-bar::before,
+  .send-btn,
+  .send-btn::after,
+  .welcome-planet,
+  .chat-input-bar:focus-within {
+    animation: none !important;
+  }
+
+  .msg {
+    animation-duration: 0.01ms !important;
+  }
+
+  .status-card:hover,
+  .agent-card:hover,
+  .welcome-card:hover,
+  .suggestion-card:hover {
+    transform: none !important;
+  }
+}
+
+</style>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Nova Web Control Hub — Body Structure
+     No CSS, no JS. Just semantic HTML.
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- ─── LEFT SIDEBAR ─────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Header: Logo + Collapse -->
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="nova-logo">
+        <div class="nova-logo-core"></div>
+        <div class="nova-logo-ring"></div>
+        <div class="nova-logo-ring"></div>
+      </div>
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">NOVA AI</span>
+        <span class="sidebar-brand-tag">v1.0</span>
+      </div>
+    </div>
+    <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">◁</button>
+  </div>
+
+  <!-- Actions: New Chat + Search -->
+  <div class="sidebar-actions">
+    <button class="new-chat-btn" id="newChatBtn" data-panel="chat">
+      <span class="btn-star">✦</span> New Chat
+    </button>
+    <div class="sidebar-search">
+      <span class="sidebar-search-icon">🔍</span>
+      <input type="text" placeholder="Search chats..." id="sidebarSearch" />
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    <!-- Nav: General -->
+    <div class="nav-category" data-category="general">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">General</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item active" data-panel="chat"><span class="nav-icon">💬</span> Chat</button></li>
+        <li><button class="nav-item" data-panel="status"><span class="nav-icon">📊</span> Status</button></li>
+        <li><button class="nav-item" data-panel="projects"><span class="nav-icon">📁</span> Projects</button></li>
+        <li><button class="nav-item" data-panel="scripts"><span class="nav-icon">📜</span> Scripts</button></li>
+      </ul>
+    </div>
+
+    <!-- Nav: Agents -->
+    <div class="nav-category" data-category="agents">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">Agents</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item" data-panel="agents"><span class="nav-icon">🤖</span> Agents</button></li>
+        <li><button class="nav-item" data-panel="skills"><span class="nav-icon">🧩</span> Skills</button></li>
+        <li><button class="nav-item" data-panel="memory"><span class="nav-icon">🧠</span> Memory</button></li>
+      </ul>
+    </div>
+
+    <!-- Nav: System -->
+    <div class="nav-category" data-category="system">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">System</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item" data-panel="settings"><span class="nav-icon">⚙️</span> Settings</button></li>
+        <li><button class="nav-item" data-panel="vision"><span class="nav-icon">👁️</span> Vision</button></li>
+        <li><button class="nav-item" data-panel="logs"><span class="nav-icon">📋</span> Logs</button></li>
+        <li><button class="nav-item" data-panel="help"><span class="nav-icon">❓</span> Help</button></li>
+      </ul>
+    </div>
+
+    <!-- Recent Chats -->
+    <div class="nav-category" data-category="recent">
+      <div class="recent-chats-header">
+        <span class="recent-chats-title">Recent Chats</span>
+        <button class="recent-chats-add" title="New chat">+</button>
+      </div>
+      <div id="recentChatsList">
+        <div class="recent-chat-item active">
+          <span class="recent-chat-dot"></span>
+          <div class="recent-chat-info">
+            <span class="recent-chat-name">Welcome to Nova AI</span>
+          </div>
+          <span class="recent-chat-time">Now</span>
+        </div>
+      </div>
+      <button class="recent-chats-more" id="showMoreChats">Show more ↓</button>
+    </div>
+  </nav>
+
+  <!-- User Profile -->
+  <div class="sidebar-user" id="sidebarUser">
+    <div class="sidebar-user-avatar">EP</div>
+    <div class="sidebar-user-info">
+      <div class="sidebar-user-name">Escipion Pedroza</div>
+      <div class="sidebar-user-plan">Free Plan</div>
+    </div>
+    <span class="sidebar-user-arrow">›</span>
+  </div>
+
+  <!-- Hidden accessibility toggles (preserved for JS compatibility) -->
+  <div class="accessibility-toggles">
+    <label class="toggle-row"><input type="checkbox" id="toggleHighContrast" /> High Contrast</label>
+    <label class="toggle-row"><input type="checkbox" id="toggleLargeText" /> Large Text</label>
+    <label class="toggle-row"><input type="checkbox" id="toggleTTS" /> TTS</label>
+  </div>
+
+</aside>
+
+
+<!-- ─── MAIN CONTENT AREA ────────────────────────────────────── -->
+<main class="main-content" id="mainContent">
+
+  <!-- ── TOP BAR ── -->
+  <div class="top-bar" id="topBar">
+    <div class="top-bar-left">
+      <div class="top-bar-model" id="topBarModel">
+        <span class="model-dot"></span>
+        <span id="topBarModelName">Nova AI 4.1</span>
+        <span class="dropdown-arrow">▾</span>
+      </div>
+      <span class="top-bar-status">Online</span>
+    </div>
+    <div class="top-bar-right">
+      <button class="top-bar-upgrade">Upgrade</button>
+      <div class="top-bar-avatar">EP</div>
+    </div>
+  </div>
+
+  <!-- ── WELCOME SCREEN (shown when no messages) ── -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-hero">
+      <!-- Animated Nova Planet -->
+      <div class="welcome-planet">
+        <div class="welcome-planet-core"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-ring"></div>
+        <div class="welcome-planet-particle"></div>
+        <div class="welcome-planet-particle"></div>
+      </div>
+      <h1 class="welcome-title" id="welcomeTitle">Welcome to <span class="accent">Nova AI</span></h1>
+      <p class="welcome-subtitle" id="welcomeSubtitle">Your intelligent partner. Limitless possibilities.</p>
+    </div>
+
+    <div class="welcome-cards">
+      <button class="welcome-card" data-action="create-image">
+        <span class="welcome-card-icon">📷</span>
+        <span class="welcome-card-title">Create an image</span>
+        <span class="welcome-card-desc">Generate stunning visuals with AI</span>
+      </button>
+      <button class="welcome-card" data-action="write">
+        <span class="welcome-card-icon">✏️</span>
+        <span class="welcome-card-title">Write or edit</span>
+        <span class="welcome-card-desc">Draft, rewrite, or polish any text</span>
+      </button>
+      <button class="welcome-card" data-action="code">
+        <span class="welcome-card-icon">&lt;/&gt;</span>
+        <span class="welcome-card-title">Code something</span>
+        <span class="welcome-card-desc">Build, debug, and ship faster</span>
+      </button>
+      <button class="welcome-card" data-action="search">
+        <span class="welcome-card-icon">🧠</span>
+        <span class="welcome-card-title">Analyze anything</span>
+        <span class="welcome-card-desc">Research, summarize, and explore</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CHAT MESSAGES AREA ── -->
+  <div class="chat-messages" id="chatMessages">
+    <!-- Messages rendered here dynamically -->
+    <!-- Example structure:
+    <div class="msg assistant">
+      <div class="msg-avatar">⚡</div>
+      <div class="msg-content">
+        <span class="msg-label">Nova</span>
+        <div class="msg-body">...</div>
+      </div>
+    </div>
+    <div class="msg user">
+      <div class="msg-content">
+        <div class="msg-body">...</div>
+      </div>
+    </div>
+    -->
+  </div>
+
+  <!-- ── THINKING BUBBLE ── -->
+  <div class="thinking-bubble" id="thinkingBubble" hidden>
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+
+  <!-- ── CHAT INPUT AREA ── -->
+  <div class="chat-input-container" id="chatInputContainer">
+    <div class="chat-input-wrapper">
+
+      <!-- Main input bar -->
+      <div class="chat-input-bar">
+        <!-- Left tool icons -->
+        <div class="input-tools">
+          <button class="input-tool-btn" title="Web search" aria-label="Web search">🌐</button>
+          <button class="input-tool-btn" title="Upload image" aria-label="Upload image">🖼️</button>
+          <button class="input-tool-btn" title="Attach file" aria-label="Attach file">📎</button>
+          <button class="input-tool-btn" title="More options" aria-label="More options">•••</button>
+        </div>
+
+        <!-- Text input -->
+        <textarea
+          id="chatInput"
+          class="chat-input"
+          placeholder="Message Nova AI..."
+          rows="1"
+          autocomplete="off"
+          aria-label="Message Nova AI"
+        ></textarea>
+
+        <!-- Right actions -->
+        <div class="input-actions">
+          <button class="input-btn" id="micBtn" title="Voice input" aria-label="Voice input">🎤</button>
+          <button class="input-btn" id="voiceBtn" title="Voice playback" aria-label="Voice playback">🔊</button>
+          <button class="send-btn" id="sendBtn" title="Send message" aria-label="Send message">↑</button>
+        </div>
+      </div>
+
+      <!-- Quick action pills -->
+      <div class="chat-action-buttons">
+        <button class="action-btn" data-action="create-image">📷 Create Image</button>
+        <button class="action-btn" data-action="write">✏️ Write</button>
+        <button class="action-btn" data-action="code">&lt;/&gt; Code</button>
+        <button class="action-btn" data-action="search">🧠 Analyze</button>
+      </div>
+
+      <!-- Hint -->
+      <div class="input-hint">Nova can make mistakes. Verify important info.</div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANELS — one per nav item
+       ═══════════════════════════════════════════════════════════ -->
+
+  <!-- ── PANEL: STATUS ── -->
+  <section class="panel" id="panel-status">
+    <h2>🏠 System Status</h2>
+
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="status-label">Pipeline</span>
+        <span class="status-value" id="sPipeline">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Ollama</span>
+        <span class="status-value" id="sOllama">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Chat Model</span>
+        <span class="status-value" id="sChatModel">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Vision</span>
+        <span class="status-value" id="sVision">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Uptime</span>
+        <span class="status-value" id="sUptime">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">RAM</span>
+        <span class="status-value" id="sRAM">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">GPU</span>
+        <span class="status-value" id="sGPU">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">LLM Mode</span>
+        <span class="status-value" id="sLLMMode">—</span>
+      </div>
+    </div>
+
+    <!-- Pipeline Controls -->
+    <div class="status-controls">
+      <h3>Pipeline Controls</h3>
+      <div class="control-buttons">
+        <button class="ctrl-btn" id="btnStartPipeline">▶ Start</button>
+        <button class="ctrl-btn" id="btnStopPipeline">⏹ Stop</button>
+        <button class="ctrl-btn" id="btnRestartPipeline">🔄 Restart</button>
+      </div>
+    </div>
+
+    <!-- Models Loaded -->
+    <div class="status-section">
+      <h3>Models Loaded</h3>
+      <div id="modelsLoaded" class="models-list">
+        <p class="placeholder-text">No models loaded</p>
+      </div>
+    </div>
+
+    <!-- Usage Metrics -->
+    <div class="status-section">
+      <h3>Usage Metrics</h3>
+      <div id="usageMetrics" class="usage-metrics">
+        <p class="placeholder-text">No usage data</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: CHAT (main chat view — handled above) ── -->
+  <section class="panel" id="panel-chat">
+    <!-- This panel activates the chat messages area + input above -->
+  </section>
+
+  <!-- ── PANEL: SCRIPTS ── -->
+  <section class="panel" id="panel-scripts">
+    <h2>📜 Scripts</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: PROJECTS ── -->
+  <section class="panel" id="panel-projects">
+    <h2>📁 Projects</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: AGENTS ── -->
+  <section class="panel" id="panel-agents">
+    <h2>🤖 Agents</h2>
+
+    <!-- Active Agent Card -->
+    <div class="agent-card active-agent">
+      <h3>Active Agent</h3>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Name:</span>
+        <span class="agent-detail-value" id="activeAgentName">—</span>
+      </div>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Model:</span>
+        <span class="agent-detail-value" id="activeAgentModel">—</span>
+      </div>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Prompt:</span>
+        <span class="agent-detail-value" id="activeAgentPrompt">—</span>
+      </div>
+    </div>
+
+    <!-- Agent List -->
+    <div class="agent-section">
+      <h3>All Agents</h3>
+      <div id="agentList" class="agent-list">
+        <p class="placeholder-text">No agents configured</p>
+      </div>
+    </div>
+
+    <!-- Quick Add Agent -->
+    <div class="agent-section">
+      <h3>Quick Add Agent</h3>
+      <form id="addAgentForm" class="quick-add-form">
+        <div class="form-group">
+          <label for="newAgentName">Name</label>
+          <input type="text" id="newAgentName" placeholder="Agent name" />
+        </div>
+        <div class="form-group">
+          <label for="newAgentModel">Model</label>
+          <input type="text" id="newAgentModel" placeholder="e.g. llama3" />
+        </div>
+        <div class="form-group">
+          <label for="newAgentPrompt">System Prompt</label>
+          <textarea id="newAgentPrompt" rows="3" placeholder="System prompt..."></textarea>
+        </div>
+        <button type="submit" class="ctrl-btn">➕ Add Agent</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── PANEL: SKILLS ── -->
+  <section class="panel" id="panel-skills">
+    <h2>🧩 Skills</h2>
+
+    <!-- Stats Bar -->
+    <div class="skills-stats" id="skillsStats">
+      <span class="stat-item">Total: <strong id="skillsTotal">0</strong></span>
+      <span class="stat-item">Active: <strong id="skillsActive">0</strong></span>
+    </div>
+
+    <button class="ctrl-btn" id="btnReloadSkills">🔄 Reload Skills</button>
+
+    <!-- Skills List -->
+    <div id="skillsList" class="skills-list">
+      <p class="placeholder-text">No skills loaded</p>
+    </div>
+  </section>
+
+  <!-- ── PANEL: MEMORY ── -->
+  <section class="panel" id="panel-memory">
+    <h2>🧠 Memory</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: SETTINGS ── -->
+  <section class="panel" id="panel-settings">
+    <h2>⚙️ Settings</h2>
+
+    <!-- API Keys -->
+    <div class="settings-section">
+      <h3>API Keys</h3>
+      <form id="apiKeysForm" class="settings-form">
+        <div class="form-group">
+          <label for="settingOpenRouterKey">OpenRouter API Key</label>
+          <input type="password" id="settingOpenRouterKey" placeholder="sk-or-..." />
+        </div>
+        <div class="form-group">
+          <label for="settingOpenAIKey">OpenAI API Key</label>
+          <input type="password" id="settingOpenAIKey" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label for="settingAnthropicKey">Anthropic API Key</label>
+          <input type="password" id="settingAnthropicKey" placeholder="sk-ant-..." />
+        </div>
+      </form>
+    </div>
+
+    <!-- Provider Status -->
+    <div class="settings-section">
+      <h3>Provider Status</h3>
+      <div id="providerStatus" class="provider-status">
+        <p class="placeholder-text">Checking providers...</p>
+      </div>
+    </div>
+
+    <!-- Config Form -->
+    <div class="settings-section">
+      <h3>Configuration</h3>
+      <form id="configForm" class="settings-form">
+        <div class="form-group">
+          <label for="settingDefaultModel">Default Model</label>
+          <input type="text" id="settingDefaultModel" placeholder="e.g. llama3" />
+        </div>
+        <div class="form-group">
+          <label for="settingVisionModel">Vision Model</label>
+          <input type="text" id="settingVisionModel" placeholder="e.g. llava" />
+        </div>
+        <div class="form-group">
+          <label for="settingTemperature">Temperature</label>
+          <input type="number" id="settingTemperature" min="0" max="2" step="0.1" value="0.7" />
+        </div>
+        <div class="form-group">
+          <label for="settingMaxTokens">Max Tokens</label>
+          <input type="number" id="settingMaxTokens" min="1" max="128000" value="4096" />
+        </div>
+        <button type="submit" class="ctrl-btn">💾 Save Settings</button>
+      </form>
+    </div>
+
+    <!-- Read-Only Info -->
+    <div class="settings-section">
+      <h3>System Info</h3>
+      <div class="readonly-info">
+        <div class="info-row">
+          <span class="info-label">Version:</span>
+          <span class="info-value" id="infoVersion">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Host:</span>
+          <span class="info-value" id="infoHost">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Platform:</span>
+          <span class="info-value" id="infoPlatform">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Node:</span>
+          <span class="info-value" id="infoNode">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: VISION ── -->
+  <section class="panel" id="panel-vision">
+    <h2>👁️ Vision</h2>
+
+    <div class="vision-controls">
+      <div class="form-group">
+        <label for="visionImageInput">Image</label>
+        <input type="file" id="visionImageInput" accept="image/*" />
+      </div>
+      <div class="form-group">
+        <label for="visionPrompt">Prompt</label>
+        <input type="text" id="visionPrompt" placeholder="What do you want to know about this image?" />
+      </div>
+      <button class="ctrl-btn" id="btnAnalyzeVision">🔍 Analyze</button>
+    </div>
+
+    <div class="vision-result" id="visionResult">
+      <p class="placeholder-text">Upload an image and click Analyze</p>
+    </div>
+  </section>
+
+  <!-- ── PANEL: LOGS ── -->
+  <section class="panel" id="panel-logs">
+    <h2>📋 Logs</h2>
+
+    <div class="logs-controls">
+      <button class="ctrl-btn" id="btnRefreshLogs">🔄 Refresh</button>
+      <button class="ctrl-btn" id="btnClearLogs">🗑️ Clear</button>
+    </div>
+
+    <pre class="log-area" id="logArea">No logs available.</pre>
+  </section>
+
+  <!-- ── PANEL: HELP ── -->
+  <section class="panel" id="panel-help">
+    <h2>❓ Help</h2>
+
+    <div class="help-content">
+      <h3>Getting Started</h3>
+      <p>Nova is your AI-powered control hub. Use the sidebar to navigate between features.</p>
+
+      <h3>Chat</h3>
+      <p>Talk to Nova directly. Ask questions, request actions, or have a conversation. Use the action buttons above the input for quick tasks.</p>
+
+      <h3>Agents</h3>
+      <p>View and manage AI agents. Each agent has a name, model, and system prompt that defines its behavior.</p>
+
+      <h3>Skills</h3>
+      <p>Skills extend Nova's capabilities. Reload to pick up new skills from the filesystem.</p>
+
+      <h3>Vision</h3>
+      <p>Upload an image and ask Nova to analyze it using vision-capable models.</p>
+
+      <h3>Keyboard Shortcuts</h3>
+      <ul class="help-shortcuts">
+        <li><kbd>Enter</kbd> — Send message</li>
+        <li><kbd>Shift+Enter</kbd> — New line</li>
+        <li><kbd>Ctrl+/</kbd> — Toggle sidebar</li>
+        <li><kbd>Esc</kbd> — Close panels</li>
+      </ul>
+
+      <h3>Need More Help?</h3>
+      <p>Type <code>/help</code> in the chat or check the project README.</p>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ─── RIGHT PANEL (visible in chat view) ───────────────────── -->
+<aside class="right-panel" id="rightPanel">
+
+  <!-- Model Selector -->
+  <div class="right-section">
+    <h3 class="right-section-title">Model</h3>
+    <select id="modelSelector" class="model-select" aria-label="Select model provider">
+      <option value="openrouter">OpenRouter</option>
+      <option value="lmstudio">LMStudio</option>
+      <option value="ollama">Local Ollama</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input
+      type="text"
+      id="modelName"
+      class="model-name-input"
+      placeholder="Model name..."
+      aria-label="Model name"
+    />
+  </div>
+
+  <!-- Knowledge Base -->
+  <div class="right-section">
+    <h3 class="right-section-title">📚 Knowledge Base</h3>
+    <div id="knowledgeBase" class="right-section-content">
+      <p class="placeholder-text">No documents loaded</p>
+    </div>
+  </div>
+
+  <!-- Agent Profile -->
+  <div class="right-section">
+    <h3 class="right-section-title">🤖 Agent Profile</h3>
+    <div id="agentProfile" class="right-section-content">
+      <div class="profile-row">
+        <span class="profile-label">Name:</span>
+        <span class="profile-value" id="rpAgentName">Nova</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Model:</span>
+        <span class="profile-value" id="rpAgentModel">—</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Status:</span>
+        <span class="profile-value" id="rpAgentStatus">Idle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills Overview -->
+  <div class="right-section">
+    <h3 class="right-section-title">🧩 Skills Overview</h3>
+    <div id="skillsOverview" class="right-section-content">
+      <p class="placeholder-text">No skills active</p>
+    </div>
+  </div>
+
+  <!-- Live Context -->
+  <div class="right-section">
+    <h3 class="right-section-title">📡 Live Context</h3>
+    <div id="liveContext" class="right-section-content">
+      <div class="context-row">
+        <span class="context-label">Messages:</span>
+        <span class="context-value" id="ctxMessageCount">0</span>
+      </div>
+      <div class="context-row">
+        <span class="context-label">Tokens:</span>
+        <span class="context-value" id="ctxTokenCount">0</span>
+      </div>
+      <div class="context-row">
+        <span class="context-label">Session:</span>
+        <span class="context-value" id="ctxSessionId">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Metrics -->
+  <div class="right-section">
+    <h3 class="right-section-title">📊 Usage Metrics</h3>
+    <div id="rpUsageMetrics" class="right-section-content">
+      <div class="metric-row">
+        <span class="metric-label">Requests:</span>
+        <span class="metric-value" id="metricRequests">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Tokens In:</span>
+        <span class="metric-value" id="metricTokensIn">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Tokens Out:</span>
+        <span class="metric-value" id="metricTokensOut">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Avg Latency:</span>
+        <span class="metric-value" id="metricLatency">—</span>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+
+<script>
+/**
+ * Nova Web Control Hub — Merged & Fixed JS (v3)
+ * ──────────────────────────────────────────────
+ * Combines js-core.js (chat/interaction) and js-panels.js (system panels).
+ *
+ * Fixes applied:
+ *   1. Single API declaration
+ *   2. All element IDs match the HTML exactly
+ *   3. All querySelector class names match the HTML exactly
+ *   4. Correct navigation logic (panels, right-panel, chat specifics)
+ *   5. Proper chat with SSE streaming
+ *   6. Web Speech API for mic + speechSynthesis for voice
+ *   7. Complete event listener wiring
+ *   8. Unified init at bottom
+ *
+ * v3 changes (ChatGPT-like init behavior):
+ *   - Default panel is "chat" (not "status")
+ *   - Chat panel: shows welcomeScreen OR chatMessages (mutually exclusive),
+ *     shows chatInputContainer, hides all .panel sections, hides rightPanel
+ *   - Other panels: hide welcomeScreen, chatInputContainer, chatMessages,
+ *     thinkingBubble; show matching panel-{name} section
+ *   - welcomeScreen hidden on first message; chatMessages shown instead
+ */
+
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  SINGLE API BASE — no duplicates
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const API = window.location.origin;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════════════════════
+
+  let ws = null;
+  let reconnectTimer = null;
+  let requestCount = 0;
+  let recognition = null;
+  let isListening = false;
+  let isSpeaking = false;
+  let hasMessages = false; // tracks whether chat has any messages
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  DOM HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function $(id) { return document.getElementById(id); }
+
+  function setText(id, val) {
+    var el = $(id);
+    if (el) el.textContent = val != null ? val : '—';
+  }
+
+  function setHTML(id, html) {
+    var el = $(id);
+    if (el) el.innerHTML = html;
+  }
+
+  async function apiFetch(path, opts) {
+    opts = opts || {};
+    requestCount++;
+    var url = API + path;
+    var res = await fetch(url, {
+      headers: Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {}),
+      method: opts.method || 'GET',
+      body: opts.body || undefined,
+    });
+    if (!res.ok) {
+      var body = await res.text().catch(function () { return ''; });
+      throw new Error('API ' + res.status + ': ' + body);
+    }
+    var ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  function statusDot(ok) {
+    return ok
+      ? '<span class="status-dot online"></span>'
+      : '<span class="status-dot offline"></span>';
+  }
+
+  function badge(text, cls) {
+    return '<span class="badge ' + (cls || '') + '">' + text + '</span>';
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+  }
+
+  function scrollToBottom() {
+    var el = $('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  1. NAVIGATION — matches HTML class names exactly
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /**
+   * switchPanel — activate a panel by name.
+   *
+   * v3 behaviour:
+   *   "chat" panel:
+   *     - Hide ALL .panel sections (chat lives outside them)
+   *     - Show chatInputContainer
+   *     - Show welcomeScreen if no messages yet, otherwise show chatMessages
+   *     - Hide rightPanel (clean ChatGPT look)
+   *
+   *   Any other panel:
+   *     - Hide welcomeScreen, chatInputContainer, chatMessages, thinkingBubble
+   *     - Hide rightPanel
+   *     - Show matching panel-{name} section
+   */
+  function switchPanel(target) {
+    var panelName;
+
+    if (typeof target === 'string') {
+      panelName = target;
+    } else if (target && target.dataset) {
+      panelName = target.dataset.panel;
+    }
+    if (!panelName) return;
+
+    // --- Deactivate all nav-items ---
+    var navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(function (item) {
+      item.classList.remove('active');
+    });
+
+    // --- Hide all panels ---
+    var panels = document.querySelectorAll('.panel');
+    panels.forEach(function (p) {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+
+    // --- Activate the clicked nav-item ---
+    var activeNav = document.querySelector('.nav-item[data-panel="' + panelName + '"]');
+    if (activeNav) activeNav.classList.add('active');
+
+    // --- Grab chat-specific elements ---
+    var welcomeScreen = $('welcomeScreen');
+    var chatInputContainer = $('chatInputContainer');
+    var chatMessages = $('chatMessages');
+    var thinkingBubble = $('thinkingBubble');
+    var rightPanel = $('rightPanel');
+
+    if (panelName === 'chat') {
+      // ── Chat panel: no .panel section, uses its own elements ──
+
+      // Show input bar
+      if (chatInputContainer) chatInputContainer.style.display = '';
+
+      // Welcome vs messages — mutually exclusive
+      if (hasMessages) {
+        if (welcomeScreen) {
+          welcomeScreen.style.display = 'none';
+          welcomeScreen.hidden = true;
+        }
+        if (chatMessages) chatMessages.style.display = '';
+      } else {
+        if (welcomeScreen) {
+          welcomeScreen.style.display = '';
+          welcomeScreen.hidden = false;
+        }
+        if (chatMessages) chatMessages.style.display = 'none';
+      }
+
+      // Keep it clean — no right panel by default (ChatGPT style)
+      if (rightPanel) rightPanel.classList.remove('visible');
+
+    } else {
+      // ── Non-chat panels ──
+
+      // Hide all chat-related elements
+      if (welcomeScreen) {
+        welcomeScreen.style.display = 'none';
+        welcomeScreen.hidden = true;
+      }
+      if (chatInputContainer) chatInputContainer.style.display = 'none';
+      if (chatMessages) chatMessages.style.display = 'none';
+      if (thinkingBubble) thinkingBubble.setAttribute('hidden', '');
+
+      // Hide right panel for non-chat panels too
+      if (rightPanel) rightPanel.classList.remove('visible');
+
+      // Show the matching panel section (id = "panel-{name}")
+      var activePanel = $('panel-' + panelName);
+      if (activePanel) {
+        activePanel.classList.add('active');
+        activePanel.style.display = '';
+      }
+    }
+  }
+
+  /**
+   * toggleCategory — collapse/expand a sidebar nav category.
+   *
+   * HTML contract:
+   *   • category wrapper has class "nav-category" with data-category attribute
+   *   • clickable header has class "nav-category-toggle"
+   *   • arrow icon has class "category-arrow"
+   */
+  function toggleCategory(toggle) {
+    if (!toggle) return;
+    var category = toggle.closest('.nav-category');
+    if (!category) return;
+
+    category.classList.toggle('collapsed');
+
+    // Toggle visibility of child items within the category
+    var items = category.querySelectorAll('.nav-item');
+    items.forEach(function (item) {
+      if (category.classList.contains('collapsed')) {
+        item.style.display = 'none';
+      } else {
+        item.style.display = '';
+      }
+    });
+
+    // Rotate the arrow icon
+    var arrow = toggle.querySelector('.category-arrow');
+    if (arrow) {
+      arrow.classList.toggle('rotated');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  2. CHAT — message rendering, SSE streaming
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /**
+   * appendChat — add a message bubble to the chat panel.
+   *
+   * HTML contract for message bubbles:
+   *   div.msg.user | div.msg.assistant
+   *     div.msg-avatar  (assistant only)
+   *     div.msg-content
+   *       span.msg-label (assistant only, "Nova")
+   *       span.msg-body  (the actual text)
+   */
+  function appendChat(role, content) {
+    var chatMessages = $('chatMessages');
+    if (!chatMessages) return null;
+
+    // Mark that we have messages — switch from welcome to chat view
+    if (!hasMessages) {
+      hasMessages = true;
+      var ws = $('welcomeScreen');
+      if (ws) {
+        ws.style.display = 'none';
+        ws.hidden = true;
+      }
+      chatMessages.style.display = '';
+    }
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'msg ' + role;
+
+    if (role === 'assistant') {
+      var avatar = document.createElement('div');
+      avatar.className = 'msg-avatar';
+      avatar.textContent = '✦';
+      wrapper.appendChild(avatar);
+    }
+
+    var msgContent = document.createElement('div');
+    msgContent.className = 'msg-content';
+
+    if (role === 'assistant') {
+      var label = document.createElement('span');
+      label.className = 'msg-label';
+      label.textContent = 'Nova';
+      msgContent.appendChild(label);
+    }
+
+    var body = document.createElement('span');
+    body.className = 'msg-body';
+
+    if (role === 'user') {
+      body.textContent = content;
+    } else {
+      body.innerHTML = formatMessage(content);
+    }
+
+    msgContent.appendChild(body);
+    wrapper.appendChild(msgContent);
+    chatMessages.appendChild(wrapper);
+    scrollToBottom();
+
+    return body; // return body span for streaming updates
+  }
+
+  /**
+   * Minimal markdown-ish formatting.
+   */
+  function formatMessage(text) {
+    if (!text) return '';
+    var safe = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Code blocks: ```...```
+    safe = safe.replace(/```(\w*)\n?([\s\S]*?)```/g, function (_m, _lang, code) {
+      return '<pre><code>' + code.trim() + '</code></pre>';
+    });
+    // Inline code
+    safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Bold
+    safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Newlines
+    safe = safe.replace(/\n/g, '<br>');
+
+    return safe;
+  }
+
+  function hideWelcome() {
+    var ws = $('welcomeScreen');
+    if (ws) {
+      ws.style.display = 'none';
+      ws.hidden = true;
+    }
+    // Also ensure chatMessages is visible
+    var cm = $('chatMessages');
+    if (cm) cm.style.display = '';
+    hasMessages = true;
+  }
+
+  function isWelcomeVisible() {
+    var ws = $('welcomeScreen');
+    if (!ws) return false;
+    return ws.style.display !== 'none' && !ws.hidden;
+  }
+
+  // ── Thinking bubble (uses hidden attribute per spec) ───────────────────
+
+  function showThinking() {
+    var tb = $('thinkingBubble');
+    if (tb) {
+      tb.removeAttribute('hidden');
+      scrollToBottom();
+    }
+  }
+
+  function hideThinking() {
+    var tb = $('thinkingBubble');
+    if (tb) {
+      tb.setAttribute('hidden', '');
+    }
+  }
+
+  // ── SSE parser ─────────────────────────────────────────────────────────
+
+  function parseSSEChunk(chunk) {
+    var events = [];
+    var blocks = chunk.split(/\n\n/);
+
+    for (var i = 0; i < blocks.length; i++) {
+      var block = blocks[i];
+      if (!block.trim()) continue;
+
+      var eventType = 'token';
+      var data = '';
+
+      var lines = block.split('\n');
+      for (var j = 0; j < lines.length; j++) {
+        var line = lines[j];
+        if (line.indexOf('event: ') === 0) {
+          eventType = line.slice(7).trim();
+        } else if (line.indexOf('data: ') === 0) {
+          data += line.slice(6);
+        }
+      }
+
+      if (data) {
+        events.push({ type: eventType, data: data });
+      }
+    }
+    return events;
+  }
+
+  /**
+   * sendChat — POST to /api/chat, stream SSE response.
+   */
+  async function sendChat() {
+    var chatInput = $('chatInput');
+    if (!chatInput) return;
+
+    var text = chatInput.value.trim();
+    if (!text) return;
+
+    // Hide welcome on first message
+    hideWelcome();
+
+    // Render user message
+    appendChat('user', text);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Show thinking bubble (remove hidden attr)
+    showThinking();
+
+    // Prepare assistant placeholder for streaming
+    var assistantBody = appendChat('assistant', '');
+    var accumulated = '';
+    var firstToken = true;
+
+    try {
+      var response = await fetch(API + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!response.ok) {
+        hideThinking();
+        if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ Error: could not reach Nova backend.');
+        scrollToBottom();
+        return;
+      }
+
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+
+        buffer += decoder.decode(chunk.value, { stream: true });
+
+        // Split on double-newline for complete SSE blocks
+        var parts = buffer.split('\n\n');
+        buffer = parts.pop(); // keep incomplete tail
+
+        for (var pi = 0; pi < parts.length; pi++) {
+          var sseEvents = parseSSEChunk(parts[pi] + '\n\n');
+          for (var ei = 0; ei < sseEvents.length; ei++) {
+            var evt = sseEvents[ei];
+            var payload;
+            try { payload = JSON.parse(evt.data); } catch (_e) { payload = evt.data; }
+
+            if (evt.type === 'token' || evt.type === 'message') {
+              if (firstToken) { hideThinking(); firstToken = false; }
+              var t = (typeof payload === 'object' && payload !== null)
+                ? (payload.token || payload.content || payload.text || '')
+                : String(payload);
+              accumulated += t;
+              if (assistantBody) assistantBody.innerHTML = formatMessage(accumulated);
+              scrollToBottom();
+
+            } else if (evt.type === 'done') {
+              hideThinking();
+              var final = (typeof payload === 'object' && payload !== null)
+                ? (payload.content || payload.text || payload.message || '')
+                : '';
+              if (final && assistantBody) assistantBody.innerHTML = formatMessage(final);
+              scrollToBottom();
+
+            } else if (evt.type === 'error') {
+              hideThinking();
+              var errMsg = (typeof payload === 'object' && payload !== null)
+                ? (payload.message || payload.error || 'Unknown error')
+                : String(payload);
+              if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ ' + errMsg);
+              scrollToBottom();
+            }
+          }
+        }
+      }
+
+      // Flush remaining buffer
+      if (buffer.trim()) {
+        var remaining = parseSSEChunk(buffer + '\n\n');
+        for (var ri = 0; ri < remaining.length; ri++) {
+          var revt = remaining[ri];
+          var rpayload;
+          try { rpayload = JSON.parse(revt.data); } catch (_e) { rpayload = revt.data; }
+          if (revt.type === 'done' || revt.type === 'token') {
+            if (firstToken) { hideThinking(); firstToken = false; }
+            var rt = (typeof rpayload === 'object' && rpayload !== null)
+              ? (rpayload.token || rpayload.content || rpayload.text || '')
+              : String(rpayload);
+            if (rt) {
+              accumulated += rt;
+              if (assistantBody) assistantBody.innerHTML = formatMessage(accumulated);
+            }
+          }
+        }
+      }
+
+      hideThinking();
+      scrollToBottom();
+
+    } catch (err) {
+      hideThinking();
+      console.error('sendChat error:', err);
+      if (assistantBody) assistantBody.innerHTML = formatMessage('⚠️ Connection error. Please try again.');
+      scrollToBottom();
+    }
+  }
+
+  /**
+   * loadHistory — fetch /api/history and populate chat.
+   */
+  async function loadHistory() {
+    try {
+      var res = await fetch(API + '/api/history');
+      if (!res.ok) return;
+      var data = await res.json();
+      var messages = data.messages || data.history || data || [];
+      if (!Array.isArray(messages) || messages.length === 0) return;
+      // History exists — hide welcome, show messages
+      hideWelcome();
+      for (var i = 0; i < messages.length; i++) {
+        var msg = messages[i];
+        var role = msg.role || (msg.is_user ? 'user' : 'assistant');
+        var content = msg.content || msg.text || msg.message || '';
+        appendChat(role, content);
+      }
+    } catch (err) {
+      console.error('loadHistory error:', err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  3. VOICE / MICROPHONE — Web Speech API
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleMic() {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice input is not supported in your browser. Try Chrome or Edge.');
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function () {
+      isListening = true;
+      var micBtn = $('micBtn');
+      if (micBtn) micBtn.classList.add('listening');
+    };
+
+    recognition.onresult = function (event) {
+      var transcript = '';
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      var chatInput = $('chatInput');
+      if (chatInput) chatInput.value = transcript;
+    };
+
+    recognition.onerror = function (event) {
+      console.error('Speech recognition error:', event.error);
+      stopListening();
+    };
+
+    recognition.onend = function () {
+      stopListening();
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error('Could not start speech recognition:', err);
+      stopListening();
+    }
+  }
+
+  function stopListening() {
+    isListening = false;
+    var micBtn = $('micBtn');
+    if (micBtn) micBtn.classList.remove('listening');
+    if (recognition) {
+      try { recognition.stop(); } catch (_e) { /* ignore */ }
+      recognition = null;
+    }
+  }
+
+  function toggleVoice() {
+    var synth = window.speechSynthesis;
+    if (!synth) {
+      alert('Text-to-speech is not supported in your browser.');
+      return;
+    }
+
+    if (isSpeaking) {
+      synth.cancel();
+      isSpeaking = false;
+      var vb = $('voiceBtn');
+      if (vb) vb.classList.remove('speaking');
+      return;
+    }
+
+    // Find last assistant message body
+    var chatMessages = $('chatMessages');
+    var assistantBodies = chatMessages
+      ? chatMessages.querySelectorAll('.msg.assistant .msg-body')
+      : [];
+
+    if (assistantBodies.length === 0) return;
+
+    var lastBody = assistantBodies[assistantBodies.length - 1];
+    var text = lastBody.textContent || lastBody.innerText || '';
+    if (!text.trim()) return;
+
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    var voiceBtn = $('voiceBtn');
+
+    utterance.onstart = function () {
+      isSpeaking = true;
+      if (voiceBtn) voiceBtn.classList.add('speaking');
+    };
+    utterance.onend = function () {
+      isSpeaking = false;
+      if (voiceBtn) voiceBtn.classList.remove('speaking');
+    };
+    utterance.onerror = function () {
+      isSpeaking = false;
+      if (voiceBtn) voiceBtn.classList.remove('speaking');
+    };
+
+    synth.speak(utterance);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  4. THEME
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleTheme() {
+    var body = document.body;
+    if (body.classList.contains('dark-theme')) {
+      body.classList.remove('dark-theme');
+      body.classList.add('light-theme');
+      localStorage.setItem('nova-theme', 'light');
+    } else {
+      body.classList.remove('light-theme');
+      body.classList.add('dark-theme');
+      localStorage.setItem('nova-theme', 'dark');
+    }
+  }
+
+  function restoreTheme() {
+    var saved = localStorage.getItem('nova-theme');
+    if (saved === 'light') {
+      document.body.classList.remove('dark-theme');
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+      document.body.classList.add('dark-theme');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  5. ACTION BUTTONS (welcome-card and data-action)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function handleAction(type) {
+    // Switch to chat first
+    switchPanel('chat');
+
+    var prefills = {
+      'create-image': 'Create an image of ',
+      'write':        'Write ',
+      'code':         'Help me code ',
+      'search':       'Search for ',
+      'projects':     null,
+    };
+
+    if (type === 'projects') {
+      switchPanel('projects');
+      return;
+    }
+
+    var prefill = prefills[type];
+    if (prefill) {
+      hideWelcome();
+      var chatInput = $('chatInput');
+      if (chatInput) {
+        chatInput.value = prefill;
+        chatInput.focus();
+        chatInput.setSelectionRange(prefill.length, prefill.length);
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  6. WEBSOCKET
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function connectWS() {
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+    var proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(proto + '://' + location.host + '/ws');
+
+    ws.onopen = function () {
+      console.log('[WS] connected');
+      setHeaderStatus('Connected', 'green');
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    };
+
+    ws.onmessage = function (ev) {
+      try {
+        var msg = JSON.parse(ev.data);
+        handleWSMessage(msg);
+      } catch (e) {
+        console.warn('[WS] non-JSON message:', ev.data);
+      }
+    };
+
+    ws.onerror = function (err) {
+      console.error('[WS] error:', err);
+    };
+
+    ws.onclose = function () {
+      console.log('[WS] closed — reconnecting in 3s');
+      setHeaderStatus('Disconnected', 'red');
+      ws = null;
+      if (!reconnectTimer) {
+        reconnectTimer = setTimeout(function () { reconnectTimer = null; connectWS(); }, 3000);
+      }
+    };
+  }
+
+  function handleWSMessage(msg) {
+    switch (msg.type) {
+      case 'status':
+        updateStatusFromData(msg.data || msg);
+        break;
+      case 'log':
+        appendLog(msg.data || msg.message || msg);
+        break;
+      case 'chat':
+        // Could be handled here for push-based chat
+        break;
+      case 'vision':
+        if (msg.data) {
+          setHTML('visionResult', '<pre class="vision-output">' + escapeHtml(
+            typeof msg.data === 'string' ? msg.data : JSON.stringify(msg.data, null, 2)
+          ) + '</pre>');
+        }
+        break;
+      case 'config':
+        if (msg.data) populateConfigForm(msg.data);
+        break;
+      case 'agent_switch':
+        loadAgents();
+        break;
+      case 'provider_model':
+        if (msg.data) setText('modelName', msg.data.model || msg.data.name || '');
+        break;
+      case 'settings':
+        loadSettingsApiKey();
+        break;
+      default:
+        console.log('[WS] unhandled type:', msg.type, msg);
+    }
+  }
+
+  function setHeaderStatus(label, color) {
+    var dot = document.querySelector('.chat-status-dot, #headerStatusDot');
+    var txt = document.querySelector('.chat-status-text, #headerStatusText');
+    if (dot) {
+      dot.style.background = color;
+      dot.className = dot.className.replace(/\bonline\b|\boffline\b|\bwarning\b/g, '');
+      if (color === 'green') dot.classList.add('online');
+      else if (color === 'red') dot.classList.add('offline');
+      else dot.classList.add('warning');
+    }
+    if (txt) txt.textContent = label;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  7. STATUS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function refreshStatus() {
+    try {
+      var d = await apiFetch('/api/status');
+      updateStatusFromData(d);
+    } catch (e) {
+      console.error('[Status] refresh failed:', e);
+      setText('sPipeline', 'Error');
+    }
+  }
+
+  function updateStatusFromData(d) {
+    if (!d) return;
+
+    // Pipeline
+    setText('sPipeline', d.pipeline || d.pipeline_status || '—');
+    var pipeEl = $('sPipeline');
+    if (pipeEl) {
+      pipeEl.className = pipeEl.className.replace(/\bstatus-\w+/g, '');
+      var running = (d.pipeline === 'running' || d.pipeline_status === 'running');
+      pipeEl.classList.add(running ? 'status-online' : 'status-offline');
+    }
+
+    setText('sOllama', d.ollama || d.ollama_status || '—');
+    setText('sChatModel', d.chat_model || d.model || '—');
+    setText('sVision', d.vision || d.vision_status || '—');
+    setText('sLLMMode', d.llm_mode || d.mode || '—');
+
+    // Uptime
+    if (d.uptime != null) setText('sUptime', formatUptime(d.uptime));
+
+    // Resources
+    setText('sRAM', d.ram || d.memory || '—');
+    setText('sGPU', d.gpu || d.gpu_usage || '—');
+
+    // Models loaded
+    if (d.models_loaded != null) {
+      var ml = $('modelsLoaded');
+      if (ml) {
+        if (Array.isArray(d.models_loaded)) {
+          ml.textContent = d.models_loaded.join(', ') || 'None';
+        } else {
+          ml.textContent = String(d.models_loaded);
+        }
+      }
+    }
+
+    // Usage metrics
+    var metricsEl = $('usageMetrics');
+    if (metricsEl && d.usage) {
+      setText('metricRequests', d.usage.requests != null ? d.usage.requests : '—');
+      setText('metricTokensIn', d.usage.tokens_in != null ? d.usage.tokens_in : '—');
+      setText('metricTokensOut', d.usage.tokens_out != null ? d.usage.tokens_out : '—');
+      setText('metricLatency', d.usage.latency != null ? d.usage.latency + 'ms' : '—');
+    }
+
+    // Right panel agent info
+    setText('rpAgentName', d.active_agent || d.agent_name || '—');
+    setText('rpAgentModel', d.chat_model || d.model || '—');
+    setText('rpAgentStatus', d.pipeline === 'running' || d.pipeline_status === 'running' ? 'Online' : 'Offline');
+
+    // Live context
+    if (d.context) {
+      setText('ctxMessageCount', d.context.messages != null ? d.context.messages : '—');
+      setText('ctxTokenCount', d.context.tokens != null ? d.context.tokens : '—');
+      setText('ctxSessionId', d.context.session_id || '—');
+    }
+
+    // Model name in right panel
+    setText('modelName', d.chat_model || d.model || '—');
+  }
+
+  function formatUptime(seconds) {
+    if (seconds == null || isNaN(seconds)) return '—';
+    seconds = Math.floor(Number(seconds));
+    if (seconds < 60) return seconds + 's';
+    var mins = Math.floor(seconds / 60);
+    var secs = seconds % 60;
+    if (mins < 60) return mins + 'm ' + secs + 's';
+    var hrs = Math.floor(mins / 60);
+    var remMins = mins % 60;
+    if (hrs < 24) return hrs + 'h ' + remMins + 'm';
+    var days = Math.floor(hrs / 24);
+    var remHrs = hrs % 24;
+    return days + 'd ' + remHrs + 'h ' + remMins + 'm';
+  }
+
+  // ── Pipeline controls ──────────────────────────────────────────────────
+
+  async function startPipeline() {
+    try {
+      await apiFetch('/api/start', { method: 'POST' });
+      setText('sPipeline', 'Starting…');
+      setTimeout(refreshStatus, 1500);
+    } catch (e) {
+      console.error('[Pipeline] start failed:', e);
+      alert('Failed to start pipeline: ' + e.message);
+    }
+  }
+
+  async function stopPipeline() {
+    try {
+      await apiFetch('/api/stop', { method: 'POST' });
+      setText('sPipeline', 'Stopping…');
+      setTimeout(refreshStatus, 1500);
+    } catch (e) {
+      console.error('[Pipeline] stop failed:', e);
+      alert('Failed to stop pipeline: ' + e.message);
+    }
+  }
+
+  async function restartPipeline() {
+    try {
+      await apiFetch('/api/restart', { method: 'POST' });
+      setText('sPipeline', 'Restarting…');
+      setTimeout(refreshStatus, 2000);
+    } catch (e) {
+      console.error('[Pipeline] restart failed:', e);
+      alert('Failed to restart pipeline: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  8. AGENTS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadAgents() {
+    try {
+      var data = await apiFetch('/api/agents');
+      var agents = Array.isArray(data) ? data : (data.agents || []);
+      var active = agents.find(function (a) { return a.active || a.is_active; }) || agents[0];
+
+      // Active agent card
+      if (active) {
+        setText('activeAgentName', active.name || active.id || '—');
+        setText('activeAgentModel', active.model || '—');
+        setText('activeAgentPrompt', active.system_prompt || active.prompt || '—');
+      }
+
+      // Agent list
+      var listEl = $('agentList');
+      if (listEl) {
+        listEl.innerHTML = agents.map(function (a) {
+          var isActive = a.active || a.is_active;
+          return '<div class="agent-item ' + (isActive ? 'active' : '') + '" data-agent-id="' + escapeHtml(a.id || a.name) + '">'
+            + '<div class="agent-item-header">'
+            + '<span class="agent-name">' + escapeHtml(a.name || a.id) + '</span>'
+            + (isActive ? badge('Active', 'badge-success') : '')
+            + '</div>'
+            + '<div class="agent-item-meta">'
+            + '<span class="agent-model">' + escapeHtml(a.model || '—') + '</span>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+
+        // Bind click handlers for agent switching
+        listEl.querySelectorAll('.agent-item[data-agent-id]').forEach(function (item) {
+          item.addEventListener('click', function () {
+            switchAgent(this.dataset.agentId);
+          });
+        });
+      }
+
+      // Right panel
+      setText('rpAgentName', active ? (active.name || active.id || '—') : '—');
+      setText('rpAgentModel', active ? (active.model || '—') : '—');
+      setText('rpAgentStatus', active ? 'Online' : 'Offline');
+
+    } catch (e) {
+      console.error('[Agents] load failed:', e);
+    }
+  }
+
+  async function switchAgent(id) {
+    try {
+      await apiFetch('/api/agents/switch', {
+        method: 'POST',
+        body: JSON.stringify({ agent_id: id }),
+      });
+      await loadAgents();
+      refreshStatus();
+    } catch (e) {
+      console.error('[Agents] switch failed:', e);
+      alert('Failed to switch agent: ' + e.message);
+    }
+  }
+
+  async function addAgent(e) {
+    if (e) e.preventDefault();
+
+    var name = ($('newAgentName') || {}).value;
+    var model = ($('newAgentModel') || {}).value;
+    var prompt = ($('newAgentPrompt') || {}).value;
+
+    if (!name) { alert('Agent name is required.'); return; }
+
+    try {
+      await apiFetch('/api/agents', {
+        method: 'POST',
+        body: JSON.stringify({ name: name, model: model || undefined, system_prompt: prompt || undefined }),
+      });
+      if ($('newAgentName')) $('newAgentName').value = '';
+      if ($('newAgentModel')) $('newAgentModel').value = '';
+      if ($('newAgentPrompt')) $('newAgentPrompt').value = '';
+      await loadAgents();
+    } catch (e) {
+      console.error('[Agents] add failed:', e);
+      alert('Failed to add agent: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  9. SKILLS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadSkills() {
+    try {
+      var data = await apiFetch('/api/skills');
+      var skills = Array.isArray(data) ? data : (data.skills || []);
+
+      var total = skills.length;
+      var activeCount = skills.filter(function (s) { return s.active !== false && s.enabled !== false; }).length;
+
+      setText('skillsTotal', total);
+      setText('skillsActive', activeCount);
+
+      // Skills stats (summary element)
+      var statsEl = $('skillsStats');
+      if (statsEl) {
+        statsEl.textContent = total + ' skills loaded, ' + activeCount + ' active';
+      }
+
+      // Skills list
+      var listEl = $('skillsList');
+      if (listEl) {
+        listEl.innerHTML = skills.map(function (s) {
+          var isActive = s.active !== false && s.enabled !== false;
+          return '<div class="skill-item ' + (isActive ? '' : 'skill-disabled') + '">'
+            + '<span class="skill-name">' + escapeHtml(s.name || s.id || '—') + '</span>'
+            + (isActive ? badge('Active', 'badge-success') : badge('Inactive', 'badge-muted'))
+            + (s.description ? '<p class="skill-desc">' + escapeHtml(s.description) + '</p>' : '')
+            + '</div>';
+        }).join('');
+      }
+
+      // Right panel skills overview
+      var soEl = $('skillsOverview');
+      if (soEl) {
+        soEl.textContent = activeCount + '/' + total + ' active';
+      }
+    } catch (e) {
+      console.error('[Skills] load failed:', e);
+    }
+  }
+
+  async function reloadSkills() {
+    try {
+      await apiFetch('/api/skills/reload', { method: 'POST' });
+      await loadSkills();
+    } catch (e) {
+      console.error('[Skills] reload failed:', e);
+      alert('Failed to reload skills: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  10. SETTINGS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function loadConfig() {
+    try {
+      var cfg = await apiFetch('/api/config');
+      populateConfigForm(cfg);
+    } catch (e) {
+      console.error('[Config] load failed:', e);
+    }
+  }
+
+  function populateConfigForm(cfg) {
+    if (!cfg) return;
+
+    // Map config fields to element IDs
+    var fieldMap = {
+      settingDefaultModel: cfg.model || cfg.default_model || cfg.chat_model,
+      settingVisionModel: cfg.vision_model || cfg.vision,
+      settingTemperature: cfg.temperature,
+      settingMaxTokens: cfg.max_tokens,
+    };
+
+    Object.keys(fieldMap).forEach(function (id) {
+      var val = fieldMap[id];
+      var el = $(id);
+      if (!el || val == null) return;
+      if (el.tagName === 'SELECT') {
+        var opt = Array.from(el.options).find(function (o) { return o.value === String(val); });
+        if (opt) opt.selected = true;
+        else el.value = val;
+      } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.value = val;
+      } else {
+        el.textContent = val;
+      }
+    });
+
+    // Info display
+    setText('infoVersion', cfg.version || '—');
+    setText('infoHost', cfg.host || '—');
+    setText('infoPlatform', cfg.platform || '—');
+    setText('infoNode', cfg.node_version || cfg.node || '—');
+  }
+
+  async function saveConfig(e) {
+    if (e) e.preventDefault();
+
+    var payload = {};
+
+    var defaultModel = ($('settingDefaultModel') || {}).value;
+    var visionModel = ($('settingVisionModel') || {}).value;
+    var temperature = ($('settingTemperature') || {}).value;
+    var maxTokens = ($('settingMaxTokens') || {}).value;
+
+    if (defaultModel) payload.model = defaultModel;
+    if (visionModel) payload.vision_model = visionModel;
+    if (temperature) payload.temperature = parseFloat(temperature);
+    if (maxTokens) payload.max_tokens = parseInt(maxTokens, 10);
+
+    try {
+      await apiFetch('/api/config', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      await loadConfig();
+      alert('Configuration saved.');
+    } catch (e) {
+      console.error('[Config] save failed:', e);
+      alert('Failed to save configuration: ' + e.message);
+    }
+  }
+
+  async function loadSettingsApiKey() {
+    try {
+      var data = await apiFetch('/api/settings');
+
+      // Provider status
+      var providerEl = $('providerStatus');
+      if (providerEl && data.providers) {
+        var providers = Array.isArray(data.providers)
+          ? data.providers
+          : Object.keys(data.providers).map(function (k) { return Object.assign({ name: k }, data.providers[k]); });
+        providerEl.innerHTML = providers.map(function (p) {
+          return '<div class="provider-card ' + (p.status === 'active' || p.available ? 'provider-active' : 'provider-inactive') + '">'
+            + '<div class="provider-name">' + escapeHtml(p.name || p.id || '—') + '</div>'
+            + '<div class="provider-status">' + escapeHtml(p.status || (p.available ? 'Active' : 'Inactive')) + '</div>'
+            + '</div>';
+        }).join('');
+      }
+    } catch (e) {
+      console.error('[Settings] load failed:', e);
+    }
+  }
+
+  async function saveApiKeys(e) {
+    if (e) e.preventDefault();
+
+    var openRouterKey = ($('settingOpenRouterKey') || {}).value;
+    var openAIKey = ($('settingOpenAIKey') || {}).value;
+    var anthropicKey = ($('settingAnthropicKey') || {}).value;
+
+    var payload = {};
+    if (openRouterKey) payload.openrouter_key = openRouterKey;
+    if (openAIKey) payload.openai_key = openAIKey;
+    if (anthropicKey) payload.anthropic_key = anthropicKey;
+
+    try {
+      await apiFetch('/api/settings/keys', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      // Clear fields
+      if ($('settingOpenRouterKey')) $('settingOpenRouterKey').value = '';
+      if ($('settingOpenAIKey')) $('settingOpenAIKey').value = '';
+      if ($('settingAnthropicKey')) $('settingAnthropicKey').value = '';
+      await loadSettingsApiKey();
+      alert('API keys saved.');
+    } catch (e) {
+      console.error('[Settings] save keys failed:', e);
+      alert('Failed to save API keys: ' + e.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  11. VISION PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function analyzeVision() {
+    var resultEl = $('visionResult');
+    var promptEl = $('visionPrompt');
+    var imageInput = $('visionImageInput');
+
+    if (resultEl) resultEl.innerHTML = '<div class="loading-spinner"></div> Analyzing…';
+
+    var formData = new FormData();
+    if (promptEl && promptEl.value.trim()) {
+      formData.append('prompt', promptEl.value.trim());
+    }
+    if (imageInput && imageInput.files && imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
+
+    try {
+      requestCount++;
+      var res = await fetch(API + '/api/vision/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        var errBody = await res.text().catch(function () { return ''; });
+        throw new Error('API ' + res.status + ': ' + errBody);
+      }
+
+      var data = await res.json();
+      if (resultEl) {
+        var content = data.analysis || data.result || data.description || JSON.stringify(data, null, 2);
+        resultEl.innerHTML = '<pre class="vision-output">' + escapeHtml(content) + '</pre>';
+      }
+    } catch (e) {
+      console.error('[Vision] analyze failed:', e);
+      if (resultEl) resultEl.innerHTML = '<div class="error-text">Analysis failed: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  12. LOGS PANEL
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function refreshLogs() {
+    try {
+      var data = await apiFetch('/api/logs');
+      var logs = Array.isArray(data) ? data : (data.logs || []);
+      var logEl = $('logArea');
+      if (logEl) {
+        logEl.innerHTML = '';
+        logs.forEach(function (entry) { appendLog(entry); });
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+    } catch (e) {
+      console.error('[Logs] refresh failed:', e);
+    }
+  }
+
+  function appendLog(entry) {
+    var logEl = $('logArea');
+    if (!logEl) return;
+
+    var div = document.createElement('div');
+    div.className = 'log-entry';
+
+    if (typeof entry === 'string') {
+      div.textContent = entry;
+    } else {
+      var ts = entry.timestamp || entry.time || '';
+      var level = entry.level || entry.severity || 'info';
+      var msg = entry.message || entry.msg || entry.text || JSON.stringify(entry);
+      div.classList.add('log-' + level.toLowerCase());
+      div.innerHTML = '<span class="log-ts">' + escapeHtml(ts) + '</span> '
+        + '<span class="log-level">[' + escapeHtml(level.toUpperCase()) + ']</span> '
+        + '<span class="log-msg">' + escapeHtml(msg) + '</span>';
+    }
+
+    logEl.appendChild(div);
+
+    // Cap at 500 entries
+    while (logEl.children.length > 500) {
+      logEl.removeChild(logEl.firstChild);
+    }
+
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function clearLogs() {
+    var logEl = $('logArea');
+    if (logEl) logEl.innerHTML = '';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  13. ACCESSIBILITY
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function handleAccessibilityToggle(type, checked) {
+    var body = document.body;
+    var className = 'a11y-' + type;
+
+    if (checked) {
+      body.classList.add(className);
+    } else {
+      body.classList.remove(className);
+    }
+
+    // Persist
+    try {
+      var prefs = JSON.parse(localStorage.getItem('nova_a11y') || '{}');
+      prefs[type] = checked;
+      localStorage.setItem('nova_a11y', JSON.stringify(prefs));
+    } catch (_) { /* ignore */ }
+  }
+
+  function restoreA11y() {
+    try {
+      var prefs = JSON.parse(localStorage.getItem('nova_a11y') || '{}');
+      Object.keys(prefs).forEach(function (type) {
+        if (prefs[type]) {
+          document.body.classList.add('a11y-' + type);
+          // Sync checkbox state
+          var idMap = {
+            'high-contrast': 'toggleHighContrast',
+            'large-text': 'toggleLargeText',
+            'tts': 'toggleTTS',
+          };
+          var el = $(idMap[type]);
+          if (el && el.type === 'checkbox') el.checked = true;
+        }
+      });
+    } catch (_) { /* ignore */ }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  14. RIGHT PANEL sections
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function toggleRPSection(header) {
+    if (!header) return;
+    var section = header.closest('.rp-section') || header.parentElement;
+    if (section) section.classList.toggle('collapsed');
+
+    var icon = header.querySelector('.collapse-icon, .rp-toggle');
+    if (icon) {
+      icon.textContent = section.classList.contains('collapsed') ? '▸' : '▾';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  15. EVENT LISTENER WIRING
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function wireEvents() {
+
+    // ── Chat input ─────────────────────────────────────────────────────
+    var sendBtnEl = $('sendBtn');
+    var chatInputEl = $('chatInput');
+
+    if (sendBtnEl) {
+      sendBtnEl.addEventListener('click', function () { sendChat(); });
+    }
+
+    if (chatInputEl) {
+      chatInputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendChat();
+        }
+      });
+      // Auto-resize textarea
+      chatInputEl.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+      });
+    }
+
+    // ── Mic & Voice ───────────────────────────────────────────────────
+    var micBtnEl = $('micBtn');
+    var voiceBtnEl = $('voiceBtn');
+
+    if (micBtnEl) {
+      micBtnEl.addEventListener('click', function () { toggleMic(); });
+    }
+    if (voiceBtnEl) {
+      voiceBtnEl.addEventListener('click', function () { toggleVoice(); });
+    }
+
+    // ── Sidebar nav-items ─────────────────────────────────────────────
+    document.querySelectorAll('.nav-item').forEach(function (item) {
+      item.addEventListener('click', function (e) {
+        e.preventDefault();
+        switchPanel(this);
+      });
+    });
+
+    // ── Sidebar nav-category-toggles ──────────────────────────────────
+    document.querySelectorAll('.nav-category-toggle').forEach(function (toggle) {
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleCategory(this);
+      });
+    });
+
+    // ── Welcome cards & action buttons ────────────────────────────────
+    document.querySelectorAll('.welcome-card, .action-btn[data-action]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var action = this.dataset.action;
+        if (action) handleAction(action);
+      });
+    });
+
+    // ── Sidebar collapse button ────────────────────────────────────────
+    var collapseBtn = $('sidebarCollapseBtn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', function () {
+        var sidebar = $('sidebar');
+        if (sidebar) {
+          sidebar.classList.toggle('collapsed');
+          this.textContent = sidebar.classList.contains('collapsed') ? '▷' : '◁';
+        }
+      });
+    }
+
+    // ── New Chat button ────────────────────────────────────────────────
+    var newChatBtn = $('newChatBtn');
+    if (newChatBtn) {
+      newChatBtn.addEventListener('click', function () {
+        var chatMessages = $('chatMessages');
+        if (chatMessages) chatMessages.innerHTML = '';
+        hasMessages = false;
+        switchPanel('chat');
+      });
+    }
+
+    // ── Recent chats add button ────────────────────────────────────────
+    var recentAddBtn = document.querySelector('.recent-chats-add');
+    if (recentAddBtn) {
+      recentAddBtn.addEventListener('click', function () {
+        if (newChatBtn) newChatBtn.click();
+      });
+    }
+
+    // ── Accessibility toggles ─────────────────────────────────────────
+    var toggleHC = $('toggleHighContrast');
+    var toggleLT = $('toggleLargeText');
+    var toggleTTSEl = $('toggleTTS');
+
+    if (toggleHC) {
+      toggleHC.addEventListener('change', function () {
+        handleAccessibilityToggle('high-contrast', this.checked);
+      });
+    }
+    if (toggleLT) {
+      toggleLT.addEventListener('change', function () {
+        handleAccessibilityToggle('large-text', this.checked);
+      });
+    }
+    if (toggleTTSEl) {
+      toggleTTSEl.addEventListener('change', function () {
+        handleAccessibilityToggle('tts', this.checked);
+      });
+    }
+
+    // ── Form: Add Agent ───────────────────────────────────────────────
+    var addAgentFormEl = $('addAgentForm');
+    if (addAgentFormEl) {
+      addAgentFormEl.addEventListener('submit', function (e) { addAgent(e); });
+    }
+
+    // ── Form: Config ──────────────────────────────────────────────────
+    var configFormEl = $('configForm');
+    if (configFormEl) {
+      configFormEl.addEventListener('submit', function (e) { saveConfig(e); });
+    }
+
+    // ── Form: API Keys ────────────────────────────────────────────────
+    var apiKeysFormEl = $('apiKeysForm');
+    if (apiKeysFormEl) {
+      apiKeysFormEl.addEventListener('submit', function (e) { saveApiKeys(e); });
+    }
+
+    // ── Pipeline buttons ──────────────────────────────────────────────
+    var btnStart = $('btnStartPipeline');
+    var btnStop = $('btnStopPipeline');
+    var btnRestart = $('btnRestartPipeline');
+
+
+    if (btnStart) btnStart.addEventListener('click', function () { startPipeline(); });
+    if (btnStop) btnStop.addEventListener('click', function () { stopPipeline(); });
+    if (btnRestart) btnRestart.addEventListener('click', function () { restartPipeline(); });
+
+    // ── Skills reload ─────────────────────────────────────────────────
+    var btnReloadSkills = $('btnReloadSkills');
+    if (btnReloadSkills) {
+      btnReloadSkills.addEventListener('click', function () { reloadSkills(); });
+    }
+
+    // ── Vision analyze ────────────────────────────────────────────────
+    var btnAnalyze = $('btnAnalyzeVision');
+    if (btnAnalyze) {
+      btnAnalyze.addEventListener('click', function () { analyzeVision(); });
+    }
+
+    // ── Logs refresh / clear ──────────────────────────────────────────
+    var btnRefreshLogs = $('btnRefreshLogs');
+    var btnClearLogs = $('btnClearLogs');
+
+    if (btnRefreshLogs) btnRefreshLogs.addEventListener('click', function () { refreshLogs(); });
+    if (btnClearLogs) btnClearLogs.addEventListener('click', function () { clearLogs(); });
+
+    // ── Theme toggle (if a button exists) ─────────────────────────────
+    var themeBtn = document.querySelector('[data-action="toggle-theme"]');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () { toggleTheme(); });
+    }
+
+    // ── Right panel section collapse toggles ──────────────────────────
+    document.querySelectorAll('.rp-section-header, .rp-section-toggle').forEach(function (header) {
+      header.addEventListener('click', function () { toggleRPSection(this); });
+    });
+
+    // ── Model selector (right panel) ──────────────────────────────────
+    var modelSelectorEl = $('modelSelector');
+    if (modelSelectorEl) {
+      modelSelectorEl.addEventListener('change', function () {
+        setText('modelName', this.value);
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  16. INIT
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // Dynamic greeting based on time of day
+  function setDynamicGreeting() {
+    var titleEl = $('welcomeTitle');
+    var subEl = $('welcomeSubtitle');
+    if (!titleEl) return;
+
+    var hour = new Date().getHours();
+    var greeting, subtitle;
+
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+      subtitle = 'What will you create today?';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+      subtitle = 'Nova is ready. Let\u2019s build something.';
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good evening';
+      subtitle = 'Explore faster with Nova.';
+    } else {
+      greeting = 'Welcome back';
+      subtitle = 'Build something impossible.';
+    }
+
+    titleEl.innerHTML = greeting + ', <span class="accent">Escipion</span>';
+    if (subEl) subEl.textContent = subtitle;
+  }
+
+  function init() {
+    // Restore preferences
+    restoreTheme();
+    restoreA11y();
+
+    // Set dynamic greeting
+    setDynamicGreeting();
+
+    // Hide thinking bubble initially
+    hideThinking();
+
+    // Wire all event listeners
+    wireEvents();
+
+    // Default active panel: chat (ChatGPT-like — opens to chat with welcome screen)
+    switchPanel('chat');
+
+    // Load chat history (will hide welcome + show messages if history exists)
+    loadHistory();
+
+    // Connect WebSocket + fetch initial data
+    connectWS();
+    refreshStatus();
+    loadConfig();
+    loadAgents();
+    loadSkills();
+    loadSettingsApiKey();
+
+    // Periodic status refresh
+    setInterval(refreshStatus, 10000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  EXPOSE GLOBALS — callable from inline handlers or external scripts
+  // ═══════════════════════════════════════════════════════════════════════
+
+  window.sendChat        = sendChat;
+  window.appendChat      = appendChat;
+  window.loadHistory     = loadHistory;
+  window.showThinking    = showThinking;
+  window.hideThinking    = hideThinking;
+  window.toggleMic       = toggleMic;
+  window.toggleVoice     = toggleVoice;
+  window.toggleTheme     = toggleTheme;
+  window.handleAction    = handleAction;
+  window.switchPanel     = switchPanel;
+  window.toggleCategory  = toggleCategory;
+  window.refreshStatus   = refreshStatus;
+  window.startPipeline   = startPipeline;
+  window.stopPipeline    = stopPipeline;
+  window.restartPipeline = restartPipeline;
+  window.loadAgents      = loadAgents;
+  window.switchAgent     = switchAgent;
+  window.addAgent        = addAgent;
+  window.loadSkills      = loadSkills;
+  window.reloadSkills    = reloadSkills;
+  window.loadConfig      = loadConfig;
+  window.saveConfig      = saveConfig;
+  window.saveApiKeys     = saveApiKeys;
+  window.analyzeVision   = analyzeVision;
+  window.refreshLogs     = refreshLogs;
+  window.clearLogs       = clearLogs;
+  window.connectWS       = connectWS;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  BOOT
+  // ═══════════════════════════════════════════════════════════════════════
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+
+</script>
+</body>
+</html>

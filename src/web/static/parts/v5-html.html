@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — AI Assistant</title>
+<style>
+/* CSS_PLACEHOLDER */
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+
+<!-- ═══ LEFT SIDEBAR (floating) ═══ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="nova-logo-icon">
+      <div class="nova-logo-planet"></div>
+      <div class="nova-logo-ring"></div>
+      <div class="nova-logo-ring"></div>
+    </div>
+    <span class="nova-logo-text">Nova</span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-panel="chat">
+      <span class="nav-icon">💬</span> Chat
+    </button>
+    <button class="nav-item" data-panel="explore">
+      <span class="nav-icon">🧭</span> Explore
+    </button>
+    <button class="nav-item" data-panel="memory">
+      <span class="nav-icon">🧠</span> Memory
+    </button>
+    <button class="nav-item" data-panel="tasks">
+      <span class="nav-icon">✓</span> Tasks
+    </button>
+    <button class="nav-item" data-panel="knowledge">
+      <span class="nav-icon">📖</span> Knowledge
+    </button>
+    <button class="nav-item" data-panel="settings">
+      <span class="nav-icon">⚙</span> Settings
+    </button>
+  </nav>
+
+  <!-- Profile -->
+  <div class="sidebar-profile">
+    <div class="profile-avatar"></div>
+    <div class="profile-info">
+      <div class="profile-name">You</div>
+      <div class="profile-role">Explorer</div>
+    </div>
+    <span class="profile-arrow">›</span>
+  </div>
+
+</aside>
+
+
+<!-- ═══ CENTER CONTENT ═══ -->
+<main class="main-content" id="mainContent">
+
+  <!-- Welcome Screen (hero + initial chat) -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-hero">
+      <h1 class="welcome-title">Hello, I'm <span class="accent">Nova.</span></h1>
+      <p class="welcome-subtitle">How can I help you today?</p>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="chat-panel" id="chatPanel">
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- Welcome message (built-in) -->
+      <div class="welcome-message" id="welcomeMsg">
+        <div class="welcome-msg-avatar">
+          <div style="position:relative;z-index:1;font-size:14px;">✦</div>
+        </div>
+        <div>
+          <div class="welcome-msg-bubble">
+            <div class="welcome-msg-text">Welcome back! What would you like to explore or create today?</div>
+            <div class="welcome-msg-time">9:41 AM</div>
+          </div>
+          <!-- Quick Actions -->
+          <div class="quick-actions" style="margin-top:16px;">
+            <button class="quick-card" data-action="search">
+              <span class="quick-card-icon">✦</span>
+              <span class="quick-card-title">Explain</span>
+              <span class="quick-card-desc">AI topics</span>
+            </button>
+            <button class="quick-card" data-action="write">
+              <span class="quick-card-icon">✎</span>
+              <span class="quick-card-title">Help me write</span>
+              <span class="quick-card-desc">Something</span>
+            </button>
+            <button class="quick-card" data-action="search">
+              <span class="quick-card-icon">≡</span>
+              <span class="quick-card-title">Summarize</span>
+              <span class="quick-card-desc">This document</span>
+            </button>
+            <button class="quick-card" data-action="create-image">
+              <span class="quick-card-icon">✧</span>
+              <span class="quick-card-title">Create</span>
+              <span class="quick-card-desc">An image</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thinking Bubble -->
+    <div class="thinking-bubble" id="thinkingBubble" hidden>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-container" id="chatInputContainer">
+      <div class="chat-input-bar">
+        <button class="input-tool-btn" title="Add">＋</button>
+        <button class="input-tool-btn" title="Tools">🌐</button>
+        <textarea id="chatInput" class="chat-input" placeholder="Message Nova..." rows="1" autocomplete="off" aria-label="Message Nova"></textarea>
+        <button class="input-btn" id="micBtn" title="Voice input">🎤</button>
+        <button class="input-btn" id="voiceBtn" title="Voice playback" style="display:none;">🔊</button>
+        <button class="send-btn" id="sendBtn" title="Send">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANELS (toggled by nav) ═══ -->
+
+  <section class="panel" id="panel-status">
+    <h2>📊 System Status</h2>
+    <div class="status-grid">
+      <div class="status-card"><span class="status-label">Pipeline</span><span class="status-value" id="sPipeline">—</span></div>
+      <div class="status-card"><span class="status-label">Ollama</span><span class="status-value" id="sOllama">—</span></div>
+      <div class="status-card"><span class="status-label">Chat Model</span><span class="status-value" id="sChatModel">—</span></div>
+      <div class="status-card"><span class="status-label">Vision</span><span class="status-value" id="sVision">—</span></div>
+      <div class="status-card"><span class="status-label">Uptime</span><span class="status-value" id="sUptime">—</span></div>
+      <div class="status-card"><span class="status-label">RAM</span><span class="status-value" id="sRAM">—</span></div>
+      <div class="status-card"><span class="status-label">GPU</span><span class="status-value" id="sGPU">—</span></div>
+      <div class="status-card"><span class="status-label">LLM Mode</span><span class="status-value" id="sLLMMode">—</span></div>
+    </div>
+    <div class="status-controls"><h3>Pipeline Controls</h3><div class="control-buttons"><button class="ctrl-btn" id="btnStartPipeline">▶ Start</button><button class="ctrl-btn" id="btnStopPipeline">⏹ Stop</button><button class="ctrl-btn" id="btnRestartPipeline">🔄 Restart</button></div></div>
+    <div class="status-section"><h3>Models Loaded</h3><div id="modelsLoaded"><p class="placeholder-text">No models loaded</p></div></div>
+    <div class="status-section"><h3>Usage Metrics</h3><div id="usageMetrics"><p class="placeholder-text">No usage data</p></div></div>
+  </section>
+
+  <section class="panel" id="panel-chat"></section>
+
+  <section class="panel" id="panel-scripts"><h2>📜 Scripts</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-projects"><h2>📁 Projects</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-agents">
+    <h2>🤖 Agents</h2>
+    <div class="agent-card active-agent"><h3>Active Agent</h3><div class="agent-detail"><span>Name:</span><span id="activeAgentName">—</span></div><div class="agent-detail"><span>Model:</span><span id="activeAgentModel">—</span></div><div class="agent-detail"><span>Prompt:</span><span id="activeAgentPrompt">—</span></div></div>
+    <div class="agent-section"><h3>All Agents</h3><div id="agentList"><p class="placeholder-text">No agents configured</p></div></div>
+    <div class="agent-section"><h3>Quick Add Agent</h3><form id="addAgentForm"><div class="form-group"><label for="newAgentName">Name</label><input type="text" id="newAgentName" placeholder="Agent name" /></div><div class="form-group"><label for="newAgentModel">Model</label><input type="text" id="newAgentModel" placeholder="e.g. llama3" /></div><div class="form-group"><label for="newAgentPrompt">System Prompt</label><textarea id="newAgentPrompt" rows="3" placeholder="System prompt..."></textarea></div><button type="submit" class="ctrl-btn">➕ Add Agent</button></form></div>
+  </section>
+
+  <section class="panel" id="panel-skills">
+    <h2>🧩 Skills</h2>
+    <div class="skills-stats" id="skillsStats"><span>Total: <strong id="skillsTotal">0</strong></span><span>Active: <strong id="skillsActive">0</strong></span></div>
+    <button class="ctrl-btn" id="btnReloadSkills">🔄 Reload Skills</button>
+    <div id="skillsList"><p class="placeholder-text">No skills loaded</p></div>
+  </section>
+
+  <section class="panel" id="panel-memory"><h2>🧠 Memory</h2><p class="placeholder-text">Coming soon</p></section>
+
+  <section class="panel" id="panel-settings">
+    <h2>⚙️ Settings</h2>
+    <div class="settings-section"><h3>API Keys</h3><form id="apiKeysForm"><div class="form-group"><label for="settingOpenRouterKey">OpenRouter API Key</label><input type="password" id="settingOpenRouterKey" placeholder="sk-or-..." /></div><div class="form-group"><label for="settingOpenAIKey">OpenAI API Key</label><input type="password" id="settingOpenAIKey" placeholder="sk-..." /></div><div class="form-group"><label for="settingAnthropicKey">Anthropic API Key</label><input type="password" id="settingAnthropicKey" placeholder="sk-ant-..." /></div></form></div>
+    <div class="settings-section"><h3>Provider Status</h3><div id="providerStatus"><p class="placeholder-text">Checking providers...</p></div></div>
+    <div class="settings-section"><h3>Configuration</h3><form id="configForm"><div class="form-group"><label for="settingDefaultModel">Default Model</label><input type="text" id="settingDefaultModel" placeholder="e.g. llama3" /></div><div class="form-group"><label for="settingVisionModel">Vision Model</label><input type="text" id="settingVisionModel" placeholder="e.g. llava" /></div><div class="form-group"><label for="settingTemperature">Temperature</label><input type="number" id="settingTemperature" min="0" max="2" step="0.1" value="0.7" /></div><div class="form-group"><label for="settingMaxTokens">Max Tokens</label><input type="number" id="settingMaxTokens" min="1" max="128000" value="4096" /></div><button type="submit" class="ctrl-btn">💾 Save Settings</button></form></div>
+    <div class="settings-section"><h3>System Info</h3><div><div><span>Version:</span> <span id="infoVersion">—</span></div><div><span>Host:</span> <span id="infoHost">—</span></div><div><span>Platform:</span> <span id="infoPlatform">—</span></div><div><span>Node:</span> <span id="infoNode">—</span></div></div></div>
+  </section>
+
+  <section class="panel" id="panel-vision">
+    <h2>👁️ Vision</h2>
+    <div><div class="form-group"><label for="visionImageInput">Image</label><input type="file" id="visionImageInput" accept="image/*" /></div><div class="form-group"><label for="visionPrompt">Prompt</label><input type="text" id="visionPrompt" placeholder="What do you want to know about this image?" /></div><button class="ctrl-btn" id="btnAnalyzeVision">🔍 Analyze</button></div>
+    <div class="vision-result" id="visionResult"><p class="placeholder-text">Upload an image and click Analyze</p></div>
+  </section>
+
+  <section class="panel" id="panel-logs">
+    <h2>📋 Logs</h2>
+    <div><button class="ctrl-btn" id="btnRefreshLogs">🔄 Refresh</button> <button class="ctrl-btn" id="btnClearLogs">🗑️ Clear</button></div>
+    <pre class="log-area" id="logArea">No logs available.</pre>
+  </section>
+
+  <section class="panel" id="panel-help">
+    <h2>❓ Help</h2>
+    <div><h3>Getting Started</h3><p>Nova is your AI-powered control hub. Use the sidebar to navigate.</p><h3>Chat</h3><p>Talk to Nova directly. Ask questions, request actions, or have a conversation.</p><h3>Keyboard Shortcuts</h3><ul><li><kbd>Enter</kbd> — Send</li><li><kbd>Shift+Enter</kbd> — New line</li></ul></div>
+  </section>
+
+  <!-- Explore panel (new) -->
+  <section class="panel" id="panel-explore"><h2>🧭 Explore</h2><p class="placeholder-text">Discover Nova's capabilities</p></section>
+
+  <!-- Tasks panel (new) -->
+  <section class="panel" id="panel-tasks"><h2>✓ Tasks</h2><p class="placeholder-text">Task management coming soon</p></section>
+
+  <!-- Knowledge panel (new) -->
+  <section class="panel" id="panel-knowledge"><h2>📖 Knowledge</h2><p class="placeholder-text">Knowledge base coming soon</p></section>
+
+</main>
+
+
+<!-- ═══ RIGHT SIDEBAR ═══ -->
+<aside class="right-sidebar" id="rightSidebar">
+
+  <!-- Nova Status Widget -->
+  <div class="widget">
+    <div class="widget-header">
+      <span class="widget-label">Nova Status</span>
+      <span class="status-online"><span class="status-dot"></span> Online</span>
+    </div>
+    <div class="planet-vis">
+      <div class="planet-core"></div>
+      <div class="planet-ring"></div>
+      <div class="planet-ring"></div>
+    </div>
+  </div>
+
+  <!-- Current Focus -->
+  <div class="widget">
+    <div class="focus-title">Current Focus</div>
+    <div class="focus-text">Helping you explore and create.</div>
+  </div>
+
+  <!-- Recent Conversations -->
+  <div class="widget">
+    <div class="widget-header">
+      <span class="widget-label">Recent Conversations</span>
+    </div>
+    <div class="conv-list">
+      <div class="conv-item"><span class="conv-title">Quantum mechanics explained</span><span class="conv-time">Today</span></div>
+      <div class="conv-item"><span class="conv-title">Ideas for a sci-fi story</span><span class="conv-time">Yesterday</span></div>
+      <div class="conv-item"><span class="conv-title">Workout plan help</span><span class="conv-time">2d ago</span></div>
+      <div class="conv-item"><span class="conv-title">Photosynthesis summary</span><span class="conv-time">3d ago</span></div>
+    </div>
+    <div class="conv-viewall">View all <span>›</span></div>
+  </div>
+
+  <!-- Weather / Time -->
+  <div class="widget">
+    <div class="weather-widget">
+      <div class="weather-left">
+        <div class="weather-icon">🌙</div>
+        <div>
+          <div class="weather-temp">24°</div>
+          <div class="weather-desc">Clear</div>
+        </div>
+      </div>
+      <div class="weather-right">
+        <div class="weather-time" id="clockTime">9:41 AM</div>
+        <div class="weather-date" id="clockDate">May 22</div>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+</div><!-- end app-layout -->
+
+<!-- Right panel for legacy JS compat (hidden) -->
+<aside class="right-panel" id="rightPanel" style="display:none;">
+  <div><h3>Model</h3><select id="modelSelector"><option value="openrouter">OpenRouter</option><option value="lmstudio">LMStudio</option><option value="ollama">Local Ollama</option><option value="custom">Custom</option></select><input type="text" id="modelName" class="model-name-input" placeholder="Model name..." /></div>
+  <div id="knowledgeBase"></div>
+  <div><span id="rpAgentName">Nova</span><span id="rpAgentModel">—</span><span id="rpAgentStatus">Idle</span></div>
+  <div id="skillsOverview"></div>
+  <div><span id="ctxMessageCount">0</span><span id="ctxTokenCount">0</span><span id="ctxSessionId">—</span></div>
+  <div><span id="metricRequests">0</span><span id="metricTokensIn">0</span><span id="metricTokensOut">0</span><span id="metricLatency">—</span></div>
+  <div id="rpUsageMetrics"></div>
+</aside>
+
+<!-- Hidden compat elements for accessibility toggles -->
+<div style="display:none;">
+  <input type="checkbox" id="toggleHighContrast" />
+  <input type="checkbox" id="toggleLargeText" />
+  <input type="checkbox" id="toggleTTS" />
+</div>
+
+</body>
+</html>
