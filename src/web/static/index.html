@@ -1404,19 +1404,33 @@ body::after {
       <div class="model-select-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         <select id="modelSelect">
-          <optgroup label="FREE MODELS">
-            <option value="llama-3.3-70b" selected>Llama 3.3 70B</option>
-            <option value="llama-3.1-70b">Llama 3.1 70B</option>
-            <option value="deepseek-v3">DeepSeek V3.1</option>
+          <optgroup label="🟢 FREE — LARGE MODELS">
+            <option value="gpt-oss-120b-groq">GPT-OSS 120B (Groq) ⚡</option>
+            <option value="gpt-oss-120b-samba">GPT-OSS 120B (SambaNova)</option>
+            <option value="deepseek-v3">DeepSeek V3.1 (131K ctx)</option>
             <option value="deepseek-v3.2">DeepSeek V3.2</option>
-            <option value="llama-4-maverick">Llama 4 Maverick 17B</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="minimax-m2.7">MiniMax M2.7 (196K ctx)</option>
+            <option value="llama-3.3-70b" selected>Llama 3.3 70B</option>
           </optgroup>
-          <optgroup label="BRING YOUR KEY">
+          <optgroup label="🟢 FREE — FAST MODELS">
+            <option value="qwen3-32b">Qwen 3 32B ⚡</option>
+            <option value="llama-4-scout">Llama 4 Scout 17B</option>
+            <option value="llama-4-maverick">Llama 4 Maverick 17B</option>
+            <option value="llama-3.1-70b">Llama 3.1 70B</option>
+          </optgroup>
+          <optgroup label="🔑 OPENAI (Your Key)">
+            <option value="gpt-4.1">GPT-4.1</option>
+            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
             <option value="gpt-4o">GPT-4o</option>
             <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="o3-mini">o3 Mini (Reasoning)</option>
+          </optgroup>
+          <optgroup label="🔑 ANTHROPIC (Your Key)">
+            <option value="claude-opus">Claude Opus 4</option>
             <option value="claude-sonnet">Claude Sonnet 4</option>
+            <option value="claude-haiku">Claude Haiku 3.5</option>
+          </optgroup>
+          <optgroup label="🔑 OPENROUTER (Your Key)">
             <option value="openrouter-auto">OpenRouter Auto</option>
           </optgroup>
         </select>
@@ -1529,16 +1543,21 @@ body::after {
       <div class="settings-row">
         <label class="settings-label">Default Chat Model</label>
         <select id="settingsDefaultModel" class="settings-select">
-          <optgroup label="Free Models">
-            <option value="llama-3.3-70b">Llama 3.3 70B</option>
-            <option value="llama-3.1-70b">Llama 3.1 70B</option>
+          <optgroup label="Free — Large">
+            <option value="gpt-oss-120b-groq">GPT-OSS 120B (Groq)</option>
+            <option value="gpt-oss-120b-samba">GPT-OSS 120B (SambaNova)</option>
             <option value="deepseek-v3">DeepSeek V3.1</option>
-            <option value="deepseek-v3.2">DeepSeek V3.2</option>
+            <option value="minimax-m2.7">MiniMax M2.7</option>
+            <option value="llama-3.3-70b">Llama 3.3 70B</option>
+          </optgroup>
+          <optgroup label="Free — Fast">
+            <option value="qwen3-32b">Qwen 3 32B</option>
+            <option value="llama-4-scout">Llama 4 Scout 17B</option>
             <option value="llama-4-maverick">Llama 4 Maverick 17B</option>
           </optgroup>
-          <optgroup label="Bring Your Key">
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
+          <optgroup label="BYOK">
+            <option value="gpt-4.1">GPT-4.1</option>
+            <option value="claude-opus">Claude Opus 4</option>
             <option value="claude-sonnet">Claude Sonnet 4</option>
             <option value="openrouter-auto">OpenRouter Auto</option>
           </optgroup>
@@ -1693,7 +1712,8 @@ function appendChat(role, content) {
 /* ─── API Key Management (browser-only) ─── */
 const BYOK_PROVIDERS = {
   'gpt-4o': 'openai', 'gpt-4o-mini': 'openai',
-  'claude-sonnet': 'anthropic',
+  'gpt-4.1': 'openai', 'gpt-4.1-mini': 'openai', 'o3-mini': 'openai',
+  'claude-sonnet': 'anthropic', 'claude-opus': 'anthropic', 'claude-haiku': 'anthropic',
   'openrouter-auto': 'openrouter',
 };
 
