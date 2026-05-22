@@ -325,9 +325,381 @@ body::after{
 .panel-view p{color:var(--text-mid);font-size:15px}
 
 /* ═══════════════ SCROLLBAR ═══════════════ */
-::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+::-webkit-scrollbar-thumb{background:rgba(123,97,255,.15);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(123,97,255,.25)}
+
+/* ═══════════════════════════════════════════════════
+   DESI CINEMATIC REFINEMENT LAYER
+   Atmosphere · Depth · Lighting · Glass · Motion
+   ═══════════════════════════════════════════════════ */
+
+/* ─── 1. DEEPER COSMIC BACKGROUND ─── */
+body{background:#040712}
+
+body::before{
+  background:
+    radial-gradient(1.5px 1.5px at 8% 12%, rgba(220,225,255,.65), transparent),
+    radial-gradient(1px 1px at 22% 55%, rgba(200,210,255,.4), transparent),
+    radial-gradient(1.2px 1.2px at 42% 8%, rgba(180,195,255,.45), transparent),
+    radial-gradient(0.8px 0.8px at 58% 35%, rgba(200,200,240,.3), transparent),
+    radial-gradient(1.3px 1.3px at 76% 68%, rgba(220,225,255,.5), transparent),
+    radial-gradient(0.8px 0.8px at 33% 82%, rgba(180,190,230,.25), transparent),
+    radial-gradient(1px 1px at 89% 14%, rgba(200,210,255,.35), transparent),
+    radial-gradient(0.6px 0.6px at 14% 42%, rgba(190,200,240,.25), transparent),
+    radial-gradient(1px 1px at 55% 22%, rgba(210,215,250,.3), transparent),
+    radial-gradient(0.8px 0.8px at 80% 48%, rgba(200,205,240,.25), transparent),
+    radial-gradient(0.5px 0.5px at 4% 88%, rgba(180,190,230,.2), transparent),
+    radial-gradient(0.7px 0.7px at 66% 4%, rgba(200,210,250,.3), transparent),
+    radial-gradient(1px 1px at 38% 52%, rgba(190,200,240,.2), transparent),
+    radial-gradient(0.5px 0.5px at 92% 36%, rgba(180,190,230,.18), transparent),
+    radial-gradient(0.8px 0.8px at 48% 72%, rgba(195,205,245,.22), transparent),
+    radial-gradient(1.2px 1.2px at 18% 28%, rgba(210,220,255,.3), transparent),
+    radial-gradient(0.6px 0.6px at 72% 85%, rgba(185,195,235,.2), transparent),
+    radial-gradient(1px 1px at 28% 15%, rgba(200,210,250,.28), transparent);
+  animation:starBreath 10s ease-in-out infinite alternate;
+}
+
+body::after{
+  background:
+    /* Light streak — diagonal upper-right, cinematic */
+    linear-gradient(125deg,
+      transparent 30%,
+      rgba(100,130,255,.025) 42%,
+      rgba(130,120,255,.05) 48%,
+      rgba(160,150,255,.035) 54%,
+      rgba(120,140,255,.02) 62%,
+      transparent 72%),
+    /* Nebula 1 — upper right, main bloom */
+    radial-gradient(ellipse 55% 45% at 75% 15%,
+      rgba(100,75,220,.09) 0%,
+      rgba(80,55,190,.04) 35%,
+      transparent 65%),
+    /* Nebula 2 — center left, violet mist */
+    radial-gradient(ellipse 40% 50% at 18% 55%,
+      rgba(65,45,170,.05) 0%,
+      transparent 55%),
+    /* Nebula 3 — lower, blue haze */
+    radial-gradient(ellipse 55% 25% at 50% 92%,
+      rgba(40,60,160,.04) 0%,
+      transparent 50%),
+    /* Fog — bottom atmospheric */
+    linear-gradient(to top,
+      rgba(4,7,18,.65) 0%,
+      rgba(4,7,18,.2) 12%,
+      transparent 30%),
+    /* Fog — top subtle */
+    linear-gradient(to bottom,
+      rgba(4,7,18,.4) 0%,
+      transparent 10%),
+    /* Vignette — cinematic */
+    radial-gradient(ellipse 78% 72% at 50% 50%,
+      transparent 45%,
+      rgba(3,5,14,.4) 78%,
+      rgba(2,3,10,.65) 100%);
+  animation:nebulaDrift 35s ease-in-out infinite alternate;
+}
+
+@keyframes nebulaDrift{
+  0%{opacity:.85;transform:translate(0,0) scale(1)}
+  50%{opacity:1;transform:translate(-3px,2px) scale(1.008)}
+  100%{opacity:.88;transform:translate(2px,-1px) scale(.997)}
+}
+
+/* ─── 2. ENVIRONMENTAL GLOW LAYER ─── */
+/* Ambient bloom behind center workspace */
+#mainContent::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 20%,
+      rgba(123,97,255,.04) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 50% at 80% 50%,
+      rgba(94,235,255,.02) 0%, transparent 50%);
+  animation:envGlow 8s ease-in-out infinite alternate;
+}
+#mainContent{position:relative}
+#mainContent>*{position:relative;z-index:1}
+@keyframes envGlow{
+  0%{opacity:.6;transform:scale(1)}
+  100%{opacity:1;transform:scale(1.03)}
+}
+
+/* ─── 3. HERO BLOOM — emotional centerpiece ─── */
+.welcome-screen{position:relative}
+.welcome-screen::before{
+  content:'';position:absolute;
+  top:-60%;right:-25%;width:700px;height:600px;
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 50%,
+      rgba(100,75,220,.08) 0%,
+      rgba(80,55,190,.035) 40%,
+      transparent 70%);
+  pointer-events:none;z-index:-1;
+  animation:heroBloom 10s ease-in-out infinite alternate;
+}
+@keyframes heroBloom{
+  0%{opacity:.65;transform:scale(1)}
+  100%{opacity:1;transform:scale(1.06)}
+}
+
+.welcome-screen h1{
+  font-size:44px;font-weight:700;letter-spacing:-.8px;
+  text-shadow:0 0 80px rgba(123,97,255,.06);
+}
+.welcome-screen p{
+  font-size:19px;color:rgba(169,177,214,.85);font-weight:400;
+}
+
+/* ─── 4. GLASS REFINEMENT — deeper, softer ─── */
+#sidebar{
+  background:rgba(8,12,28,.75)!important;
+  backdrop-filter:blur(28px) saturate(1.2)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.2)!important;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 0 40px rgba(80,60,200,.015);
+}
+
+.chat-panel{
+  background:rgba(8,12,28,.68)!important;
+  backdrop-filter:blur(24px) saturate(1.15)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.15)!important;
+  box-shadow:
+    0 12px 48px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 0 50px rgba(70,50,180,.012);
+  position:relative;
+}
+
+/* Chat panel inner radial light */
+.chat-panel::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(ellipse 45% 25% at 50% 3%,
+    rgba(100,80,220,.025) 0%, transparent 55%);
+  pointer-events:none;z-index:0;
+}
+.chat-panel>*{position:relative;z-index:1}
+
+.widget{
+  background:rgba(10,14,30,.72)!important;
+  backdrop-filter:blur(24px) saturate(1.15)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.15)!important;
+  box-shadow:
+    0 6px 28px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 0 25px rgba(80,60,200,.012);
+  transition:box-shadow .3s ease,border-color .3s ease;
+}
+
+.widget:hover{
+  border-color:rgba(255,255,255,.09);
+  box-shadow:
+    0 8px 36px rgba(0,0,0,.32),
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 0 30px rgba(123,97,255,.035);
+}
+
+/* Quick cards — glass depth */
+.quick-card{
+  background:rgba(12,16,38,.7)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+  box-shadow:
+    0 4px 18px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.025);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.quick-card:hover{
+  border-color:rgba(123,97,255,.2)!important;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.3),
+    0 0 25px rgba(123,97,255,.06),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  transform:translateY(-4px);
+}
+
+/* Welcome message bubble */
+.message.assistant .msg-bubble{
+  background:rgba(12,16,38,.75);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 4px 20px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+/* ─── 5. SIDEBAR REFINEMENT ─── */
+.nav-item{
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  border:1px solid transparent;
+}
+.nav-item:hover{
+  background:rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.025);
+}
+.nav-item.active{
+  background:rgba(42,42,78,.9)!important;
+  border-color:rgba(123,97,255,.12);
+  box-shadow:
+    0 0 24px rgba(123,97,255,.12),
+    inset 0 0 22px rgba(123,97,255,.035);
+}
+.nav-item.active svg{opacity:1;filter:drop-shadow(0 0 4px rgba(123,97,255,.35))}
+
+/* Profile separator glow */
+.sidebar-profile{position:relative}
+.sidebar-profile::before{
+  content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(123,97,255,.12),transparent);
+}
+
+/* Logo planet glow */
+.sidebar-logo svg circle[fill]{
+  filter:drop-shadow(0 0 8px rgba(123,97,255,.4));
+}
+
+/* ─── 6. PLANET VISUALIZATION — cinematic ─── */
+.planet-core{
+  box-shadow:
+    0 0 30px rgba(123,97,255,.45),
+    0 0 60px rgba(123,97,255,.15),
+    0 0 100px rgba(123,97,255,.06),
+    inset 0 -4px 12px rgba(0,0,0,.3);
+}
+
+/* Planet ambient glow */
+.planet-container::before{
+  content:'';position:absolute;width:75%;height:75%;border-radius:50%;
+  background:radial-gradient(circle,rgba(123,97,255,.1),rgba(94,235,255,.03) 40%,transparent 65%);
+  animation:planetGlow 6s ease-in-out infinite alternate;
+}
+@keyframes planetGlow{0%{opacity:.5;transform:scale(.95)}100%{opacity:1;transform:scale(1.05)}}
+
+.orbit{border-color:rgba(123,97,255,.2)}
+.orbit::after{box-shadow:0 0 8px currentColor}
+
+/* ─── 7. SEND BUTTON — energized AI core ─── */
+#sendBtn{
+  background:linear-gradient(135deg,#5B41DF,#7B61FF,#8B71FF)!important;
+  box-shadow:
+    0 0 20px rgba(123,97,255,.5),
+    0 0 50px rgba(123,97,255,.18),
+    0 0 90px rgba(123,97,255,.06),
+    inset 0 1px 2px rgba(255,255,255,.15);
+  animation:sendPulse 4s ease-in-out infinite;
+}
+@keyframes sendPulse{
+  0%,100%{box-shadow:0 0 20px rgba(123,97,255,.5),0 0 50px rgba(123,97,255,.18),0 0 90px rgba(123,97,255,.06),inset 0 1px 2px rgba(255,255,255,.15)}
+  50%{box-shadow:0 0 26px rgba(123,97,255,.6),0 0 60px rgba(123,97,255,.22),0 0 100px rgba(123,97,255,.08),inset 0 1px 2px rgba(255,255,255,.2)}
+}
+#sendBtn:hover{
+  box-shadow:
+    0 0 30px rgba(123,97,255,.65),
+    0 0 70px rgba(123,97,255,.25),
+    0 0 110px rgba(123,97,255,.1),
+    inset 0 1px 2px rgba(255,255,255,.2)!important;
+}
+
+/* ─── 8. INPUT BAR — atmospheric ─── */
+.input-bar{
+  background:rgba(8,10,24,.8)!important;
+  backdrop-filter:blur(16px)!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  box-shadow:0 4px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.02);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.input-bar:focus-within{
+  border-color:rgba(123,97,255,.25)!important;
+  box-shadow:
+    0 4px 28px rgba(0,0,0,.25),
+    0 0 35px rgba(123,97,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* ─── 9. AVATARS — cosmic depth ─── */
+.msg-avatar,.profile-avatar{
+  box-shadow:0 0 14px rgba(100,80,220,.25),0 0 35px rgba(80,60,200,.08);
+}
+
+/* ─── 10. AMBIENT MOTION ─── */
+/* Floating particles in center area */
+#mainContent::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(2px 2px at 25% 18%, rgba(123,97,255,.12) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 65% 55%, rgba(94,235,255,.08) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 78%, rgba(123,97,255,.07) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 82% 22%, rgba(150,140,255,.06) 0%, transparent 100%);
+  animation:particleDrift 25s ease-in-out infinite alternate;
+}
+@keyframes particleDrift{
+  0%{transform:translate(0,0);opacity:.45}
+  33%{transform:translate(8px,-5px);opacity:.65}
+  66%{transform:translate(-4px,3px);opacity:.5}
+  100%{transform:translate(3px,-2px);opacity:.6}
+}
+
+/* Smoother message entrance */
+.message{animation:msgCinematic .4s cubic-bezier(.22,1,.36,1) both!important}
+@keyframes msgCinematic{
+  from{opacity:0;transform:translateY(12px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+
+/* Panel entrance */
+.panel-view[style*="display"]:not([style*="none"]){
+  animation:panelIn .35s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes panelIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+
+/* Button press feedback */
+.nav-item:active,.quick-card:active,.input-btn:active{transform:scale(.97)}
+
+/* Status card hover */
+.recent-item{
+  transition:all .2s ease;
+  padding:10px 6px;border-radius:6px;margin:0 -6px;
+}
+.recent-item:hover{background:rgba(255,255,255,.03)}
+
+/* ─── 11. THINKING DOTS — vivid ─── */
+.thinking-dots span{
+  width:9px!important;height:9px!important;
+  background:var(--purple)!important;
+  box-shadow:0 0 8px rgba(123,97,255,.4);
+}
+
+/* ─── 12. TYPOGRAPHY — premium ─── */
+.welcome-screen h1 .purple{
+  background:linear-gradient(135deg,#7B61FF,#9B8BFF);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.sidebar-logo span{
+  letter-spacing:8px!important;font-weight:600;opacity:.95;
+}
+
+.widget-label{letter-spacing:2.5px!important;font-size:10px!important}
+
+/* ─── 13. SELECTION ─── */
+::selection{background:rgba(123,97,255,.28);color:#fff}
+
+/* ─── 14. RESPONSIVE ─── */
+@media(max-width:1100px){.widget-col{display:none}}
+@media(max-width:768px){
+  body{padding:10px;gap:10px}
+  #sidebar{display:none}
+  .welcome-screen h1{font-size:30px}
+  .quick-actions{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .quick-actions{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
