@@ -1,0 +1,577 @@
+<!-- ═══════════════════════════════════════════════════════════════
+     Nova Web Control Hub — Body Structure
+     No CSS, no JS. Just semantic HTML.
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- ─── LEFT SIDEBAR ─────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-logo">
+    <span class="logo-icon">⚡</span>
+    <span class="logo-text">Nova <small>v1.0</small></span>
+  </div>
+
+  <!-- Nav: General -->
+  <nav class="sidebar-nav">
+    <div class="nav-category" data-category="general">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">General</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item active" data-panel="status">🏠 Home / Status</button></li>
+        <li><button class="nav-item" data-panel="chat">💬 Chat</button></li>
+        <li><button class="nav-item" data-panel="scripts">📜 Scripts</button></li>
+        <li><button class="nav-item" data-panel="projects">📁 Projects</button></li>
+      </ul>
+    </div>
+
+    <!-- Nav: Agents -->
+    <div class="nav-category" data-category="agents">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">Agents</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item" data-panel="agents">🤖 Agents</button></li>
+        <li><button class="nav-item" data-panel="skills">🧩 Skills</button></li>
+        <li><button class="nav-item" data-panel="memory">🧠 Memory</button></li>
+      </ul>
+    </div>
+
+    <!-- Nav: System -->
+    <div class="nav-category" data-category="system">
+      <button class="nav-category-toggle" aria-expanded="true">
+        <span class="category-label">System</span>
+        <span class="category-arrow">▾</span>
+      </button>
+      <ul class="nav-list">
+        <li><button class="nav-item" data-panel="settings">⚙️ Settings</button></li>
+        <li><button class="nav-item" data-panel="vision">👁️ Vision</button></li>
+        <li><button class="nav-item" data-panel="logs">📋 Logs</button></li>
+        <li><button class="nav-item" data-panel="help">❓ Help</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Sidebar Bottom: Accessibility -->
+  <div class="sidebar-bottom">
+    <div class="accessibility-toggles">
+      <label class="toggle-row">
+        <input type="checkbox" id="toggleHighContrast" />
+        <span>🔲 High Contrast</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="toggleLargeText" />
+        <span>🔤 Large Text</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="toggleTTS" />
+        <span>🔊 TTS</span>
+      </label>
+    </div>
+  </div>
+
+</aside>
+
+
+<!-- ─── MAIN CONTENT AREA ────────────────────────────────────── -->
+<main class="main-content" id="mainContent">
+
+  <!-- ── WELCOME SCREEN (shown when no messages) ── -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-hero">
+      <div class="welcome-icon">⚡</div>
+      <h1 class="welcome-title">Nova</h1>
+      <p class="welcome-subtitle">How can I help you today?</p>
+    </div>
+
+    <div class="welcome-cards">
+      <button class="welcome-card" data-action="create-image">
+        <span class="welcome-card-icon">🎨</span>
+        <span class="welcome-card-title">Create an image</span>
+        <span class="welcome-card-desc">Generate art, photos, designs</span>
+      </button>
+      <button class="welcome-card" data-action="write">
+        <span class="welcome-card-icon">✏️</span>
+        <span class="welcome-card-title">Write or edit</span>
+        <span class="welcome-card-desc">Draft, proofread, or rewrite text</span>
+      </button>
+      <button class="welcome-card" data-action="search">
+        <span class="welcome-card-icon">🔍</span>
+        <span class="welcome-card-title">Look something up</span>
+        <span class="welcome-card-desc">Search the web for info</span>
+      </button>
+      <button class="welcome-card" data-action="projects">
+        <span class="welcome-card-icon">📁</span>
+        <span class="welcome-card-title">Projects</span>
+        <span class="welcome-card-desc">Manage your projects and code</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CHAT MESSAGES AREA ── -->
+  <div class="chat-messages" id="chatMessages">
+    <!-- Messages rendered here dynamically -->
+    <!-- Example structure:
+    <div class="msg assistant">
+      <div class="msg-avatar">⚡</div>
+      <div class="msg-content">
+        <span class="msg-label">Nova</span>
+        <div class="msg-body">...</div>
+      </div>
+    </div>
+    <div class="msg user">
+      <div class="msg-content">
+        <div class="msg-body">...</div>
+      </div>
+    </div>
+    -->
+  </div>
+
+  <!-- ── THINKING BUBBLE ── -->
+  <div class="thinking-bubble" id="thinkingBubble" hidden>
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+
+  <!-- ── CHAT INPUT AREA ── -->
+  <div class="chat-input-container" id="chatInputContainer">
+    <div class="chat-input-wrapper">
+
+      <!-- Action buttons row -->
+      <div class="chat-action-buttons">
+        <button class="action-btn" data-action="create-image">🎨 Create Image</button>
+        <button class="action-btn" data-action="write">✏️ Write</button>
+        <button class="action-btn" data-action="search">🔍 Search</button>
+        <button class="action-btn" data-action="projects">📁 Projects</button>
+      </div>
+
+      <!-- Input bar -->
+      <div class="chat-input-bar">
+        <input
+          type="text"
+          id="chatInput"
+          class="chat-input"
+          placeholder="Message Nova..."
+          autocomplete="off"
+          aria-label="Message Nova"
+        />
+        <button class="input-btn" id="micBtn" title="Voice input" aria-label="Voice input">🎤</button>
+        <button class="input-btn" id="voiceBtn" title="Voice playback" aria-label="Voice playback">🔊</button>
+        <button class="input-btn send-btn" id="sendBtn" title="Send message" aria-label="Send message">➤</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANELS — one per nav item
+       ═══════════════════════════════════════════════════════════ -->
+
+  <!-- ── PANEL: STATUS ── -->
+  <section class="panel" id="panel-status">
+    <h2>🏠 System Status</h2>
+
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="status-label">Pipeline</span>
+        <span class="status-value" id="sPipeline">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Ollama</span>
+        <span class="status-value" id="sOllama">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Chat Model</span>
+        <span class="status-value" id="sChatModel">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Vision</span>
+        <span class="status-value" id="sVision">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Uptime</span>
+        <span class="status-value" id="sUptime">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">RAM</span>
+        <span class="status-value" id="sRAM">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">GPU</span>
+        <span class="status-value" id="sGPU">—</span>
+      </div>
+      <div class="status-card">
+        <span class="status-label">LLM Mode</span>
+        <span class="status-value" id="sLLMMode">—</span>
+      </div>
+    </div>
+
+    <!-- Pipeline Controls -->
+    <div class="status-controls">
+      <h3>Pipeline Controls</h3>
+      <div class="control-buttons">
+        <button class="ctrl-btn" id="btnStartPipeline">▶ Start</button>
+        <button class="ctrl-btn" id="btnStopPipeline">⏹ Stop</button>
+        <button class="ctrl-btn" id="btnRestartPipeline">🔄 Restart</button>
+      </div>
+    </div>
+
+    <!-- Models Loaded -->
+    <div class="status-section">
+      <h3>Models Loaded</h3>
+      <div id="modelsLoaded" class="models-list">
+        <p class="placeholder-text">No models loaded</p>
+      </div>
+    </div>
+
+    <!-- Usage Metrics -->
+    <div class="status-section">
+      <h3>Usage Metrics</h3>
+      <div id="usageMetrics" class="usage-metrics">
+        <p class="placeholder-text">No usage data</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: CHAT (main chat view — handled above) ── -->
+  <section class="panel" id="panel-chat">
+    <!-- This panel activates the chat messages area + input above -->
+  </section>
+
+  <!-- ── PANEL: SCRIPTS ── -->
+  <section class="panel" id="panel-scripts">
+    <h2>📜 Scripts</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: PROJECTS ── -->
+  <section class="panel" id="panel-projects">
+    <h2>📁 Projects</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: AGENTS ── -->
+  <section class="panel" id="panel-agents">
+    <h2>🤖 Agents</h2>
+
+    <!-- Active Agent Card -->
+    <div class="agent-card active-agent">
+      <h3>Active Agent</h3>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Name:</span>
+        <span class="agent-detail-value" id="activeAgentName">—</span>
+      </div>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Model:</span>
+        <span class="agent-detail-value" id="activeAgentModel">—</span>
+      </div>
+      <div class="agent-detail">
+        <span class="agent-detail-label">Prompt:</span>
+        <span class="agent-detail-value" id="activeAgentPrompt">—</span>
+      </div>
+    </div>
+
+    <!-- Agent List -->
+    <div class="agent-section">
+      <h3>All Agents</h3>
+      <div id="agentList" class="agent-list">
+        <p class="placeholder-text">No agents configured</p>
+      </div>
+    </div>
+
+    <!-- Quick Add Agent -->
+    <div class="agent-section">
+      <h3>Quick Add Agent</h3>
+      <form id="addAgentForm" class="quick-add-form">
+        <div class="form-group">
+          <label for="newAgentName">Name</label>
+          <input type="text" id="newAgentName" placeholder="Agent name" />
+        </div>
+        <div class="form-group">
+          <label for="newAgentModel">Model</label>
+          <input type="text" id="newAgentModel" placeholder="e.g. llama3" />
+        </div>
+        <div class="form-group">
+          <label for="newAgentPrompt">System Prompt</label>
+          <textarea id="newAgentPrompt" rows="3" placeholder="System prompt..."></textarea>
+        </div>
+        <button type="submit" class="ctrl-btn">➕ Add Agent</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── PANEL: SKILLS ── -->
+  <section class="panel" id="panel-skills">
+    <h2>🧩 Skills</h2>
+
+    <!-- Stats Bar -->
+    <div class="skills-stats" id="skillsStats">
+      <span class="stat-item">Total: <strong id="skillsTotal">0</strong></span>
+      <span class="stat-item">Active: <strong id="skillsActive">0</strong></span>
+    </div>
+
+    <button class="ctrl-btn" id="btnReloadSkills">🔄 Reload Skills</button>
+
+    <!-- Skills List -->
+    <div id="skillsList" class="skills-list">
+      <p class="placeholder-text">No skills loaded</p>
+    </div>
+  </section>
+
+  <!-- ── PANEL: MEMORY ── -->
+  <section class="panel" id="panel-memory">
+    <h2>🧠 Memory</h2>
+    <p class="placeholder-text">Coming soon</p>
+  </section>
+
+  <!-- ── PANEL: SETTINGS ── -->
+  <section class="panel" id="panel-settings">
+    <h2>⚙️ Settings</h2>
+
+    <!-- API Keys -->
+    <div class="settings-section">
+      <h3>API Keys</h3>
+      <form id="apiKeysForm" class="settings-form">
+        <div class="form-group">
+          <label for="settingOpenRouterKey">OpenRouter API Key</label>
+          <input type="password" id="settingOpenRouterKey" placeholder="sk-or-..." />
+        </div>
+        <div class="form-group">
+          <label for="settingOpenAIKey">OpenAI API Key</label>
+          <input type="password" id="settingOpenAIKey" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label for="settingAnthropicKey">Anthropic API Key</label>
+          <input type="password" id="settingAnthropicKey" placeholder="sk-ant-..." />
+        </div>
+      </form>
+    </div>
+
+    <!-- Provider Status -->
+    <div class="settings-section">
+      <h3>Provider Status</h3>
+      <div id="providerStatus" class="provider-status">
+        <p class="placeholder-text">Checking providers...</p>
+      </div>
+    </div>
+
+    <!-- Config Form -->
+    <div class="settings-section">
+      <h3>Configuration</h3>
+      <form id="configForm" class="settings-form">
+        <div class="form-group">
+          <label for="settingDefaultModel">Default Model</label>
+          <input type="text" id="settingDefaultModel" placeholder="e.g. llama3" />
+        </div>
+        <div class="form-group">
+          <label for="settingVisionModel">Vision Model</label>
+          <input type="text" id="settingVisionModel" placeholder="e.g. llava" />
+        </div>
+        <div class="form-group">
+          <label for="settingTemperature">Temperature</label>
+          <input type="number" id="settingTemperature" min="0" max="2" step="0.1" value="0.7" />
+        </div>
+        <div class="form-group">
+          <label for="settingMaxTokens">Max Tokens</label>
+          <input type="number" id="settingMaxTokens" min="1" max="128000" value="4096" />
+        </div>
+        <button type="submit" class="ctrl-btn">💾 Save Settings</button>
+      </form>
+    </div>
+
+    <!-- Read-Only Info -->
+    <div class="settings-section">
+      <h3>System Info</h3>
+      <div class="readonly-info">
+        <div class="info-row">
+          <span class="info-label">Version:</span>
+          <span class="info-value" id="infoVersion">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Host:</span>
+          <span class="info-value" id="infoHost">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Platform:</span>
+          <span class="info-value" id="infoPlatform">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Node:</span>
+          <span class="info-value" id="infoNode">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: VISION ── -->
+  <section class="panel" id="panel-vision">
+    <h2>👁️ Vision</h2>
+
+    <div class="vision-controls">
+      <div class="form-group">
+        <label for="visionImageInput">Image</label>
+        <input type="file" id="visionImageInput" accept="image/*" />
+      </div>
+      <div class="form-group">
+        <label for="visionPrompt">Prompt</label>
+        <input type="text" id="visionPrompt" placeholder="What do you want to know about this image?" />
+      </div>
+      <button class="ctrl-btn" id="btnAnalyzeVision">🔍 Analyze</button>
+    </div>
+
+    <div class="vision-result" id="visionResult">
+      <p class="placeholder-text">Upload an image and click Analyze</p>
+    </div>
+  </section>
+
+  <!-- ── PANEL: LOGS ── -->
+  <section class="panel" id="panel-logs">
+    <h2>📋 Logs</h2>
+
+    <div class="logs-controls">
+      <button class="ctrl-btn" id="btnRefreshLogs">🔄 Refresh</button>
+      <button class="ctrl-btn" id="btnClearLogs">🗑️ Clear</button>
+    </div>
+
+    <pre class="log-area" id="logArea">No logs available.</pre>
+  </section>
+
+  <!-- ── PANEL: HELP ── -->
+  <section class="panel" id="panel-help">
+    <h2>❓ Help</h2>
+
+    <div class="help-content">
+      <h3>Getting Started</h3>
+      <p>Nova is your AI-powered control hub. Use the sidebar to navigate between features.</p>
+
+      <h3>Chat</h3>
+      <p>Talk to Nova directly. Ask questions, request actions, or have a conversation. Use the action buttons above the input for quick tasks.</p>
+
+      <h3>Agents</h3>
+      <p>View and manage AI agents. Each agent has a name, model, and system prompt that defines its behavior.</p>
+
+      <h3>Skills</h3>
+      <p>Skills extend Nova's capabilities. Reload to pick up new skills from the filesystem.</p>
+
+      <h3>Vision</h3>
+      <p>Upload an image and ask Nova to analyze it using vision-capable models.</p>
+
+      <h3>Keyboard Shortcuts</h3>
+      <ul class="help-shortcuts">
+        <li><kbd>Enter</kbd> — Send message</li>
+        <li><kbd>Shift+Enter</kbd> — New line</li>
+        <li><kbd>Ctrl+/</kbd> — Toggle sidebar</li>
+        <li><kbd>Esc</kbd> — Close panels</li>
+      </ul>
+
+      <h3>Need More Help?</h3>
+      <p>Type <code>/help</code> in the chat or check the project README.</p>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ─── RIGHT PANEL (visible in chat view) ───────────────────── -->
+<aside class="right-panel" id="rightPanel">
+
+  <!-- Model Selector -->
+  <div class="right-section">
+    <h3 class="right-section-title">Model</h3>
+    <select id="modelSelector" class="model-select" aria-label="Select model provider">
+      <option value="openrouter">OpenRouter</option>
+      <option value="lmstudio">LMStudio</option>
+      <option value="ollama">Local Ollama</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input
+      type="text"
+      id="modelName"
+      class="model-name-input"
+      placeholder="Model name..."
+      aria-label="Model name"
+    />
+  </div>
+
+  <!-- Knowledge Base -->
+  <div class="right-section">
+    <h3 class="right-section-title">📚 Knowledge Base</h3>
+    <div id="knowledgeBase" class="right-section-content">
+      <p class="placeholder-text">No documents loaded</p>
+    </div>
+  </div>
+
+  <!-- Agent Profile -->
+  <div class="right-section">
+    <h3 class="right-section-title">🤖 Agent Profile</h3>
+    <div id="agentProfile" class="right-section-content">
+      <div class="profile-row">
+        <span class="profile-label">Name:</span>
+        <span class="profile-value" id="rpAgentName">Nova</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Model:</span>
+        <span class="profile-value" id="rpAgentModel">—</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Status:</span>
+        <span class="profile-value" id="rpAgentStatus">Idle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills Overview -->
+  <div class="right-section">
+    <h3 class="right-section-title">🧩 Skills Overview</h3>
+    <div id="skillsOverview" class="right-section-content">
+      <p class="placeholder-text">No skills active</p>
+    </div>
+  </div>
+
+  <!-- Live Context -->
+  <div class="right-section">
+    <h3 class="right-section-title">📡 Live Context</h3>
+    <div id="liveContext" class="right-section-content">
+      <div class="context-row">
+        <span class="context-label">Messages:</span>
+        <span class="context-value" id="ctxMessageCount">0</span>
+      </div>
+      <div class="context-row">
+        <span class="context-label">Tokens:</span>
+        <span class="context-value" id="ctxTokenCount">0</span>
+      </div>
+      <div class="context-row">
+        <span class="context-label">Session:</span>
+        <span class="context-value" id="ctxSessionId">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Metrics -->
+  <div class="right-section">
+    <h3 class="right-section-title">📊 Usage Metrics</h3>
+    <div id="rpUsageMetrics" class="right-section-content">
+      <div class="metric-row">
+        <span class="metric-label">Requests:</span>
+        <span class="metric-value" id="metricRequests">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Tokens In:</span>
+        <span class="metric-value" id="metricTokensIn">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Tokens Out:</span>
+        <span class="metric-value" id="metricTokensOut">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Avg Latency:</span>
+        <span class="metric-value" id="metricLatency">—</span>
+      </div>
+    </div>
+  </div>
+
+</aside>
