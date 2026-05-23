@@ -1383,6 +1383,36 @@ body::after {
 .msg-time{font-size:10px;color:var(--text-dim);margin-top:4px;opacity:.6}
 .msg-bubble p{margin:0 0 8px;} .msg-bubble p:last-child{margin:0}
 
+/* ─── Streaming cursor ─── */
+.streaming-cursor::after{
+  content:'\25AE';display:inline;color:var(--purple);
+  animation:cursorBlink 1s step-end infinite;
+  margin-left:2px;font-weight:700;
+}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ─── Thinking status labels ─── */
+.thinking-status{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text-dim);padding:2px 0 4px;
+  font-style:italic;
+}
+.thinking-status .dot-pulse{
+  width:6px;height:6px;border-radius:50%;background:var(--purple);
+  animation:thinkPulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Chat timestamp with model ─── */
+.msg-meta{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;color:var(--text-dim);margin-top:4px;opacity:.6;
+}
+.msg-model-tag{
+  background:rgba(123,97,255,.08);border:1px solid rgba(123,97,255,.08);
+  border-radius:4px;padding:1px 5px;font-size:9px;color:var(--purple);
+  font-family:'Orbitron',sans-serif;letter-spacing:.3px;
+}
+
 /* ─── Keyboard shortcut hint ─── */
 .shortcut-hint{
   font-size:10px;color:var(--text-dim);text-align:center;
@@ -1812,10 +1842,14 @@ function formatMessage(text) {
   return h;
 }
 
-function appendChat(role, content, thinkingText) {
+function appendChat(role, content, opts = {}) {
   const div = document.createElement('div');
   div.className = 'message ' + role;
   const isUser = role === 'user';
+  const thinkingText = opts.thinking || '';
+  const model = opts.model || currentModel;
+  const time = opts.time || timeStr();
+  const streaming = opts.streaming || false;
   let thinkingHtml = '';
   if (thinkingText && !isUser) {
     const id = 'think-' + Date.now();
@@ -1832,20 +1866,29 @@ function appendChat(role, content, thinkingText) {
     <div class="msg-avatar">${isUser ? 'Y' : '<img src="/static/img/nova-icon.png" alt="N">'}</div>
     <div style="flex:1;min-width:0">
       ${thinkingHtml}
-      <div class="msg-bubble">${formatMessage(content)}</div>
-      <div class="msg-time">${timeStr()} · ${currentModel}</div>
+      <div class="msg-bubble${streaming ? ' streaming-cursor' : ''}">${formatMessage(content)}</div>
+      <div class="msg-meta">
+        <span>${time}</span>
+        ${!isUser ? `<span class="msg-model-tag">${model}</span>` : ''}
+      </div>
     </div>`;
   chatMessages.insertBefore(div, thinkingBubble);
   chatMessages.scrollTop = chatMessages.scrollHeight;
   if (quickActions.style.display !== 'none') quickActions.style.display = 'none';
   document.getElementById('voiceBtn').style.display = (role === 'assistant') ? '' : 'none';
   // Add copy buttons to code blocks
-  div.querySelectorAll('pre').forEach(pre => {
+  _addCopyButtons(div);
+  return div;
+}
+
+function _addCopyButtons(container) {
+  container.querySelectorAll('pre').forEach(pre => {
+    if (pre.querySelector('.copy-code-btn')) return;
     const btn = document.createElement('button');
     btn.className = 'copy-code-btn';
     btn.textContent = 'Copy';
     btn.onclick = () => {
-      navigator.clipboard.writeText(pre.textContent.replace('Copy','').trim());
+      navigator.clipboard.writeText(pre.textContent.replace('Copy','').replace('Copied!','').trim());
       btn.textContent = 'Copied!';
       btn.classList.add('copied');
       setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
@@ -1853,7 +1896,6 @@ function appendChat(role, content, thinkingText) {
     pre.style.position = 'relative';
     pre.appendChild(btn);
   });
-  return div;
 }
 
 /* ─── API Key Management (browser-only) ─── */
@@ -2023,6 +2065,7 @@ async function sendChat() {
   autoResize();
   appendChat('user', text);
   chatHistory.push({ role: 'user', content: text });
+  _saveToLocal();
 
   thinkingBubble.style.display = 'flex';
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2032,6 +2075,7 @@ async function sendChat() {
 
   try {
     const reqBody = { message: text, model: model, history: chatHistory.slice(-20) };
+    if (currentChatId) reqBody.chat_id = currentChatId;
     if (apiKey) reqBody.api_key = apiKey;
 
     const res = await fetch('/api/v2/chat', {
@@ -2081,6 +2125,8 @@ async function sendChat() {
             }
             return;
           }
+          // Capture chat_id from done event
+          if (data.chat_id) currentChatId = data.chat_id;
           const token = data.token || data.content || data.text || '';
           if (token) {
             rawReply += token;
@@ -2104,10 +2150,12 @@ async function sendChat() {
             // Still inside <think> block
             if (inThink) continue;
             if (visible) {
-              if (!msgDiv) msgDiv = appendChat('assistant', visible, thinking);
+              if (!msgDiv) msgDiv = appendChat('assistant', visible, { thinking, streaming: true });
               else {
-                msgDiv.querySelector('.msg-bubble').innerHTML = formatMessage(visible);
-                // Update thinking if present
+                const bubble = msgDiv.querySelector('.msg-bubble');
+                bubble.innerHTML = formatMessage(visible);
+                if (!bubble.classList.contains('streaming-cursor')) bubble.classList.add('streaming-cursor');
+                _addCopyButtons(msgDiv);
                 const tc = msgDiv.querySelector('.thinking-content');
                 if (tc && thinking) tc.innerHTML = formatMessage(thinking);
               }
@@ -2125,15 +2173,25 @@ async function sendChat() {
       }
     }
 
-    // Final cleanup
+    // Final cleanup — remove streaming cursor
+    if (msgDiv) {
+      const bubble = msgDiv.querySelector('.msg-bubble');
+      if (bubble) bubble.classList.remove('streaming-cursor');
+      _addCopyButtons(msgDiv);
+    }
     let finalVisible = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
     let finalThink = '';
     const fm = rawReply.match(/<think>([\s\S]*?)<\/think>/);
     if (fm) finalThink = fm[1].trim();
     if (finalVisible) {
-      if (!msgDiv) msgDiv = appendChat('assistant', finalVisible, finalThink);
+      if (!msgDiv) msgDiv = appendChat('assistant', finalVisible, { thinking: finalThink });
+      else if (finalVisible) msgDiv.querySelector('.msg-bubble').innerHTML = formatMessage(finalVisible);
       chatHistory.push({ role: 'assistant', content: finalVisible });
+      _saveToLocal();
     } else if (!msgDiv) appendChat('assistant', '(No response)');
+    // Capture chat_id from done event for follow-up messages
+    // (already parsed in the token loop — extract from last done event)
+    loadRecentConversations();
 
   } catch (err) {
     thinkingBubble.style.display = 'none';
@@ -2158,8 +2216,31 @@ function prefillChat(text) {
   autoResize();
 }
 
+/* ─── Local Persistence ─── */
+function _saveToLocal() {
+  try {
+    const data = { chatId: currentChatId, model: currentModel, history: chatHistory.slice(-50) };
+    localStorage.setItem('nova_active_chat', JSON.stringify(data));
+  } catch(_) {}
+}
+function _restoreFromLocal() {
+  try {
+    const raw = localStorage.getItem('nova_active_chat');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.history && data.history.length > 0) {
+      chatHistory = data.history;
+      currentChatId = data.chatId || null;
+      data.history.forEach(m => {
+        if (m.role && m.content) appendChat(m.role, m.content);
+      });
+    }
+  } catch(_) {}
+}
+
 /* ─── New Chat ─── */
 function startNewChat() {
+  localStorage.removeItem('nova_active_chat');
   chatHistory = [];
   currentChatId = null;
   const msgs = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
@@ -2359,20 +2440,25 @@ async function loadChat(chatId) {
     if (!res.ok) return;
     const data = await res.json();
     const msgs = data.messages || data || [];
-    // Clear current chat
+    if (!msgs.length) return;
+    // Clear current chat UI
     chatHistory = [];
     const existing = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
     existing.forEach(el => { if (!el.id) el.remove(); });
     quickActions.style.display = 'none';
-    // Load messages
+    // Restore ALL messages with timestamps
     msgs.forEach(m => {
       if (m.role && m.content) {
-        appendChat(m.role, m.content);
+        const t = m.created_at ? new Date(m.created_at * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : timeStr();
+        appendChat(m.role, m.content, { time: t });
         chatHistory.push({ role: m.role, content: m.content });
       }
     });
     currentChatId = chatId;
+    _saveToLocal();
     switchPanel('chat');
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   } catch (_) {}
 }
 
@@ -2413,11 +2499,12 @@ async function loadRecentConversations() {
     const viewAll = container.querySelector('.view-all');
     chats.forEach(c => {
       const date = c.updated_at ? timeAgo(c.updated_at * 1000) : '';
+      const title = c.title || 'Chat';
       const div = document.createElement('div');
       div.className = 'recent-item';
       div.style.cursor = 'pointer';
       div.onclick = () => loadChat(c.id);
-      div.innerHTML = `<span class="recent-title">${escapeHtml(c.title || 'Chat')}</span><span class="recent-time">${date}</span>`;
+      div.innerHTML = `<span class="recent-title">${escapeHtml(title.length > 35 ? title.slice(0,35) + '...' : title)}</span><span class="recent-time">${date}</span>`;
       if (viewAll) container.insertBefore(div, viewAll);
       else container.appendChild(div);
     });
@@ -2483,6 +2570,7 @@ document.querySelector('.sidebar-profile')?.addEventListener('click', () => swit
 /* ─── Init ─── */
 checkAuth();
 loadRecentConversations();
+_restoreFromLocal();
 </script>
 
 <!-- API Key Modal -->
