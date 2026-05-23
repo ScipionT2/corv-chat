@@ -90,18 +90,33 @@ body::after{
 .nav-item.active svg{opacity:1}
 .sidebar-site-links{
   display:flex;flex-direction:column;gap:2px;
-  padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.06);
+  padding:10px 10px 0;border-top:1px solid rgba(123,97,255,.12);
   margin-top:8px;
 }
 .sidebar-site-links a{
   display:flex;align-items:center;gap:8px;
   padding:6px 10px;border-radius:8px;
-  font-size:12px;color:var(--text-dim);text-decoration:none;
-  transition:color .2s,background .2s;letter-spacing:.3px;
+  font-size:12px;text-decoration:none;
+  letter-spacing:.3px;font-weight:500;
+  color:rgba(169,177,214,.7);
+  transition:all .25s ease;
 }
-.sidebar-site-links a:hover{color:#fff;background:rgba(255,255,255,.04)}
-.sidebar-site-links a svg{width:14px;height:14px;opacity:.5;flex-shrink:0}
-.sidebar-site-links a:hover svg{opacity:.8}
+.sidebar-site-links a:hover{
+  color:#fff;
+  background:rgba(123,97,255,.08);
+  text-shadow:0 0 12px rgba(123,97,255,.4);
+}
+.sidebar-site-links a svg{
+  width:14px;height:14px;flex-shrink:0;
+  stroke:var(--purple);opacity:.45;
+  transition:all .25s ease;
+  filter:drop-shadow(0 0 0px transparent);
+}
+.sidebar-site-links a:hover svg{
+  opacity:1;
+  stroke:var(--blue);
+  filter:drop-shadow(0 0 6px rgba(94,235,255,.35));
+}
 .sidebar-profile{
   display:flex;align-items:center;gap:10px;
   padding:12px 14px;margin-top:auto;
