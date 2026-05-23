@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Terms of Service — Nova AI</title>
+<link rel="icon" href="/static/img/nova-icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050816;--purple:#7B61FF;--blue:#5EEBFF;--green:#34D399;
+  --glass-bg:rgba(10,15,35,.68);--glass-border:rgba(255,255,255,.12);
+  --glass-blur:blur(32px);
+  --text:#e2e8f0;--text-dim:#94a3b8;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  line-height:1.6;overflow-x:hidden;min-height:100vh;position:relative;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%,rgba(123,97,255,.12),transparent),
+    radial-gradient(ellipse 50% 40% at 80% 60%,rgba(94,235,255,.08),transparent),
+    radial-gradient(ellipse 80% 60% at 50% 100%,rgba(123,97,255,.06),transparent);
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at top,transparent 60%,rgba(5,8,22,.7)),
+    radial-gradient(ellipse at bottom,transparent 60%,rgba(5,8,22,.8)),
+    radial-gradient(ellipse at left,transparent 70%,rgba(5,8,22,.6)),
+    radial-gradient(ellipse at right,transparent 70%,rgba(5,8,22,.6));
+}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,15,35,.78);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--glass-border)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'Orbitron',sans-serif;font-weight:800;font-size:20px;letter-spacing:8px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;transition:color .25s;letter-spacing:.5px}
+.nav-links a:hover{color:#fff}
+.nav-links a.active{color:var(--purple)}
+.nav-btn{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;background:linear-gradient(135deg,var(--purple),#6246ea);color:#fff;text-decoration:none;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;letter-spacing:.5px}
+.nav-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(123,97,255,.4)}
+.nav-toggle{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
+
+.footer{border-top:1px solid var(--glass-border);padding:60px 24px 40px;position:relative;z-index:1}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:48px;justify-content:space-between}
+.footer-brand .footer-logo{font-family:'Orbitron',sans-serif;font-weight:800;font-size:18px;letter-spacing:6px;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.footer-brand p{font-size:13px;color:var(--text-dim)}
+.footer-links{display:flex;gap:48px;flex-wrap:wrap}
+.footer-col h4{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:600}
+.footer-col a{display:block;font-size:13px;color:var(--text-dim);text-decoration:none;margin-bottom:8px;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{max-width:1100px;margin:32px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-bottom span{font-size:12px;color:var(--text-dim)}
+
+/* Page Styles */
+.page-wrap{position:relative;z-index:1;padding-top:64px}
+
+.hero{text-align:center;padding:80px 24px 16px}
+.hero h1{font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(30px,5vw,48px);letter-spacing:2px;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero .subtitle{font-size:14px;color:var(--text-dim)}
+
+.glass{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:16px}
+
+.content{max-width:780px;margin:0 auto;padding:48px 24px 80px;display:flex;flex-direction:column;gap:20px}
+
+.terms-card{padding:32px}
+.terms-card .num{font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;color:var(--purple);letter-spacing:2px;margin-bottom:6px}
+.terms-card h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:12px}
+.terms-card p{font-size:15px;color:var(--text-dim);line-height:1.75}
+.terms-card a{color:var(--blue);text-decoration:none;transition:color .2s}
+.terms-card a:hover{color:#fff}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:768px){
+  .nav-links{display:none;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:rgba(10,15,35,.95);backdrop-filter:blur(24px);padding:20px;gap:16px;border-bottom:1px solid var(--glass-border)}
+  .nav-links.open{display:flex}
+  .nav-toggle{display:block}
+  .footer-inner{flex-direction:column;gap:32px}
+  .footer-links{gap:32px}
+  .footer-bottom{flex-direction:column;text-align:center}
+  .terms-card{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <a href="/site/" class="nav-logo">NOVA</a>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="/site/features.html">Features</a>
+    <a href="/site/pricing.html">Pricing</a>
+    <a href="/site/download.html">Download</a>
+    <a href="/site/about.html">About</a>
+    <a href="https://github.com/escipionpedroza147-commits" target="_blank">GitHub</a>
+    <a href="/" class="nav-btn">Launch Nova</a>
+  </div>
+</div></nav>
+
+<div class="page-wrap">
+
+  <section class="hero reveal">
+    <h1>Terms of Service</h1>
+    <p class="subtitle">Last updated: May 22, 2026</p>
+  </section>
+
+  <div class="content">
+
+    <div class="glass terms-card reveal">
+      <div class="num">01</div>
+      <h2>Agreement</h2>
+      <p>By using Nova, you agree to these terms. If you don't agree, please don't use the service.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">02</div>
+      <h2>Service Description</h2>
+      <p>Nova is an AI assistant platform offering free and premium tiers with access to multiple AI models.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">03</div>
+      <h2>Free Tier</h2>
+      <p>21 models, image generation, unlimited use, no credit card required. Available to everyone.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">04</div>
+      <h2>Pro &amp; Enterprise</h2>
+      <p>Paid plans with additional models and features. Billed monthly or annually. Cancel anytime.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">05</div>
+      <h2>Acceptable Use</h2>
+      <p>Don't use Nova for illegal content, system abuse, reverse engineering, or automated scraping. Be respectful.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">06</div>
+      <h2>API Keys</h2>
+      <p>You're responsible for your own API keys and any charges from providers. Nova is not liable for third-party provider costs.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">07</div>
+      <h2>Intellectual Property</h2>
+      <p>Your content is yours. Nova doesn't claim ownership of your conversations or generated content.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">08</div>
+      <h2>Disclaimers</h2>
+      <p>AI can make mistakes. Don't rely on Nova for medical, legal, or financial advice without professional verification.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">09</div>
+      <h2>Limitation of Liability</h2>
+      <p>Nova is provided as-is. We're not liable for indirect, incidental, or consequential damages.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">10</div>
+      <h2>Changes</h2>
+      <p>We may update these terms. Continued use after changes constitutes acceptance.</p>
+    </div>
+
+    <div class="glass terms-card reveal">
+      <div class="num">11</div>
+      <h2>Contact</h2>
+      <p>Questions about these terms? Reach us at <a href="mailto:contact@nov-assistant.com">contact@nov-assistant.com</a>.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">NOVA</div>
+      <p>Personal AI Operating System</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col"><h4>Product</h4>
+        <a href="/site/features.html">Features</a>
+        <a href="/site/pricing.html">Pricing</a>
+        <a href="/site/download.html">Download</a>
+      </div>
+      <div class="footer-col"><h4>Company</h4>
+        <a href="/site/about.html">About</a>
+        <a href="https://github.com/escipionpedroza147-commits" target="_blank">GitHub</a>
+        <a href="mailto:contact@nov-assistant.com">Contact</a>
+      </div>
+      <div class="footer-col"><h4>Legal</h4>
+        <a href="/site/privacy.html">Privacy</a>
+        <a href="/site/terms.html">Terms</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>Built by Escipion Pedroza</span>
+    <span>&copy; 2026 Nova AI</span>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Mobile menu close on link click
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => { document.querySelector('.nav-links').classList.remove('open'); });
+});
+</script>
+</body>
+</html>
