@@ -1475,6 +1475,479 @@ body::after {
   .quick-actions{grid-template-columns:1fr}
 }
 
+
+/* ═══════════════════════════════════════════════════
+   DESI FINAL POLISH — 3-agent merged
+   Atmosphere · Borders · Motion · Typography
+   ═══════════════════════════════════════════════════ */
+
+/* ============================================================
+   FINAL POLISH A — Atmosphere + Glow + Depth
+   Additive layer. Does NOT replace existing styles.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. ENVIRONMENTAL LIGHTING — strengthen body::after
+   ---------------------------------------------------------- */
+body::after {
+  background:
+    /* top-center purple — bumped .10 → .14 */
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(123,97,255,.14) 0%, transparent 70%),
+    /* lower-right blue — bumped .06 → .09 */
+    radial-gradient(ellipse 60% 55% at 85% 90%, rgba(56,120,255,.09) 0%, transparent 65%),
+    /* NEW center-screen warm fill */
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(123,97,255,.03) 0%, transparent 60%),
+    /* vignette — edges bumped .50 → .55 */
+    radial-gradient(ellipse 80% 80% at 50% 50%, transparent 50%, rgba(0,0,0,.55) 100%) !important;
+  animation: envBreathe 14s ease-in-out infinite !important;
+}
+
+/* ----------------------------------------------------------
+   2. WORKSPACE AMBIENT — strengthen #mainContent::before
+   ---------------------------------------------------------- */
+#mainContent::before {
+  background:
+    /* top purple — bumped .05 → .07 */
+    radial-gradient(ellipse 60% 45% at 50% 0%, rgba(123,97,255,.07) 0%, transparent 65%),
+    /* right blue — bumped .03 → .045 */
+    radial-gradient(ellipse 50% 55% at 95% 50%, rgba(56,120,255,.045) 0%, transparent 60%),
+    /* NEW bottom edge atmospheric fade */
+    linear-gradient(to top, rgba(5,8,22,.3) 0%, transparent 15%) !important;
+}
+
+/* ----------------------------------------------------------
+   3. UNIFIED DEPTH — deeper shadow layer on all panels
+   ---------------------------------------------------------- */
+#sidebar,
+.chat-panel,
+.widget,
+.panel-view,
+.quick-card {
+  box-shadow:
+    /* preserve any existing glow via inherit-friendly additive shadow */
+    0 20px 60px rgba(0,0,0,.15) !important;
+}
+
+/* ----------------------------------------------------------
+   4. GLASSMORPHISM CONSISTENCY
+   ---------------------------------------------------------- */
+#sidebar,
+.chat-panel,
+.widget,
+.panel-view {
+  -webkit-backdrop-filter: blur(32px) saturate(1.25) !important;
+          backdrop-filter: blur(32px) saturate(1.25) !important;
+}
+
+/* ----------------------------------------------------------
+   5. BACKGROUND PANEL CONSISTENCY
+   ---------------------------------------------------------- */
+#sidebar,
+.chat-panel,
+.widget {
+  background: rgba(10,15,35,.68) !important;
+}
+
+/* ----------------------------------------------------------
+   6. MESSAGE BUBBLE GLASSMORPHISM
+   ---------------------------------------------------------- */
+.msg-bubble {
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+}
+
+/* ----------------------------------------------------------
+   7. PLANET / NOVA CORE ENHANCEMENT
+   ---------------------------------------------------------- */
+.planet-container img {
+  filter:
+    drop-shadow(0 0 30px rgba(123,97,255,.4))
+    drop-shadow(0 0 60px rgba(123,97,255,.15)) !important;
+}
+
+.planet-container::before {
+  width: 95% !important;
+  height: 95% !important;
+  background: radial-gradient(
+    circle,
+    rgba(123,97,255,.14) 0%,
+    transparent 70%
+  ) !important;
+}
+/* ============================================================
+   FINAL POLISH B — Borders · Panels · Hover States
+   Additive layer — use !important where needed to override
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. UNIFIED BORDER GLOW SYSTEM
+   ---------------------------------------------------------- */
+#sidebar,
+.chat-panel,
+.widget,
+.panel-view {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* ----------------------------------------------------------
+   2. HOVER STATES — premium interactive feedback
+   ---------------------------------------------------------- */
+
+/* Nav items */
+.nav-item:hover {
+  background: rgba(123, 97, 255, 0.06) !important;
+  border-color: rgba(123, 97, 255, 0.08) !important;
+}
+
+.nav-item.active {
+  border-color: rgba(123, 97, 255, 0.16) !important;
+  box-shadow: 0 0 30px rgba(123, 97, 255, 0.1),
+              0 0 60px rgba(123, 97, 255, 0.03),
+              inset 0 0 20px rgba(123, 97, 255, 0.03) !important;
+}
+
+/* Quick cards */
+.quick-card {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease !important;
+}
+
+.quick-card:hover {
+  border-color: rgba(123, 97, 255, 0.2) !important;
+  box-shadow: 0 0 35px rgba(123, 97, 255, 0.08),
+              0 8px 30px rgba(0, 0, 0, 0.35) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Widgets */
+.widget:hover {
+  border-color: rgba(123, 97, 255, 0.14) !important;
+  box-shadow: 0 0 50px rgba(123, 97, 255, 0.06) !important;
+}
+
+/* Settings sections */
+.settings-section {
+  transition: border-color 0.4s ease !important;
+}
+
+.settings-section:hover {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Chat list items */
+.chat-list-item {
+  transition: border-color 0.3s ease, background 0.3s ease !important;
+}
+
+.chat-list-item:hover {
+  border-color: rgba(123, 97, 255, 0.1) !important;
+  background: rgba(123, 97, 255, 0.04) !important;
+}
+
+/* Panel cards */
+.panel-card {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease !important;
+}
+
+.panel-card:hover {
+  border-color: rgba(123, 97, 255, 0.14) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Recent items */
+.recent-item {
+  transition: background 0.3s ease !important;
+}
+
+.recent-item:hover {
+  background: rgba(123, 97, 255, 0.04) !important;
+}
+
+/* ----------------------------------------------------------
+   3. TOP-EDGE GLOW LINES
+   ---------------------------------------------------------- */
+.chat-panel {
+  position: relative;
+}
+
+.chat-panel::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 6% !important;
+  right: 6% !important;
+  height: 1px !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(123, 97, 255, 0.2) 30%,
+    rgba(94, 235, 255, 0.1) 70%,
+    transparent 100%
+  ) !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+.widget {
+  position: relative;
+}
+
+.widget::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 10% !important;
+  right: 10% !important;
+  height: 1px !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(123, 97, 255, 0.12) 30%,
+    rgba(94, 235, 255, 0.06) 70%,
+    transparent 100%
+  ) !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+/* ----------------------------------------------------------
+   4. INPUT BAR REFINEMENT
+   ---------------------------------------------------------- */
+.input-bar {
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+.input-bar:focus-within {
+  border-color: rgba(123, 97, 255, 0.22) !important;
+  box-shadow: 0 0 40px rgba(123, 97, 255, 0.05),
+              0 0 1px rgba(255, 255, 255, 0.12),
+              0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+.input-btn {
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.input-btn:hover {
+  background: rgba(123, 97, 255, 0.1) !important;
+  color: var(--purple) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 10px rgba(123, 97, 255, 0.08) !important;
+}
+
+/* ----------------------------------------------------------
+   5. SEND BUTTON — stronger presence
+   ---------------------------------------------------------- */
+#sendBtn {
+  box-shadow: 0 0 24px rgba(123, 97, 255, 0.5),
+              0 0 60px rgba(123, 97, 255, 0.15),
+              0 0 100px rgba(123, 97, 255, 0.05),
+              inset 0 1px 2px rgba(255, 255, 255, 0.18) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#sendBtn:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 30px rgba(123, 97, 255, 0.6),
+              0 0 72px rgba(123, 97, 255, 0.18),
+              0 0 120px rgba(123, 97, 255, 0.06),
+              inset 0 1px 2px rgba(255, 255, 255, 0.22) !important;
+}
+
+/* ----------------------------------------------------------
+   6. MODEL DROPDOWN
+   ---------------------------------------------------------- */
+.model-trigger {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.model-trigger:hover {
+  border-color: rgba(123, 97, 255, 0.15) !important;
+  box-shadow: 0 0 15px rgba(123, 97, 255, 0.04) !important;
+}
+
+.model-menu {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -12px 50px rgba(0, 0, 0, 0.5),
+              0 0 40px rgba(123, 97, 255, 0.04) !important;
+}
+
+.model-option {
+  transition: background 0.25s ease, border-left 0.25s ease !important;
+}
+
+.model-option:hover {
+  background: rgba(123, 97, 255, 0.06) !important;
+}
+
+.model-option.active {
+  background: rgba(123, 97, 255, 0.1) !important;
+  border-left: 2px solid var(--purple) !important;
+}
+
+/* ----------------------------------------------------------
+   7. PROFILE SECTION
+   ---------------------------------------------------------- */
+.sidebar-profile {
+  transition: background 0.35s ease, border-color 0.35s ease !important;
+}
+
+.sidebar-profile:hover {
+  background: rgba(123, 97, 255, 0.04) !important;
+  border-color: rgba(123, 97, 255, 0.06) !important;
+}
+
+.profile-avatar {
+  box-shadow: 0 0 16px rgba(123, 97, 255, 0.25),
+              0 0 40px rgba(123, 97, 255, 0.08) !important;
+}
+/* ============================================
+   FINAL POLISH C — Motion · Typography · Spacing
+   Slow, calm, expensive, cinematic.
+   ============================================ */
+
+/* 1. ANIMATION TIMING — unified premium easing */
+.nav-item, .quick-card, .widget, .input-btn, .model-trigger,
+.model-option, .settings-key-btn, .panel-card, .chat-list-item,
+.recent-item, .btn-sign-in, .new-chat-btn, .img-gen-btn {
+  transition: all .35s cubic-bezier(.25,.46,.45,.94) !important;
+}
+
+/* 2. MESSAGE ANIMATIONS — cinematic reveal */
+.message {
+  animation: msgReveal .5s cubic-bezier(.22,1,.36,1) both !important;
+}
+@keyframes msgReveal {
+  from { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(2px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* 3. PANEL TRANSITIONS — smooth switching */
+.panel-view[style*="block"] {
+  animation: panelReveal .4s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes panelReveal {
+  from { opacity: 0; transform: translateY(10px); filter: blur(1px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* 4. BREATHING ANIMATIONS — slower, premium cadence */
+.planet-container img {
+  animation-duration: 7s !important;
+  animation-timing-function: ease-in-out !important;
+}
+.send-btn .pulse,
+[class*="sendPulse"] {
+  animation-duration: 5s !important;
+  animation-timing-function: ease-in-out !important;
+}
+
+/* 5. TYPOGRAPHY REFINEMENT */
+
+/* Welcome screen */
+.welcome-screen h1 {
+  font-size: 46px !important;
+  font-weight: 700;
+  letter-spacing: 2.5px !important;
+  line-height: 1.1;
+}
+.welcome-screen p {
+  font-size: 16px !important;
+  color: rgba(169,177,214,.65) !important;
+  font-weight: 300;
+  letter-spacing: .8px;
+  margin-top: 8px;
+}
+
+/* Message text */
+.msg-bubble {
+  font-size: 14.5px !important;
+  line-height: 1.65 !important;
+  letter-spacing: .2px;
+}
+
+/* Widget labels */
+.widget-label {
+  font-size: 9px !important;
+  letter-spacing: 3px !important;
+  opacity: .7;
+}
+
+/* Panel headings */
+.panel-view h2 {
+  font-size: 26px !important;
+  letter-spacing: 1.5px !important;
+}
+
+/* Nav items */
+.nav-item {
+  font-size: 13.5px !important;
+  letter-spacing: .3px;
+}
+
+/* 6. SPACING REFINEMENT */
+
+/* Chat messages — breathing room */
+#chatMessages {
+  padding: 28px !important;
+  gap: 20px !important;
+}
+
+/* Quick actions */
+.quick-actions {
+  gap: 14px !important;
+  padding: 0 28px 20px !important;
+}
+
+/* Sidebar nav gap */
+.sidebar-nav {
+  gap: 5px !important;
+}
+
+/* Widget internal spacing */
+.widget {
+  padding: 18px !important;
+}
+
+/* Widget column gap */
+.widget-col {
+  gap: 14px !important;
+}
+
+/* 7. SCROLLBAR — refined */
+::-webkit-scrollbar {
+  width: 4px !important;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(123,97,255,.12) !important;
+  border-radius: 4px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123,97,255,.22) !important;
+}
+
+/* 8. SELECTION — premium feel */
+::selection {
+  background: rgba(123,97,255,.25) !important;
+  color: #fff !important;
+}
+
+/* 9. FOCUS STATES — accessible but subtle */
+*:focus-visible {
+  outline: 1px solid rgba(123,97,255,.3);
+  outline-offset: 2px;
+}
+
+/* 10. BUTTON PRESS — tactile active state */
+.nav-item:active, .quick-card:active, .input-btn:active,
+.model-trigger:active, .new-chat-btn:active, .img-gen-btn:active,
+.settings-key-btn:active, .panel-card:active {
+  transform: scale(.96) !important;
+  transition-duration: .1s !important;
+}
+
+
 </style>
 </head>
 <body>
