@@ -1887,6 +1887,13 @@ function openKeyModal() {
 }
 function closeKeyModal() {
   document.getElementById('keyModal').classList.remove('active');
+  // If they closed without saving a key for the pending model, revert
+  if (pendingByokModel) {
+    const prov = BYOK_PROVIDERS[pendingByokModel.value];
+    if (!getStoredKeys()[prov]) {
+      _revertToPreviousModel();
+    }
+  }
 }
 function saveKeys() {
   const keys = getStoredKeys();
@@ -1901,7 +1908,23 @@ function saveKeys() {
     else if (!val) delete keys[prov];
   }
   setStoredKeys(keys);
-  closeKeyModal();
+  document.getElementById('keyModal').classList.remove('active');
+  // Check if pending BYOK model now has a valid key
+  if (pendingByokModel) {
+    const prov = BYOK_PROVIDERS[pendingByokModel.value];
+    if (keys[prov]) {
+      // Key saved — switch to the model they wanted
+      const { value, icon, name } = pendingByokModel;
+      previousModel = currentModel;
+      currentModel = value;
+      localStorage.setItem('nova_model', value);
+      _updateTriggerUI(value, icon, name);
+      pendingByokModel = null;
+    } else {
+      // Still no key — revert
+      _revertToPreviousModel();
+    }
+  }
 }
 
 // Close modal on backdrop click
@@ -1936,25 +1959,40 @@ const ICON_MAP = {
 };
 const INVERT_ICONS = ['openai','ollama','groq','openrouter'];
 let previousModel = null;
+let pendingByokModel = null;
 function selectModel(value, icon, name) {
   const prov = BYOK_PROVIDERS[value];
   if (prov && !getStoredKeys()[prov]) {
-    // No key — revert to previous model, don't switch
+    // No key yet — show modal, remember what they wanted
+    pendingByokModel = { value, icon, name };
     closeModelMenu();
+    openKeyModal();
     return;
   }
   previousModel = currentModel;
   currentModel = value;
   localStorage.setItem('nova_model', value);
+  _updateTriggerUI(value, icon, name);
+  closeModelMenu();
+}
+function _updateTriggerUI(value, icon, name) {
   const slug = ICON_MAP[icon] || icon;
   const inv = INVERT_ICONS.includes(slug) ? ' class="invert"' : '';
   document.getElementById('triggerIcon').innerHTML = `<img src="${ICON_CDN}${slug}.svg" alt=""${inv}>`;
   document.getElementById('triggerName').textContent = name;
-  // Update active state
   document.querySelectorAll('.model-option').forEach(o => {
     o.classList.toggle('active', o.dataset.value === value);
   });
-  closeModelMenu();
+}
+function _revertToPreviousModel() {
+  if (!previousModel) previousModel = 'llama-3.3-70b';
+  const opt = document.querySelector(`.model-option[data-value="${previousModel}"]`);
+  if (opt) {
+    currentModel = previousModel;
+    localStorage.setItem('nova_model', previousModel);
+    _updateTriggerUI(previousModel, opt.dataset.icon, opt.querySelector('.model-option-name').textContent);
+  }
+  pendingByokModel = null;
 }
 
 // Wire up all options
@@ -2035,9 +2073,9 @@ async function sendChat() {
           const data = JSON.parse(raw);
           if (evtType === 'error') {
             const errMsg = data.error || 'Unknown error';
-            if (errMsg.includes('requires an API key')) {
-              openKeyModal();
-              appendChat('assistant', '\ud83d\udd11 This model needs an API key. Please add it in Settings.');
+            if (errMsg.includes('requires an API key') || errMsg.includes('401') || errMsg.includes('403') || errMsg.includes('invalid') || errMsg.includes('Incorrect API')) {
+              appendChat('assistant', '\ud83d\udd11 Invalid or missing API key. Switching back to free model.');
+              _revertToPreviousModel();
             } else {
               appendChat('assistant', 'Error: ' + errMsg);
             }
