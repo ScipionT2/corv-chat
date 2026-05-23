@@ -256,6 +256,7 @@ body::after{
 .model-option.active{padding-left:28px}
 .model-option-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .model-option-icon img{width:22px;height:22px;object-fit:contain;border-radius:4px}
+.model-option-icon img.invert,.model-trigger-icon img.invert{filter:invert(1) brightness(2)}
 .model-option-name{font-size:13px;color:var(--text);font-weight:500}
 .settings-key-btn{
   display:flex;align-items:center;gap:5px;
@@ -1435,35 +1436,35 @@ body::after {
     <div class="model-bar">
       <div class="model-dropdown" id="modelDropdown">
         <div class="model-trigger" id="modelTrigger" onclick="toggleModelMenu()">
-          <span class="model-trigger-icon" id="triggerIcon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span>
+          <span class="model-trigger-icon" id="triggerIcon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt="" class="invert"></span>
           <span class="model-trigger-name" id="triggerName">Llama 3.3 70B</span>
           <svg class="model-trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="model-menu" id="modelMenu">
           <!-- FREE — SMARTEST -->
           <div class="model-group-label"><span class="dot green"></span>FREE — SMARTEST</div>
-          <div class="model-option" data-value="gpt-oss-120b-groq" data-icon="groq"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/groq-color.svg" alt=""></span><span class="model-option-name">GPT-OSS 120B (Groq)</span></div>
+          <div class="model-option" data-value="gpt-oss-120b-groq" data-icon="groq"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/groq.svg" alt="" class="invert"></span><span class="model-option-name">GPT-OSS 120B (Groq)</span></div>
           <div class="model-option" data-value="gpt-oss-120b-samba" data-icon="sambanova"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/sambanova-color.svg" alt=""></span><span class="model-option-name">GPT-OSS 120B (SambaNova)</span></div>
           <div class="model-option" data-value="deepseek-v3" data-icon="deepseek"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/deepseek-color.svg" alt=""></span><span class="model-option-name">DeepSeek V3.1 (131K ctx)</span></div>
           <div class="model-option" data-value="deepseek-v3.2" data-icon="deepseek"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/deepseek-color.svg" alt=""></span><span class="model-option-name">DeepSeek V3.2</span></div>
           <div class="model-option" data-value="minimax-m2.7" data-icon="minimax"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/minimax-color.svg" alt=""></span><span class="model-option-name">MiniMax M2.7 (196K ctx)</span></div>
           <!-- FREE — FAST -->
           <div class="model-group-label"><span class="dot green"></span>FREE — FAST</div>
-          <div class="model-option active" data-value="llama-3.3-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 3.3 70B</span></div>
+          <div class="model-option active" data-value="llama-3.3-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt="" class="invert"></span><span class="model-option-name">Llama 3.3 70B</span></div>
           <div class="model-option" data-value="qwen3-32b" data-icon="qwen"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/qwen-color.svg" alt=""></span><span class="model-option-name">Qwen 3 32B</span></div>
-          <div class="model-option" data-value="llama-4-scout" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 4 Scout 17B</span></div>
-          <div class="model-option" data-value="llama-4-maverick" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 4 Maverick 17B</span></div>
-          <div class="model-option" data-value="llama-3.1-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 3.1 70B</span></div>
+          <div class="model-option" data-value="llama-4-scout" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt="" class="invert"></span><span class="model-option-name">Llama 4 Scout 17B</span></div>
+          <div class="model-option" data-value="llama-4-maverick" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt="" class="invert"></span><span class="model-option-name">Llama 4 Maverick 17B</span></div>
+          <div class="model-option" data-value="llama-3.1-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt="" class="invert"></span><span class="model-option-name">Llama 3.1 70B</span></div>
           <!-- OPENAI -->
           <div class="model-group-label"><span class="dot key"></span>OPENAI — FRONTIER (Your Key)</div>
-          <div class="model-option" data-value="gpt-5.5-pro" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-5.5 Pro (Strongest)</span></div>
-          <div class="model-option" data-value="gpt-5.5" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-5.5 (Frontier)</span></div>
-          <div class="model-option" data-value="gpt-5.5-instant" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-5.5 Instant (Fast)</span></div>
-          <div class="model-option" data-value="gpt-4.1" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-4.1</span></div>
-          <div class="model-option" data-value="gpt-4.1-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-4.1 Mini</span></div>
-          <div class="model-option" data-value="gpt-4o" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-4o</span></div>
-          <div class="model-option" data-value="gpt-4o-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-4o Mini</span></div>
-          <div class="model-option" data-value="o3-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">o3 Mini (Reasoning)</span></div>
+          <div class="model-option" data-value="gpt-5.5-pro" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-5.5 Pro (Strongest)</span></div>
+          <div class="model-option" data-value="gpt-5.5" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-5.5 (Frontier)</span></div>
+          <div class="model-option" data-value="gpt-5.5-instant" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-5.5 Instant (Fast)</span></div>
+          <div class="model-option" data-value="gpt-4.1" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-4.1</span></div>
+          <div class="model-option" data-value="gpt-4.1-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-4.1 Mini</span></div>
+          <div class="model-option" data-value="gpt-4o" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-4o</span></div>
+          <div class="model-option" data-value="gpt-4o-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">GPT-4o Mini</span></div>
+          <div class="model-option" data-value="o3-mini" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="invert"></span><span class="model-option-name">o3 Mini (Reasoning)</span></div>
           <!-- ANTHROPIC -->
           <div class="model-group-label"><span class="dot key"></span>ANTHROPIC — FRONTIER (Your Key)</div>
           <div class="model-option" data-value="claude-opus-4.7" data-icon="claude"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/claude-color.svg" alt=""></span><span class="model-option-name">Claude Opus 4.7 (Best Coding)</span></div>
@@ -1473,7 +1474,7 @@ body::after {
           <div class="model-option" data-value="claude-haiku" data-icon="claude"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/claude-color.svg" alt=""></span><span class="model-option-name">Claude Haiku 3.5</span></div>
           <!-- OPENROUTER -->
           <div class="model-group-label"><span class="dot key"></span>OPENROUTER (Your Key)</div>
-          <div class="model-option" data-value="openrouter-auto" data-icon="openrouter"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openrouter-color.svg" alt=""></span><span class="model-option-name">OpenRouter DeepSeek V4</span></div>
+          <div class="model-option" data-value="openrouter-auto" data-icon="openrouter"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openrouter.svg" alt="" class="invert"></span><span class="model-option-name">OpenRouter DeepSeek V4</span></div>
         </div>
       </div>
       <button class="settings-key-btn" onclick="openKeyModal()">
@@ -1823,15 +1824,17 @@ function closeModelMenu() {
 }
 const ICON_CDN = 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/';
 const ICON_MAP = {
-  groq:'groq-color', sambanova:'sambanova-color', deepseek:'deepseek-color',
+  groq:'groq', sambanova:'sambanova-color', deepseek:'deepseek-color',
   minimax:'minimax-color', llama:'ollama', qwen:'qwen-color',
-  openai:'openai', claude:'claude-color', openrouter:'openrouter-color'
+  openai:'openai', claude:'claude-color', openrouter:'openrouter'
 };
+const INVERT_ICONS = ['openai','ollama','groq','openrouter'];
 function selectModel(value, icon, name) {
   currentModel = value;
   localStorage.setItem('nova_model', value);
   const slug = ICON_MAP[icon] || icon;
-  document.getElementById('triggerIcon').innerHTML = `<img src="${ICON_CDN}${slug}.svg" alt="">`;
+  const inv = INVERT_ICONS.includes(slug) ? ' class="invert"' : '';
+  document.getElementById('triggerIcon').innerHTML = `<img src="${ICON_CDN}${slug}.svg" alt=""${inv}>`;
   document.getElementById('triggerName').textContent = name;
   // Update active state
   document.querySelectorAll('.model-option').forEach(o => {
