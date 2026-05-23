@@ -1,6 +1,6 @@
 {
   "name": "nova-ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nova AI — Your Personal AI Operating System",
   "main": "main.js",
   "author": "Escipion Pedroza",
@@ -17,17 +17,23 @@
     "appId": "com.escipion.nova",
     "productName": "Nova AI",
     "copyright": "Copyright © 2026 Escipion Pedroza",
+    "asar": true,
+    "compression": "maximum",
+    "removePackageScripts": true,
     "directories": {
       "output": "dist"
     },
     "files": [
       "main.js",
       "preload.js",
-      "icons/**/*"
+      "icons/**/*",
+      "!icons/icon.iconset/**"
     ],
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "icons/icon.icns",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.inherit.plist",
       "target": [
         {
           "target": "dmg",
@@ -35,7 +41,20 @@
         }
       ],
       "darkModeSupport": true,
-      "hardenedRuntime": true
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSExceptionDomains": {
+            "nov-assistant.com": {
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSIncludesSubdomains": true,
+              "NSExceptionRequiresForwardSecrecy": true
+            }
+          }
+        }
+      }
     },
     "dmg": {
       "background": null,
@@ -52,13 +71,15 @@
           "target": "nsis",
           "arch": ["x64"]
         }
-      ]
+      ],
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": true
     },
     "linux": {
       "icon": "icons",

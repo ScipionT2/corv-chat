@@ -1,12 +1,12 @@
-const { app, BrowserWindow, Menu, shell, nativeTheme, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, shell, nativeTheme, session, dialog } = require('electron');
 const path = require('path');
 
 // ── Config ──────────────────────────────────────────────────────────
 const NOVA_URL = 'https://nov-assistant.com';
+const ALLOWED_HOSTS = ['nov-assistant.com', 'www.nov-assistant.com'];
 const APP_NAME = 'Nova AI';
 
 let mainWindow = null;
-let tray = null;
 
 // ── Force dark mode ─────────────────────────────────────────────────
 nativeTheme.themeSource = 'dark';
@@ -24,6 +24,16 @@ if (!gotLock) {
   });
 }
 
+// ── Helper: check if URL is allowed ─────────────────────────────────
+function isAllowedURL(url) {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_HOSTS.includes(parsed.hostname) && parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 // ── Create window ───────────────────────────────────────────────────
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -37,11 +47,20 @@ function createWindow() {
     backgroundColor: '#050816',
     show: false,
     webPreferences: {
+      // ── SECURITY: Maximum isolation ──
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      webviewTag: false,
+      contextIsolation: true,       // Isolate preload from renderer
+      nodeIntegration: false,        // No Node.js in renderer
+      nodeIntegrationInWorker: false,
+      nodeIntegrationInSubFrames: false,
+      sandbox: true,                 // OS-level sandbox
+      webviewTag: false,             // No <webview> tags
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
+      enableBlinkFeatures: '',       // No extra Blink features
+      webSecurity: true,             // Enforce same-origin
       spellcheck: true,
+      navigateOnDragDrop: false,     // Prevent drag-drop navigation
     },
     icon: path.join(__dirname, 'icons', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
   });
@@ -55,26 +74,95 @@ function createWindow() {
   // Load Nova
   mainWindow.loadURL(NOVA_URL);
 
-  // Open external links in browser
+  // ── SECURITY: Block all new windows except Nova domains ──
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://nov-assistant.com') || url.startsWith('https://www.nov-assistant.com')) {
+    if (isAllowedURL(url)) {
       return { action: 'allow' };
     }
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Navigate external links to browser
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    const parsed = new URL(url);
-    if (parsed.hostname !== 'nov-assistant.com' && parsed.hostname !== 'www.nov-assistant.com') {
-      event.preventDefault();
-      shell.openExternal(url);
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+// ── SECURITY: Permission handlers ───────────────────────────────────
+function setupPermissions() {
+  const ses = session.defaultSession;
+
+  // Only allow specific permissions
+  const ALLOWED_PERMISSIONS = [
+    'clipboard-read',
+    'clipboard-sanitized-write',
+    'pointerLock',
+    'fullscreen',
+    'notifications',
+  ];
+
+  ses.setPermissionRequestHandler((webContents, permission, callback) => {
+    const url = webContents.getURL();
+    if (isAllowedURL(url) && ALLOWED_PERMISSIONS.includes(permission)) {
+      callback(true);
+    } else {
+      console.log(`[Security] Denied permission: ${permission} for ${url}`);
+      callback(false);
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  ses.setPermissionCheckHandler((webContents, permission) => {
+    if (!webContents) return false;
+    const url = webContents.getURL();
+    return isAllowedURL(url) && ALLOWED_PERMISSIONS.includes(permission);
+  });
+
+  // ── SECURITY: Content Security Policy ──
+  ses.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' https://nov-assistant.com https://www.nov-assistant.com; " +
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://nov-assistant.com https://www.nov-assistant.com https://accounts.google.com https://apis.google.com; " +
+          "style-src 'self' 'unsafe-inline' https://nov-assistant.com https://www.nov-assistant.com https://fonts.googleapis.com; " +
+          "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; " +
+          "img-src 'self' data: blob: https: http:; " +
+          "connect-src 'self' https://nov-assistant.com https://www.nov-assistant.com wss://nov-assistant.com https://accounts.google.com https://apis.google.com https://openrouter.ai https://api.openai.com https://api.anthropic.com https://api.groq.com https://api.sambanova.ai; " +
+          "frame-src https://accounts.google.com; " +
+          "media-src 'self' blob: data:; " +
+          "object-src 'none'; " +
+          "base-uri 'self';"
+        ],
+      },
+    });
+  });
+}
+
+// ── SECURITY: Navigation guard ──────────────────────────────────────
+function setupNavigationSecurity() {
+  app.on('web-contents-created', (_, contents) => {
+    // Block navigation to non-Nova URLs
+    contents.on('will-navigate', (event, url) => {
+      if (!isAllowedURL(url)) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    });
+
+    // Block new window creation for non-Nova URLs
+    contents.setWindowOpenHandler(({ url }) => {
+      if (!isAllowedURL(url)) {
+        shell.openExternal(url);
+        return { action: 'deny' };
+      }
+      return { action: 'allow' };
+    });
+
+    // Prevent attaching webviews
+    contents.on('will-attach-webview', (event) => {
+      event.preventDefault();
+    });
   });
 }
 
@@ -125,8 +213,6 @@ function createMenu() {
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        { type: 'separator' },
-        { role: 'toggleDevTools' },
       ],
     },
     {
@@ -192,6 +278,8 @@ function createMenu() {
 
 // ── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(() => {
+  setupPermissions();
+  setupNavigationSecurity();
   createMenu();
   createWindow();
 
@@ -208,13 +296,9 @@ app.on('window-all-closed', () => {
   }
 });
 
-// ── Security ────────────────────────────────────────────────────────
-app.on('web-contents-created', (_, contents) => {
-  // Prevent navigation to non-Nova URLs
-  contents.on('will-navigate', (event, url) => {
-    const parsed = new URL(url);
-    if (parsed.hostname !== 'nov-assistant.com' && parsed.hostname !== 'www.nov-assistant.com') {
-      event.preventDefault();
-    }
-  });
-});
+// ── SECURITY: Disable remote module entirely ────────────────────────
+app.on('remote-require', (event) => event.preventDefault());
+app.on('remote-get-builtin', (event) => event.preventDefault());
+app.on('remote-get-global', (event) => event.preventDefault());
+app.on('remote-get-current-window', (event) => event.preventDefault());
+app.on('remote-get-current-web-contents', (event) => event.preventDefault());
