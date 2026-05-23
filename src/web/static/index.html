@@ -352,12 +352,14 @@ body::after{
 /* ─── Input Bar ─── */
 #chatInputContainer{
   padding:0 16px 16px;border-top:1px solid var(--glass-border);
+  position:relative;overflow:visible;
 }
 .input-bar{
   display:flex;align-items:flex-end;gap:8px;
   background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
   border-radius:16px;padding:8px 12px;
   transition:border-color .2s;
+  position:relative;overflow:visible;
 }
 .input-bar:focus-within{border-color:rgba(123,97,255,.3)}
 .input-left,.input-right{display:flex;align-items:center;gap:4px}
@@ -2924,19 +2926,7 @@ async function generateImage() {
   }
 }
 
-// Override sendChat to detect /image command
-const _origSendChat = sendChat;
-async function sendChatWrapper() {
-  const val = chatInput.value.trim();
-  if (val.startsWith('/image ')) {
-    generateImage();
-    return;
-  }
-  return _origSendChat();
-}
-sendChat = sendChatWrapper;
-// Re-wire enter key
-chatInput.removeEventListener('keydown', chatInput._keyHandler);
+// Enter key handler
 chatInput._keyHandler = e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
 };
@@ -3347,11 +3337,17 @@ function removeAttachment(index) {
   renderAttachPreview();
 }
 
-// Patch sendChat to include attachments
-const _origSendChat = sendChat;
+// Wrap sendChat to handle /image command + attachments
+const _baseSendChat = sendChat;
 sendChat = async function() {
+  // Check /image command
+  const val = chatInput.value.trim();
+  if (val.startsWith('/image ')) {
+    generateImage();
+    return;
+  }
+  // Handle pending attachments
   if (pendingAttachments.length > 0) {
-    // Build attachment context into the message
     let attachContext = '';
     pendingAttachments.forEach(a => {
       if (a.isImage) {
@@ -3361,25 +3357,21 @@ sendChat = async function() {
         attachContext += `\n\n--- File: ${a.name} ---\n${content}\n--- End of ${a.name} ---`;
       }
     });
-    // Show images in chat
     pendingAttachments.forEach(a => {
       if (a.isImage) {
         const imgMsg = document.createElement('div');
         imgMsg.className = 'message user';
         imgMsg.innerHTML = `<div><div class="msg-bubble"><img src="${a.data}" style="max-width:300px;max-height:200px;border-radius:8px;display:block;margin:4px 0"><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${escapeHtml(a.name)}</div></div></div>`;
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.insertBefore(imgMsg, document.getElementById('thinkingBubble'));
+        const cm = document.getElementById('chatMessages');
+        cm.insertBefore(imgMsg, document.getElementById('thinkingBubble'));
       }
     });
-    // Append to input
-    const input = document.getElementById('chatInput');
-    const userText = input.value.trim() || 'Please analyze the attached file(s).';
-    input.value = userText + attachContext;
-    // Clear attachments
+    const userText = chatInput.value.trim() || 'Please analyze the attached file(s).';
+    chatInput.value = userText + attachContext;
     pendingAttachments = [];
     renderAttachPreview();
   }
-  return _origSendChat();
+  return _baseSendChat();
 };
 
 // Drag & drop support
