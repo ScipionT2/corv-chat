@@ -1383,6 +1383,50 @@ body::after {
 .msg-time{font-size:10px;color:var(--text-dim);margin-top:4px;opacity:.6}
 .msg-bubble p{margin:0 0 8px;} .msg-bubble p:last-child{margin:0}
 
+/* ─── Image Generation UI ─── */
+.img-gen-bar{
+  display:none;align-items:center;gap:8px;
+  padding:8px 16px;border-top:1px solid rgba(255,255,255,.06);
+}
+.img-gen-bar.active{display:flex}
+.img-model-select{
+  appearance:none;-webkit-appearance:none;
+  background:rgba(10,15,35,.6);border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;color:var(--text);font-size:11px;font-family:'Orbitron',sans-serif;
+  padding:5px 10px;cursor:pointer;letter-spacing:.3px;outline:none;
+}
+.img-model-select option{background:#0a0e1c;color:var(--text)}
+.img-gen-btn{
+  background:linear-gradient(135deg,rgba(123,97,255,.15),rgba(94,235,255,.1));
+  border:1px solid rgba(123,97,255,.15);border-radius:8px;
+  color:var(--purple);font-size:11px;font-family:'Orbitron',sans-serif;
+  padding:5px 12px;cursor:pointer;letter-spacing:.3px;transition:all .2s;
+}
+.img-gen-btn:hover{background:rgba(123,97,255,.2);border-color:rgba(123,97,255,.25)}
+.img-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.img-gen-label{font-size:11px;color:var(--text-dim)}
+
+/* Generated image in chat */
+.msg-image{
+  max-width:420px;border-radius:12px;margin:8px 0;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  cursor:pointer;transition:transform .2s;
+}
+.msg-image:hover{transform:scale(1.02)}
+.img-loading{
+  display:flex;align-items:center;gap:8px;
+  padding:16px;background:rgba(123,97,255,.04);
+  border:1px solid rgba(123,97,255,.08);border-radius:12px;
+  color:var(--text-dim);font-size:13px;
+}
+.img-loading .spinner{
+  width:18px;height:18px;border:2px solid rgba(123,97,255,.2);
+  border-top-color:var(--purple);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 /* ─── Streaming cursor ─── */
 .streaming-cursor::after{
   content:'\25AE';display:inline;color:var(--purple);
@@ -1614,7 +1658,18 @@ body::after {
         </div>
       </div>
     </div>
-    <div class="shortcut-hint">⌘K focus · ⌘⇧N new chat · Enter send · Shift+Enter newline</div>
+    <div class="img-gen-bar" id="imgGenBar">
+      <span class="img-gen-label">🎨 Image:</span>
+      <select class="img-model-select" id="imgModelSelect">
+        <option value="flux">Flux (Default)</option>
+        <option value="flux-realism">Flux Realism</option>
+        <option value="flux-anime">Flux Anime</option>
+        <option value="flux-3d">Flux 3D</option>
+        <option value="turbo">Turbo (Fast)</option>
+      </select>
+      <button class="img-gen-btn" id="imgGenBtn" onclick="generateImage()">Generate</button>
+    </div>
+    <div class="shortcut-hint">⌘K focus · ⌘⇧N new chat · /image to generate · Enter send</div>
   </div>
 
   <!-- ═══════ FUNCTIONAL PANELS ═══════ -->
@@ -2252,6 +2307,74 @@ function startNewChat() {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.panel === 'chat'));
   chatInput.focus();
 }
+
+/* ─── Image Generation ─── */
+let imgMode = false;
+chatInput.addEventListener('input', () => {
+  const val = chatInput.value.trim();
+  const bar = document.getElementById('imgGenBar');
+  if (val.startsWith('/image ') || val === '/image') {
+    if (!imgMode) { imgMode = true; bar.classList.add('active'); }
+  } else {
+    if (imgMode) { imgMode = false; bar.classList.remove('active'); }
+  }
+});
+
+async function generateImage() {
+  let prompt = chatInput.value.trim();
+  if (prompt.startsWith('/image ')) prompt = prompt.slice(7).trim();
+  if (!prompt) return;
+  chatInput.value = '';
+  imgMode = false;
+  document.getElementById('imgGenBar').classList.remove('active');
+  autoResize();
+
+  appendChat('user', '🎨 Generate: ' + prompt);
+  chatHistory.push({ role: 'user', content: '/image ' + prompt });
+
+  const model = document.getElementById('imgModelSelect').value;
+  // Show loading
+  const loadDiv = appendChat('assistant', '', { streaming: false });
+  const bubble = loadDiv.querySelector('.msg-bubble');
+  bubble.innerHTML = '<div class="img-loading"><div class="spinner"></div>Generating image with ' + model + '...</div>';
+
+  try {
+    const res = await fetch('/api/v2/image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, model, width: 1024, height: 1024 })
+    });
+    const data = await res.json();
+    if (data.error) {
+      bubble.innerHTML = 'Error: ' + data.error;
+      return;
+    }
+    bubble.innerHTML = `<img class="msg-image" src="${data.image_url}" alt="${escapeHtml(prompt)}" onclick="window.open(this.src,'_blank')" /><div style="font-size:11px;color:var(--text-dim);margin-top:6px">${escapeHtml(prompt)} · ${model}</div>`;
+    chatHistory.push({ role: 'assistant', content: '[Image: ' + prompt + ']' });
+    _saveToLocal();
+    loadRecentConversations();
+  } catch (e) {
+    bubble.innerHTML = 'Failed to generate image. Please try again.';
+  }
+}
+
+// Override sendChat to detect /image command
+const _origSendChat = sendChat;
+async function sendChatWrapper() {
+  const val = chatInput.value.trim();
+  if (val.startsWith('/image ')) {
+    generateImage();
+    return;
+  }
+  return _origSendChat();
+}
+sendChat = sendChatWrapper;
+// Re-wire enter key
+chatInput.removeEventListener('keydown', chatInput._keyHandler);
+chatInput._keyHandler = e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+};
+chatInput.addEventListener('keydown', chatInput._keyHandler);
 
 /* ─── Keyboard shortcuts ─── */
 document.addEventListener('keydown', e => {
