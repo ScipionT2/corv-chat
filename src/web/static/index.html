@@ -88,6 +88,20 @@ body::after{
 }
 .nav-item svg{flex-shrink:0;opacity:.7}
 .nav-item.active svg{opacity:1}
+.sidebar-site-links{
+  display:flex;flex-direction:column;gap:2px;
+  padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.06);
+  margin-top:8px;
+}
+.sidebar-site-links a{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:8px;
+  font-size:12px;color:var(--text-dim);text-decoration:none;
+  transition:color .2s,background .2s;letter-spacing:.3px;
+}
+.sidebar-site-links a:hover{color:#fff;background:rgba(255,255,255,.04)}
+.sidebar-site-links a svg{width:14px;height:14px;opacity:.5;flex-shrink:0}
+.sidebar-site-links a:hover svg{opacity:.8}
 .sidebar-profile{
   display:flex;align-items:center;gap:10px;
   padding:12px 14px;margin-top:auto;
@@ -1989,7 +2003,30 @@ body::after {
     </button>
   </div>
 
-  <div class="sidebar-profile">
+  <div class=sidebar-site-links>
+    <a href=/site/>
+      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><path d=M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z/><polyline points=9 22 9 12 15 12 15 22/></svg>
+      Home
+    </a>
+    <a href=/site/features.html>
+      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><polygon points=12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2/></svg>
+      Features
+    </a>
+    <a href=/site/pricing.html>
+      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><line x1=12 y1=1 x2=12 y2=23/><path d=M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6/></svg>
+      Pricing
+    </a>
+    <a href=/site/download.html>
+      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><path d=M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4/><polyline points=7 10 12 15 17 10/><line x1=12 y1=15 x2=12 y2=3/></svg>
+      Download
+    </a>
+    <a href=/site/about.html>
+      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><circle cx=12 cy=12 r=10/><line x1=12 y1=16 x2=12 y2=12/><line x1=12 y1=8 x2=12.01 y2=8/></svg>
+      About
+    </a>
+  </div>
+
+  <div class=sidebar-profile>
     <div class="profile-avatar"></div>
     <div class="profile-info">
       <div class="profile-name">You</div>
