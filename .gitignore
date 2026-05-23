@@ -47,3 +47,5 @@ web/.venv/
 web/.env
 web/nova.db*
 web/.venv/
+desktop/node_modules/
+desktop/dist/

@@ -19,24 +19,46 @@ html{scroll-behavior:smooth;font-size:16px}
 body{
   background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
   line-height:1.6;overflow-x:hidden;min-height:100vh;position:relative;
+  font-feature-settings:'cv01','cv02';
 }
+
+/* === STARFIELD === */
+.starfield{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.starfield .star{
+  position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;
+  animation:starPulse var(--dur,4s) ease-in-out infinite alternate;
+  opacity:var(--o,.3);
+}
+@keyframes starPulse{0%{opacity:var(--o,.3);transform:scale(1)}100%{opacity:calc(var(--o,.3)*2.2);transform:scale(1.6)}}
+
+/* === AMBIENT GRADIENTS === */
 body::after{
-  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
     radial-gradient(ellipse 60% 50% at 20% 20%,rgba(123,97,255,.12),transparent),
     radial-gradient(ellipse 50% 40% at 80% 60%,rgba(94,235,255,.08),transparent),
     radial-gradient(ellipse 80% 60% at 50% 100%,rgba(123,97,255,.06),transparent);
 }
+
+/* === CONTENT GLOW === */
+.content-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 35%,rgba(123,97,255,.08),transparent 70%),
+    radial-gradient(ellipse 40% 30% at 50% 65%,rgba(94,235,255,.06),transparent 70%);
+}
+
+/* === VIGNETTE === */
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse at top,transparent 60%,rgba(5,8,22,.7)),
-    radial-gradient(ellipse at bottom,transparent 60%,rgba(5,8,22,.8)),
-    radial-gradient(ellipse at left,transparent 70%,rgba(5,8,22,.6)),
-    radial-gradient(ellipse at right,transparent 70%,rgba(5,8,22,.6));
+    radial-gradient(ellipse at top,transparent 50%,rgba(5,8,22,.8)),
+    radial-gradient(ellipse at bottom,transparent 40%,rgba(5,8,22,.9)),
+    radial-gradient(ellipse at left,transparent 55%,rgba(5,8,22,.75)),
+    radial-gradient(ellipse at right,transparent 55%,rgba(5,8,22,.75));
 }
 
-/* NAV */
+/* === NAV === */
 .nav{
   position:fixed;top:0;left:0;right:0;z-index:1000;
   background:rgba(10,15,35,.78);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
@@ -69,7 +91,7 @@ body::before{
 .nav-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(123,97,255,.4)}
 .nav-toggle{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
 
-/* HERO */
+/* === HERO === */
 .hero{
   padding:160px 24px 100px;text-align:center;position:relative;z-index:1;
 }
@@ -78,49 +100,106 @@ body::before{
   background:linear-gradient(135deg,#fff 0%,var(--blue) 50%,var(--purple) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   margin-bottom:20px;line-height:1.2;
+  text-shadow:0 0 40px rgba(123,97,255,.3),0 0 80px rgba(94,235,255,.15);
+  animation:heroFloat 4s ease-in-out infinite alternate;
 }
+/* text-shadow won't show on clipped text, so add a glow layer */
+.hero h1{position:relative}
+.hero-glow{
+  position:absolute;top:0;left:0;right:0;pointer-events:none;
+  font-family:'Orbitron',sans-serif;font-size:48px;font-weight:800;line-height:1.2;
+  color:transparent;
+  text-shadow:0 0 40px rgba(123,97,255,.3),0 0 80px rgba(94,235,255,.15);
+  -webkit-text-fill-color:transparent;
+  filter:blur(2px);opacity:.5;z-index:-1;
+  animation:heroFloat 4s ease-in-out infinite alternate;
+}
+@keyframes heroFloat{0%{transform:translateY(0)}100%{transform:translateY(-4px)}}
 .hero p{
   font-size:18px;color:var(--text-dim);max-width:560px;margin:0 auto;line-height:1.7;
+  text-shadow:0 0 20px rgba(123,97,255,.1);
+  animation:heroFloat 4s ease-in-out infinite alternate;
+  animation-delay:.3s;
 }
 
-/* FEATURES */
+/* === FEATURES === */
 .features-wrap{
   max-width:1100px;margin:0 auto;padding:0 24px 80px;position:relative;z-index:1;
 }
 .feature-row{
   display:flex;align-items:center;gap:60px;margin-bottom:100px;
-  opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s ease;
+  opacity:0;transform:translateY(30px) scale(0.97);
+  transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);
 }
-.feature-row.visible{opacity:1;transform:translateY(0)}
+.feature-row.visible{opacity:1;transform:translateY(0) scale(1)}
 .feature-row.reverse{flex-direction:row-reverse}
 .feature-text{flex:1;min-width:0}
 .feature-text .feat-icon{font-size:40px;margin-bottom:16px;display:block}
 .feature-text h2{
   font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:#fff;
   margin-bottom:12px;line-height:1.3;
+  text-shadow:0 0 20px rgba(123,97,255,.15);
 }
 .feature-text p{font-size:16px;color:var(--text-dim);line-height:1.8;max-width:460px}
+
+/* --- Feature Visual Panels with Gradient Border --- */
 .feature-visual{
-  flex:1;min-width:0;
+  flex:1;min-width:0;position:relative;border-radius:16px;
+  padding:2px;/* space for gradient border */
+  background:linear-gradient(135deg,rgba(123,97,255,.4),rgba(94,235,255,.3),rgba(123,97,255,.2));
+  box-shadow:0 0 60px rgba(123,97,255,.08),0 0 120px rgba(94,235,255,.04);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease;
+}
+.feature-visual:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 80px rgba(123,97,255,.14),0 0 160px rgba(94,235,255,.07);
+}
+.feature-visual-inner{
   background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-border);border-radius:16px;
-  padding:28px;min-height:280px;position:relative;overflow:hidden;
+  border-radius:14px;padding:28px;min-height:280px;position:relative;overflow:hidden;
+}
+/* Inner top-edge highlight */
+.feature-visual-inner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 30%,rgba(255,255,255,.35) 50%,rgba(255,255,255,.2) 70%,transparent 95%);
+  pointer-events:none;
 }
 
-/* VISUAL MOCKUPS */
+/* Alternating ambient glow - purple (odd) vs blue (even) */
+.feature-row:nth-child(odd) .feature-visual{
+  box-shadow:0 0 60px rgba(123,97,255,.1),0 0 120px rgba(123,97,255,.04);
+}
+.feature-row:nth-child(odd) .feature-visual:hover{
+  box-shadow:0 0 80px rgba(123,97,255,.16),0 0 160px rgba(123,97,255,.06);
+}
+.feature-row:nth-child(even) .feature-visual{
+  background:linear-gradient(135deg,rgba(94,235,255,.35),rgba(123,97,255,.25),rgba(94,235,255,.2));
+  box-shadow:0 0 60px rgba(94,235,255,.08),0 0 120px rgba(94,235,255,.04);
+}
+.feature-row:nth-child(even) .feature-visual:hover{
+  box-shadow:0 0 80px rgba(94,235,255,.14),0 0 160px rgba(94,235,255,.06);
+}
+
+/* === VISUAL MOCKUPS === */
 .model-list{display:flex;flex-direction:column;gap:10px}
 .model-item{
   display:flex;align-items:center;gap:12px;padding:10px 14px;
   border-radius:10px;background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);transition:background .2s;
+  border:1px solid rgba(255,255,255,.06);
+  transition:background .25s,box-shadow .25s,transform .25s;
 }
-.model-item:hover{background:rgba(123,97,255,.1)}
+.model-item:hover{
+  background:rgba(123,97,255,.1);
+  box-shadow:0 0 20px rgba(123,97,255,.1);
+  transform:translateX(4px);
+}
 .model-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .model-name{font-size:13px;color:#fff;font-weight:500;flex:1}
 .model-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.5px}
 .tag-pro{background:rgba(123,97,255,.2);color:var(--purple)}
 .tag-free{background:rgba(52,211,153,.15);color:var(--green)}
 
+/* --- Image Gen Shimmer --- */
 .img-gen-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .img-placeholder{
   aspect-ratio:1;border-radius:12px;position:relative;overflow:hidden;
@@ -129,15 +208,23 @@ body::before{
 .img-placeholder:nth-child(2){background:linear-gradient(135deg,#34D39933,#5EEBFF33)}
 .img-placeholder:nth-child(3){background:linear-gradient(135deg,#FF617733,#7B61FF33)}
 .img-placeholder:nth-child(4){background:linear-gradient(135deg,#5EEBFF33,#34D39933)}
+.img-placeholder::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);
+  animation:shimmer 2.5s ease-in-out infinite;
+  transform:translateX(-100%);
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 .img-placeholder::after{
   content:'✨';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   font-size:28px;opacity:.5;
 }
 .img-label{
   position:absolute;bottom:8px;left:8px;font-size:10px;color:var(--text-dim);
-  background:rgba(0,0,0,.5);padding:2px 8px;border-radius:6px;
+  background:rgba(0,0,0,.5);padding:2px 8px;border-radius:6px;z-index:1;
 }
 
+/* --- Thinking Panel --- */
 .thinking-panel{display:flex;flex-direction:column;gap:12px}
 .think-header{
   display:flex;align-items:center;gap:8px;font-size:13px;color:var(--purple);
@@ -145,22 +232,32 @@ body::before{
 }
 .think-header .pulse{
   width:8px;height:8px;border-radius:50%;background:var(--purple);
-  animation:pulse 1.5s infinite;
+  animation:thinkPulse 1.5s infinite;
+  box-shadow:0 0 12px rgba(123,97,255,.6),0 0 24px rgba(123,97,255,.3);
 }
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes thinkPulse{0%,100%{opacity:1;box-shadow:0 0 12px rgba(123,97,255,.6),0 0 24px rgba(123,97,255,.3)}50%{opacity:.3;box-shadow:0 0 4px rgba(123,97,255,.2)}}
 .think-step{
   padding:8px 14px;border-left:2px solid rgba(123,97,255,.3);
   font-size:12px;color:var(--text-dim);line-height:1.6;
   background:rgba(123,97,255,.04);border-radius:0 8px 8px 0;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:border-color .3s,background .3s;
 }
-.think-step.active{border-left-color:var(--purple);color:var(--text)}
+.think-step.active{
+  border-left-color:var(--purple);color:var(--text);
+  background:rgba(123,97,255,.08);
+  box-shadow:inset 0 0 20px rgba(123,97,255,.05);
+}
 
+/* --- Conversations --- */
 .convo-list{display:flex;flex-direction:column;gap:8px}
 .convo-item{
   display:flex;align-items:center;gap:12px;padding:12px 14px;
   border-radius:10px;background:rgba(255,255,255,.03);
   border:1px solid rgba(255,255,255,.05);
+  transition:background .25s,transform .25s;
 }
+.convo-item:hover{transform:translateX(4px)}
 .convo-item.active-convo{background:rgba(123,97,255,.08);border-color:rgba(123,97,255,.2)}
 .convo-icon{font-size:18px}
 .convo-info{flex:1;min-width:0}
@@ -171,39 +268,81 @@ body::before{
   background:rgba(94,235,255,.12);color:var(--blue);font-weight:600;
 }
 
+/* --- Shield --- */
 .shield-visual{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px}
-.shield-icon{font-size:72px;filter:drop-shadow(0 0 30px rgba(52,211,153,.3))}
+.shield-icon{
+  font-size:72px;
+  filter:drop-shadow(0 0 30px rgba(52,211,153,.3)) drop-shadow(0 0 60px rgba(52,211,153,.15));
+  animation:shieldGlow 3s ease-in-out infinite alternate;
+}
+@keyframes shieldGlow{
+  0%{filter:drop-shadow(0 0 30px rgba(52,211,153,.3)) drop-shadow(0 0 60px rgba(52,211,153,.15))}
+  100%{filter:drop-shadow(0 0 40px rgba(52,211,153,.45)) drop-shadow(0 0 80px rgba(52,211,153,.2))}
+}
 .shield-bars{display:flex;flex-direction:column;gap:8px;width:100%}
 .shield-bar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-dim)}
 .shield-bar .check{color:var(--green);font-weight:bold}
 
+/* --- Speed --- */
 .speed-visual{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px}
 .speed-number{
   font-family:'Orbitron',sans-serif;font-size:56px;font-weight:900;
   background:linear-gradient(135deg,var(--blue),var(--green));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+}
+/* Speed glow layer */
+.speed-number::after{
+  content:'2000+';position:absolute;inset:0;
+  font-family:'Orbitron',sans-serif;font-size:56px;font-weight:900;
+  color:transparent;
+  text-shadow:0 0 30px rgba(94,235,255,.35),0 0 60px rgba(52,211,153,.2);
+  filter:blur(3px);z-index:-1;
+  -webkit-text-fill-color:transparent;
 }
 .speed-label{font-size:14px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
 .speed-bar-track{width:80%;height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden}
-.speed-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--blue),var(--green));width:0;transition:width 1.5s ease}
+.speed-bar-fill{
+  height:100%;border-radius:3px;width:0;
+  background:linear-gradient(90deg,var(--purple),var(--blue),var(--green));
+  background-size:200% 100%;
+  animation:speedGradient 2s linear infinite;
+  transition:width 1.5s cubic-bezier(.22,1,.36,1);
+}
 .visible .speed-bar-fill{width:92%}
+@keyframes speedGradient{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 
-/* CTA */
+/* === CTA === */
 .cta-section{
   text-align:center;padding:60px 24px 120px;position:relative;z-index:1;
 }
 .cta-section h2{
   font-family:'Orbitron',sans-serif;font-size:32px;font-weight:700;color:#fff;margin-bottom:24px;
+  text-shadow:0 0 20px rgba(123,97,255,.15);
 }
 .cta-btn{
   display:inline-block;padding:14px 40px;border-radius:12px;font-size:16px;font-weight:700;
   background:linear-gradient(135deg,var(--purple),#6246ea);color:#fff;text-decoration:none;
-  transition:transform .25s,box-shadow .25s;letter-spacing:1px;
+  transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease;
+  letter-spacing:1px;position:relative;overflow:hidden;
   box-shadow:0 4px 30px rgba(123,97,255,.3);
 }
-.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(123,97,255,.5)}
+/* Inner highlight */
+.cta-btn::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);
+  border-radius:12px 12px 0 0;pointer-events:none;
+}
+.cta-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 50px rgba(123,97,255,.5),0 0 80px rgba(123,97,255,.2);
+}
+.cta-btn:active{
+  transform:scale(0.98);
+  box-shadow:0 2px 20px rgba(123,97,255,.3);
+}
 
-/* FOOTER */
+/* === FOOTER === */
 .footer{
   border-top:1px solid var(--glass-border);padding:60px 24px 40px;
   position:relative;z-index:1;
@@ -227,7 +366,15 @@ body::before{
 }
 .footer-bottom span{font-size:12px;color:var(--text-dim)}
 
-/* RESPONSIVE */
+/* === SCROLL REVEAL STAGGER === */
+.feature-row:nth-child(1){transition-delay:0s}
+.feature-row:nth-child(2){transition-delay:.08s}
+.feature-row:nth-child(3){transition-delay:.04s}
+.feature-row:nth-child(4){transition-delay:.08s}
+.feature-row:nth-child(5){transition-delay:.04s}
+.feature-row:nth-child(6){transition-delay:.08s}
+
+/* === RESPONSIVE === */
 @media(max-width:768px){
   .nav-links{
     display:none;flex-direction:column;position:absolute;top:64px;left:0;right:0;
@@ -236,23 +383,29 @@ body::before{
   }
   .nav-links.open{display:flex}
   .nav-toggle{display:block}
-  .hero h1{font-size:32px}
+  .hero h1,.hero-glow{font-size:32px}
   .hero p{font-size:16px}
   .feature-row,.feature-row.reverse{flex-direction:column;gap:32px}
   .feature-text h2{font-size:22px}
-  .feature-visual{min-height:220px}
+  .feature-visual-inner{min-height:220px}
   .footer-inner{flex-direction:column;gap:32px}
   .footer-links{gap:32px}
   .footer-bottom{flex-direction:column;text-align:center}
   .cta-section h2{font-size:24px}
 }
 @media(max-width:480px){
-  .hero h1{font-size:26px}
+  .hero h1,.hero-glow{font-size:26px}
   .img-gen-preview{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
+
+<!-- STARFIELD -->
+<div class="starfield" id="starfield"></div>
+
+<!-- CONTENT GLOW -->
+<div class="content-glow"></div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -271,7 +424,10 @@ body::before{
 
 <!-- HERO -->
 <section class="hero">
-  <h1>Built for the Future</h1>
+  <div style="position:relative;display:inline-block;width:100%">
+    <h1>Built for the Future</h1>
+    <span class="hero-glow" aria-hidden="true">Built for the Future</span>
+  </div>
   <p>Every feature designed for intelligence, privacy, and beauty.</p>
 </section>
 
@@ -286,39 +442,41 @@ body::before{
       <p>26 AI models at your fingertips. From GPT-5.5 Pro to free open-source models like Llama 3.3 70B and DeepSeek V3.1. Switch instantly.</p>
     </div>
     <div class="feature-visual">
-      <div class="model-list">
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--purple)"></span>
-          <span class="model-name">GPT-5.5 Pro</span>
-          <span class="model-tag tag-pro">PRO</span>
-        </div>
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--blue)"></span>
-          <span class="model-name">Claude 4 Sonnet</span>
-          <span class="model-tag tag-pro">PRO</span>
-        </div>
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--green)"></span>
-          <span class="model-name">Llama 3.3 70B</span>
-          <span class="model-tag tag-free">FREE</span>
-        </div>
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--green)"></span>
-          <span class="model-name">DeepSeek V3.1</span>
-          <span class="model-tag tag-free">FREE</span>
-        </div>
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--blue)"></span>
-          <span class="model-name">Gemini 2.5 Pro</span>
-          <span class="model-tag tag-pro">PRO</span>
-        </div>
-        <div class="model-item">
-          <span class="model-dot" style="background:var(--green)"></span>
-          <span class="model-name">Mistral Large</span>
-          <span class="model-tag tag-free">FREE</span>
-        </div>
-        <div class="model-item" style="opacity:.5;text-align:center;justify-content:center">
-          <span class="model-name" style="color:var(--text-dim)">+ 20 more models</span>
+      <div class="feature-visual-inner">
+        <div class="model-list">
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--purple)"></span>
+            <span class="model-name">GPT-5.5 Pro</span>
+            <span class="model-tag tag-pro">PRO</span>
+          </div>
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--blue)"></span>
+            <span class="model-name">Claude 4 Sonnet</span>
+            <span class="model-tag tag-pro">PRO</span>
+          </div>
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--green)"></span>
+            <span class="model-name">Llama 3.3 70B</span>
+            <span class="model-tag tag-free">FREE</span>
+          </div>
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--green)"></span>
+            <span class="model-name">DeepSeek V3.1</span>
+            <span class="model-tag tag-free">FREE</span>
+          </div>
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--blue)"></span>
+            <span class="model-name">Gemini 2.5 Pro</span>
+            <span class="model-tag tag-pro">PRO</span>
+          </div>
+          <div class="model-item">
+            <span class="model-dot" style="background:var(--green)"></span>
+            <span class="model-name">Mistral Large</span>
+            <span class="model-tag tag-free">FREE</span>
+          </div>
+          <div class="model-item" style="opacity:.5;text-align:center;justify-content:center">
+            <span class="model-name" style="color:var(--text-dim)">+ 20 more models</span>
+          </div>
         </div>
       </div>
     </div>
@@ -332,11 +490,13 @@ body::before{
       <p>Create stunning visuals with 5 free Flux models. Photorealistic, anime, 3D — just type /image and describe your vision.</p>
     </div>
     <div class="feature-visual">
-      <div class="img-gen-preview">
-        <div class="img-placeholder"><span class="img-label">Photorealistic</span></div>
-        <div class="img-placeholder"><span class="img-label">Anime</span></div>
-        <div class="img-placeholder"><span class="img-label">3D Render</span></div>
-        <div class="img-placeholder"><span class="img-label">Abstract</span></div>
+      <div class="feature-visual-inner">
+        <div class="img-gen-preview">
+          <div class="img-placeholder"><span class="img-label">Photorealistic</span></div>
+          <div class="img-placeholder"><span class="img-label">Anime</span></div>
+          <div class="img-placeholder"><span class="img-label">3D Render</span></div>
+          <div class="img-placeholder"><span class="img-label">Abstract</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -349,12 +509,14 @@ body::before{
       <p>Watch Nova reason. See the AI's thought process in real-time with our expandable thinking panel. Understand how it reaches answers.</p>
     </div>
     <div class="feature-visual">
-      <div class="thinking-panel">
-        <div class="think-header"><span class="pulse"></span> Nova is thinking…</div>
-        <div class="think-step">Analyzing the question about quantum entanglement…</div>
-        <div class="think-step">Considering the relationship between particle spin states…</div>
-        <div class="think-step active">Formulating a clear explanation with an analogy…</div>
-        <div class="think-step" style="opacity:.4">Generating final response…</div>
+      <div class="feature-visual-inner">
+        <div class="thinking-panel">
+          <div class="think-header"><span class="pulse"></span> Nova is thinking…</div>
+          <div class="think-step">Analyzing the question about quantum entanglement…</div>
+          <div class="think-step">Considering the relationship between particle spin states…</div>
+          <div class="think-step active">Formulating a clear explanation with an analogy…</div>
+          <div class="think-step" style="opacity:.4">Generating final response…</div>
+        </div>
       </div>
     </div>
   </div>
@@ -367,38 +529,40 @@ body::before{
       <p>Your chats survive refreshes, reloads, and restarts. Full history with timestamps, model tags, and search.</p>
     </div>
     <div class="feature-visual">
-      <div class="convo-list">
-        <div class="convo-item active-convo">
-          <span class="convo-icon">💡</span>
-          <div class="convo-info">
-            <div class="convo-title">Building a Neural Network from Scratch</div>
-            <div class="convo-meta">Today, 3:42 PM</div>
+      <div class="feature-visual-inner">
+        <div class="convo-list">
+          <div class="convo-item active-convo">
+            <span class="convo-icon">💡</span>
+            <div class="convo-info">
+              <div class="convo-title">Building a Neural Network from Scratch</div>
+              <div class="convo-meta">Today, 3:42 PM</div>
+            </div>
+            <span class="convo-badge">GPT-5.5</span>
           </div>
-          <span class="convo-badge">GPT-5.5</span>
-        </div>
-        <div class="convo-item">
-          <span class="convo-icon">🎨</span>
-          <div class="convo-info">
-            <div class="convo-title">Logo Design Concepts</div>
-            <div class="convo-meta">Yesterday, 11:20 AM</div>
+          <div class="convo-item">
+            <span class="convo-icon">🎨</span>
+            <div class="convo-info">
+              <div class="convo-title">Logo Design Concepts</div>
+              <div class="convo-meta">Yesterday, 11:20 AM</div>
+            </div>
+            <span class="convo-badge">Flux</span>
           </div>
-          <span class="convo-badge">Flux</span>
-        </div>
-        <div class="convo-item">
-          <span class="convo-icon">📊</span>
-          <div class="convo-info">
-            <div class="convo-title">Financial Analysis Q2 2026</div>
-            <div class="convo-meta">May 19, 9:05 AM</div>
+          <div class="convo-item">
+            <span class="convo-icon">📊</span>
+            <div class="convo-info">
+              <div class="convo-title">Financial Analysis Q2 2026</div>
+              <div class="convo-meta">May 19, 9:05 AM</div>
+            </div>
+            <span class="convo-badge">Claude 4</span>
           </div>
-          <span class="convo-badge">Claude 4</span>
-        </div>
-        <div class="convo-item">
-          <span class="convo-icon">🔧</span>
-          <div class="convo-info">
-            <div class="convo-title">Debug React SSR Issue</div>
-            <div class="convo-meta">May 18, 7:30 PM</div>
+          <div class="convo-item">
+            <span class="convo-icon">🔧</span>
+            <div class="convo-info">
+              <div class="convo-title">Debug React SSR Issue</div>
+              <div class="convo-meta">May 18, 7:30 PM</div>
+            </div>
+            <span class="convo-badge">DeepSeek</span>
           </div>
-          <span class="convo-badge">DeepSeek</span>
         </div>
       </div>
     </div>
@@ -412,14 +576,16 @@ body::before{
       <p>Your data never leaves your device. API keys stored locally. No tracking. No analytics. No cloud dependency.</p>
     </div>
     <div class="feature-visual">
-      <div class="shield-visual">
-        <div class="shield-icon">🛡️</div>
-        <div class="shield-bars">
-          <div class="shield-bar"><span class="check">✓</span> Local API key storage</div>
-          <div class="shield-bar"><span class="check">✓</span> Zero telemetry or tracking</div>
-          <div class="shield-bar"><span class="check">✓</span> No cloud dependency</div>
-          <div class="shield-bar"><span class="check">✓</span> End-to-end encrypted sync</div>
-          <div class="shield-bar"><span class="check">✓</span> Open source & auditable</div>
+      <div class="feature-visual-inner">
+        <div class="shield-visual">
+          <div class="shield-icon">🛡️</div>
+          <div class="shield-bars">
+            <div class="shield-bar"><span class="check">✓</span> Local API key storage</div>
+            <div class="shield-bar"><span class="check">✓</span> Zero telemetry or tracking</div>
+            <div class="shield-bar"><span class="check">✓</span> No cloud dependency</div>
+            <div class="shield-bar"><span class="check">✓</span> End-to-end encrypted sync</div>
+            <div class="shield-bar"><span class="check">✓</span> Open source & auditable</div>
+          </div>
         </div>
       </div>
     </div>
@@ -433,10 +599,12 @@ body::before{
       <p>Groq-powered inference delivers 2000+ tokens per second. Responses start in milliseconds.</p>
     </div>
     <div class="feature-visual">
-      <div class="speed-visual">
-        <div class="speed-number">2000+</div>
-        <div class="speed-label">Tokens per second</div>
-        <div class="speed-bar-track"><div class="speed-bar-fill"></div></div>
+      <div class="feature-visual-inner">
+        <div class="speed-visual">
+          <div class="speed-number">2000+</div>
+          <div class="speed-label">Tokens per second</div>
+          <div class="speed-bar-track"><div class="speed-bar-fill"></div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -483,21 +651,40 @@ body::before{
 </footer>
 
 <script>
-// Intersection Observer fade-in
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
+// === Generate CSS Starfield ===
+(function(){
+  const field=document.getElementById('starfield');
+  const count=80;
+  for(let i=0;i<count;i++){
+    const star=document.createElement('div');
+    star.classList.add('star');
+    star.style.left=Math.random()*100+'%';
+    star.style.top=Math.random()*100+'%';
+    star.style.setProperty('--o',(Math.random()*.3+.15).toFixed(2));
+    star.style.setProperty('--dur',(Math.random()*4+3).toFixed(1)+'s');
+    star.style.animationDelay=(Math.random()*5).toFixed(1)+'s';
+    const size=Math.random()>.85?2:1;
+    star.style.width=size+'px';
+    star.style.height=size+'px';
+    field.appendChild(star);
+  }
+})();
+
+// === Intersection Observer with stagger ===
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
       entry.target.classList.add('visible');
       observer.unobserve(entry.target);
     }
   });
-}, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+},{threshold:0.12,rootMargin:'0px 0px -60px 0px'});
 
-document.querySelectorAll('.feature-row').forEach(row => observer.observe(row));
+document.querySelectorAll('.feature-row').forEach(row=>observer.observe(row));
 
-// Close mobile menu on link click
-document.querySelectorAll('.nav-links a').forEach(link => {
-  link.addEventListener('click', () => {
+// === Close mobile menu on link click ===
+document.querySelectorAll('.nav-links a').forEach(link=>{
+  link.addEventListener('click',()=>{
     document.querySelector('.nav-links').classList.remove('open');
   });
 });

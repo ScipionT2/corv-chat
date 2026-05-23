@@ -17,22 +17,33 @@
 html{scroll-behavior:smooth;font-size:16px}
 body{
   background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-feature-settings:'cv01','cv02';
   line-height:1.6;overflow-x:hidden;min-height:100vh;position:relative;
 }
+
+/* Starfield particles */
+.starfield{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;width:1px;height:1px;background:rgba(255,255,255,.5);border-radius:50%;animation:star-pulse var(--dur,4s) ease-in-out infinite alternate}
+@keyframes star-pulse{0%{opacity:.15;transform:scale(1)}100%{opacity:.6;transform:scale(1.4)}}
+
+/* Large soft radial glow behind content */
 body::after{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
+    radial-gradient(ellipse 50% 45% at 50% 40%,rgba(123,97,255,.09),transparent 70%),
     radial-gradient(ellipse 60% 50% at 20% 20%,rgba(123,97,255,.12),transparent),
     radial-gradient(ellipse 50% 40% at 80% 60%,rgba(94,235,255,.08),transparent),
     radial-gradient(ellipse 80% 60% at 50% 100%,rgba(123,97,255,.06),transparent);
 }
+
+/* Vignette */
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse at top,transparent 60%,rgba(5,8,22,.7)),
-    radial-gradient(ellipse at bottom,transparent 60%,rgba(5,8,22,.8)),
-    radial-gradient(ellipse at left,transparent 70%,rgba(5,8,22,.6)),
-    radial-gradient(ellipse at right,transparent 70%,rgba(5,8,22,.6));
+    radial-gradient(ellipse at top,transparent 50%,rgba(5,8,22,.85)),
+    radial-gradient(ellipse at bottom,transparent 50%,rgba(5,8,22,.9)),
+    radial-gradient(ellipse at left,transparent 55%,rgba(5,8,22,.75)),
+    radial-gradient(ellipse at right,transparent 55%,rgba(5,8,22,.75));
 }
 
 /* NAV */
@@ -49,14 +60,24 @@ body::before{
 
 /* HERO */
 .hero{padding:140px 24px 60px;text-align:center;position:relative;z-index:1}
-.hero h1{font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(28px,5vw,48px);letter-spacing:2px;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
-.hero p{font-size:clamp(15px,2vw,18px);color:var(--text-dim);max-width:560px;margin:0 auto;line-height:1.7}
+.hero h1{
+  font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(28px,5vw,48px);letter-spacing:2px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:16px;
+  text-shadow:0 0 40px rgba(123,97,255,.3),0 0 80px rgba(94,235,255,.15);
+  animation:hero-float 4s ease-in-out infinite alternate;
+}
+@keyframes hero-float{0%{transform:translateY(0)}100%{transform:translateY(-4px)}}
+.hero p{
+  font-size:clamp(15px,2vw,18px);color:var(--text-dim);max-width:560px;margin:0 auto;line-height:1.7;
+  text-shadow:0 0 20px rgba(123,97,255,.1);
+}
 
 /* TOGGLE */
 .toggle-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin:48px auto 56px;position:relative;z-index:1}
-.toggle-label{font-size:14px;font-weight:500;color:var(--text-dim);transition:color .25s;cursor:pointer}
+.toggle-label{font-size:14px;font-weight:500;color:var(--text-dim);transition:color .35s;cursor:pointer}
 .toggle-label.active{color:#fff}
-.toggle-track{width:56px;height:30px;border-radius:15px;background:rgba(255,255,255,.1);border:1px solid var(--glass-border);position:relative;cursor:pointer;transition:background .3s}
+.toggle-track{width:56px;height:30px;border-radius:15px;background:rgba(255,255,255,.1);border:1px solid var(--glass-border);position:relative;cursor:pointer;transition:background .4s,border-color .4s}
 .toggle-track.annual{background:rgba(123,97,255,.3);border-color:rgba(123,97,255,.5)}
 .toggle-thumb{width:24px;height:24px;border-radius:50%;background:#fff;position:absolute;top:2px;left:3px;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .toggle-track.annual .toggle-thumb{transform:translateX(25px)}
@@ -65,21 +86,52 @@ body::before{
 /* PRICING GRID */
 .pricing-grid{max-width:1100px;margin:0 auto 80px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px;position:relative;z-index:1}
 
-/* CARDS */
-.price-card{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:20px;padding:40px 32px;display:flex;flex-direction:column;position:relative;transition:transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s;opacity:0;transform:translateY(30px)}
-.price-card.visible{opacity:1;transform:translateY(0)}
-.price-card:hover{transform:translateY(-6px)}
+/* Recommended arrow for Pro */
+.pricing-grid::before{
+  content:'';position:absolute;top:-32px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:10px solid var(--purple);
+  filter:drop-shadow(0 0 6px rgba(123,97,255,.5));
+  animation:arrow-bob 2s ease-in-out infinite;
+}
+@keyframes arrow-bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
 
-/* Pro elevated */
-.price-card.pro{border-color:rgba(123,97,255,.35);box-shadow:0 0 40px rgba(123,97,255,.3)}
-.price-card.pro:hover{box-shadow:0 0 60px rgba(123,97,255,.4)}
+/* CARDS */
+.price-card{
+  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid transparent;border-radius:20px;padding:40px 32px;
+  display:flex;flex-direction:column;position:relative;
+  transition:transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s;
+  opacity:0;transform:translateY(30px) scale(0.97);
+  box-shadow:0 0 60px rgba(123,97,255,.06),0 0 120px rgba(94,235,255,.03);
+}
+/* Gradient border via background-clip trick */
+.price-card::after{
+  content:'';position:absolute;inset:0;border-radius:20px;padding:1px;
+  background:linear-gradient(135deg,rgba(123,97,255,.2),rgba(94,235,255,.12));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  pointer-events:none;transition:opacity .35s;
+}
+/* Top inner highlight */
+.price-card::before{
+  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  border-radius:20px 20px 0 0;z-index:1;pointer-events:none;
+}
+.price-card.visible{opacity:1;transform:translateY(0) scale(1)}
+.price-card:hover{transform:translateY(-4px) scale(1.005);box-shadow:0 0 60px rgba(123,97,255,.1),0 0 120px rgba(94,235,255,.05)}
+
+/* Pro elevated — dramatic glow */
+.price-card.pro{box-shadow:0 0 60px rgba(123,97,255,.2),0 0 120px rgba(123,97,255,.08),0 4px 40px rgba(123,97,255,.15)}
+.price-card.pro::after{background:linear-gradient(135deg,rgba(123,97,255,.45),rgba(94,235,255,.25))}
+.price-card.pro:hover{box-shadow:0 0 80px rgba(123,97,255,.35),0 0 160px rgba(123,97,255,.12),0 8px 60px rgba(123,97,255,.2)}
 
 /* Enterprise blue accent */
-.price-card.enterprise{border-color:rgba(94,235,255,.2)}
-.price-card.enterprise:hover{box-shadow:0 0 40px rgba(94,235,255,.15)}
+.price-card.enterprise::after{background:linear-gradient(135deg,rgba(94,235,255,.2),rgba(123,97,255,.1))}
+.price-card.enterprise:hover{box-shadow:0 0 50px rgba(94,235,255,.12),0 0 100px rgba(94,235,255,.05)}
 
 /* Badge */
-.card-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--purple),#6246ea);color:#fff;padding:5px 18px;border-radius:20px;white-space:nowrap}
+.card-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--purple),#6246ea);color:#fff;padding:5px 18px;border-radius:20px;white-space:nowrap;box-shadow:0 4px 20px rgba(123,97,255,.35);z-index:2}
 
 .card-tier{font-family:'Orbitron',sans-serif;font-weight:700;font-size:18px;letter-spacing:2px;margin-bottom:4px}
 .price-card.free .card-tier{color:var(--green)}
@@ -96,7 +148,7 @@ body::before{
 
 .annual-note{font-size:12px;color:var(--text-dim);min-height:18px;margin-bottom:24px;transition:opacity .3s}
 
-.card-divider{height:1px;background:var(--glass-border);margin-bottom:24px}
+.card-divider{height:1px;background:linear-gradient(90deg,transparent,var(--glass-border),transparent);margin-bottom:24px}
 
 /* Feature list */
 .feature-list{list-style:none;flex:1;margin-bottom:32px}
@@ -106,32 +158,65 @@ body::before{
 .price-card.pro .check{color:var(--purple)}
 .price-card.enterprise .check{color:var(--blue)}
 
-/* CTA */
-.card-cta{display:block;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:.5px;transition:transform .25s,box-shadow .25s,background .25s}
-.card-cta:hover{transform:translateY(-2px)}
+/* CTA buttons */
+.card-cta{
+  display:block;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;
+  text-decoration:none;letter-spacing:.5px;position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s,background .25s;
+}
+.card-cta:active{transform:scale(0.98) !important}
 
 .price-card.free .card-cta{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3)}
-.price-card.free .card-cta:hover{background:rgba(52,211,153,.2);box-shadow:0 4px 20px rgba(52,211,153,.2)}
+.price-card.free .card-cta:hover{background:rgba(52,211,153,.2);box-shadow:0 4px 24px rgba(52,211,153,.25);transform:translateY(-2px)}
 
-.price-card.pro .card-cta{background:linear-gradient(135deg,var(--purple),#6246ea);color:#fff;border:none}
-.price-card.pro .card-cta:hover{box-shadow:0 4px 24px rgba(123,97,255,.45)}
+.price-card.pro .card-cta{
+  background:linear-gradient(135deg,var(--purple),#6246ea,var(--purple));background-size:200% 100%;
+  color:#fff;border:none;
+  box-shadow:0 0 20px rgba(123,97,255,.2);
+}
+.price-card.pro .card-cta::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 50%,transparent 100%);
+  border-radius:12px;pointer-events:none;
+}
+.price-card.pro .card-cta:hover{
+  box-shadow:0 4px 30px rgba(123,97,255,.5),0 0 60px rgba(123,97,255,.2);
+  transform:translateY(-2px);background-position:100% 0;
+}
 
 .price-card.enterprise .card-cta{background:rgba(94,235,255,.1);color:var(--blue);border:1px solid rgba(94,235,255,.3)}
-.price-card.enterprise .card-cta:hover{background:rgba(94,235,255,.18);box-shadow:0 4px 20px rgba(94,235,255,.2)}
+.price-card.enterprise .card-cta:hover{background:rgba(94,235,255,.18);box-shadow:0 4px 24px rgba(94,235,255,.25);transform:translateY(-2px)}
 
 /* FAQ */
 .faq-section{max-width:760px;margin:0 auto 100px;padding:0 24px;position:relative;z-index:1}
-.faq-title{font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(22px,3.5vw,32px);text-align:center;margin-bottom:40px;letter-spacing:1px;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.faq-title{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(22px,3.5vw,32px);text-align:center;margin-bottom:40px;letter-spacing:1px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-shadow:0 0 40px rgba(123,97,255,.3),0 0 80px rgba(94,235,255,.15);
+}
 
-.faq-item{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:14px;margin-bottom:14px;overflow:hidden;opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s}
+.faq-item{
+  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid transparent;border-radius:14px;margin-bottom:14px;overflow:hidden;
+  opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s,box-shadow .3s;
+  position:relative;
+}
+.faq-item::after{
+  content:'';position:absolute;inset:0;border-radius:14px;padding:1px;
+  background:linear-gradient(135deg,rgba(123,97,255,.15),rgba(94,235,255,.08));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  pointer-events:none;
+}
 .faq-item.visible{opacity:1;transform:translateY(0)}
+.faq-item:hover{box-shadow:0 0 30px rgba(123,97,255,.06)}
 
 .faq-question{width:100%;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;background:none;border:none;color:var(--text);font-size:15px;font-weight:500;text-align:left;cursor:pointer;transition:color .2s;font-family:'Inter',sans-serif;line-height:1.5}
 .faq-question:hover{color:#fff}
-.faq-arrow{font-size:18px;color:var(--text-dim);transition:transform .3s;flex-shrink:0;margin-left:12px}
-.faq-item.open .faq-arrow{transform:rotate(180deg)}
+.faq-arrow{font-size:18px;color:var(--text-dim);transition:transform .35s cubic-bezier(.4,0,.2,1);flex-shrink:0;margin-left:12px}
+.faq-item.open .faq-arrow{transform:rotate(180deg);color:var(--purple)}
 
-.faq-answer{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),padding .3s}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.4,0,.2,1),padding .3s}
 .faq-answer-inner{padding:0 24px 20px;font-size:14px;color:var(--text-dim);line-height:1.7}
 
 /* FOOTER */
@@ -155,17 +240,22 @@ body::before{
   .footer-links{gap:32px}
   .footer-bottom{flex-direction:column;text-align:center}
   .pricing-grid{grid-template-columns:1fr;max-width:420px}
+  .pricing-grid::before{display:none}
   .hero h1{font-size:28px}
   .faq-question{font-size:14px;padding:16px 20px}
   .faq-answer-inner{padding:0 20px 16px;font-size:13px}
 }
 @media(min-width:769px) and (max-width:1024px){
   .pricing-grid{grid-template-columns:1fr 1fr;max-width:720px}
+  .pricing-grid::before{display:none}
   .price-card.pro{order:-1;grid-column:1/-1;max-width:380px;justify-self:center;width:100%}
 }
 </style>
 </head>
 <body>
+
+<!-- STARFIELD -->
+<div class="starfield" id="starfield"></div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -244,7 +334,7 @@ body::before{
       <li><span class="check">✓</span>Custom themes</li>
       <li><span class="check">✓</span>Email support</li>
     </ul>
-    <a href="/" class="card-cta">Start Pro Trial</a>
+    <a href="https://ko-fi.com/escipion17" target="_blank" rel="noopener" class="card-cta">Start Pro Trial</a>
   </div>
 
   <!-- ENTERPRISE -->
@@ -360,6 +450,19 @@ body::before{
 
 <script>
 (function(){
+  // Generate starfield
+  const starfield = document.getElementById('starfield');
+  const starCount = 80;
+  for(let i = 0; i < starCount; i++){
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.setProperty('--dur', (3 + Math.random() * 5) + 's');
+    star.style.animationDelay = (Math.random() * 5) + 's';
+    starfield.appendChild(star);
+  }
+
   // Billing toggle
   const toggle = document.getElementById('billing-toggle');
   const labelM = document.getElementById('label-monthly');
@@ -390,7 +493,7 @@ body::before{
   labelM.addEventListener('click', ()=>{ if(isAnnual) switchBilling(); });
   labelA.addEventListener('click', ()=>{ if(!isAnnual) switchBilling(); });
 
-  // FAQ accordion
+  // FAQ accordion with smooth height animation
   document.querySelectorAll('.faq-question').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const item = btn.parentElement;
@@ -400,26 +503,34 @@ body::before{
       // Close all
       document.querySelectorAll('.faq-item.open').forEach(openItem=>{
         openItem.classList.remove('open');
-        openItem.querySelector('.faq-answer').style.maxHeight = '0';
+        const a = openItem.querySelector('.faq-answer');
+        a.style.maxHeight = a.scrollHeight + 'px';
+        requestAnimationFrame(()=>{ a.style.maxHeight = '0'; });
       });
 
       // Open clicked if it was closed
       if(!isOpen){
         item.classList.add('open');
-        answer.style.maxHeight = answer.scrollHeight + 'px';
+        answer.style.maxHeight = '0';
+        requestAnimationFrame(()=>{
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        });
       }
     });
   });
 
-  // IntersectionObserver scroll reveal
+  // IntersectionObserver scroll reveal with stagger
   const reveals = document.querySelectorAll('[data-reveal]');
   if('IntersectionObserver' in window){
+    let staggerIndex = 0;
     const observer = new IntersectionObserver((entries)=>{
-      entries.forEach((entry, i)=>{
+      entries.forEach((entry)=>{
         if(entry.isIntersecting){
+          const delay = staggerIndex * 120;
+          staggerIndex++;
           setTimeout(()=>{
             entry.target.classList.add('visible');
-          }, i * 100);
+          }, delay);
           observer.unobserve(entry.target);
         }
       });
