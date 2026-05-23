@@ -1435,7 +1435,7 @@ body::after {
     <div class="model-bar">
       <div class="model-dropdown" id="modelDropdown">
         <div class="model-trigger" id="modelTrigger" onclick="toggleModelMenu()">
-          <span class="model-trigger-icon" id="triggerIcon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/llama-color.svg" alt=""></span>
+          <span class="model-trigger-icon" id="triggerIcon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span>
           <span class="model-trigger-name" id="triggerName">Llama 3.3 70B</span>
           <svg class="model-trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
@@ -1449,11 +1449,11 @@ body::after {
           <div class="model-option" data-value="minimax-m2.7" data-icon="minimax"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/minimax-color.svg" alt=""></span><span class="model-option-name">MiniMax M2.7 (196K ctx)</span></div>
           <!-- FREE — FAST -->
           <div class="model-group-label"><span class="dot green"></span>FREE — FAST</div>
-          <div class="model-option active" data-value="llama-3.3-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/llama-color.svg" alt=""></span><span class="model-option-name">Llama 3.3 70B</span></div>
+          <div class="model-option active" data-value="llama-3.3-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 3.3 70B</span></div>
           <div class="model-option" data-value="qwen3-32b" data-icon="qwen"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/qwen-color.svg" alt=""></span><span class="model-option-name">Qwen 3 32B</span></div>
-          <div class="model-option" data-value="llama-4-scout" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/llama-color.svg" alt=""></span><span class="model-option-name">Llama 4 Scout 17B</span></div>
-          <div class="model-option" data-value="llama-4-maverick" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/llama-color.svg" alt=""></span><span class="model-option-name">Llama 4 Maverick 17B</span></div>
-          <div class="model-option" data-value="llama-3.1-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/llama-color.svg" alt=""></span><span class="model-option-name">Llama 3.1 70B</span></div>
+          <div class="model-option" data-value="llama-4-scout" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 4 Scout 17B</span></div>
+          <div class="model-option" data-value="llama-4-maverick" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 4 Maverick 17B</span></div>
+          <div class="model-option" data-value="llama-3.1-70b" data-icon="llama"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/ollama.svg" alt=""></span><span class="model-option-name">Llama 3.1 70B</span></div>
           <!-- OPENAI -->
           <div class="model-group-label"><span class="dot key"></span>OPENAI — FRONTIER (Your Key)</div>
           <div class="model-option" data-value="gpt-5.5-pro" data-icon="openai"><span class="model-option-icon"><img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt=""></span><span class="model-option-name">GPT-5.5 Pro (Strongest)</span></div>
@@ -1824,7 +1824,7 @@ function closeModelMenu() {
 const ICON_CDN = 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/';
 const ICON_MAP = {
   groq:'groq-color', sambanova:'sambanova-color', deepseek:'deepseek-color',
-  minimax:'minimax-color', llama:'llama-color', qwen:'qwen-color',
+  minimax:'minimax-color', llama:'ollama', qwen:'qwen-color',
   openai:'openai', claude:'claude-color', openrouter:'openrouter-color'
 };
 function selectModel(value, icon, name) {
