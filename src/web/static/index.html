@@ -1935,7 +1935,15 @@ const ICON_MAP = {
   openai:'openai', claude:'claude-color', openrouter:'openrouter'
 };
 const INVERT_ICONS = ['openai','ollama','groq','openrouter'];
+let previousModel = null;
 function selectModel(value, icon, name) {
+  const prov = BYOK_PROVIDERS[value];
+  if (prov && !getStoredKeys()[prov]) {
+    // No key — revert to previous model, don't switch
+    closeModelMenu();
+    return;
+  }
+  previousModel = currentModel;
   currentModel = value;
   localStorage.setItem('nova_model', value);
   const slug = ICON_MAP[icon] || icon;
@@ -1947,9 +1955,6 @@ function selectModel(value, icon, name) {
     o.classList.toggle('active', o.dataset.value === value);
   });
   closeModelMenu();
-  // Check if BYOK key needed
-  const prov = BYOK_PROVIDERS[value];
-  if (prov && !getStoredKeys()[prov]) openKeyModal();
 }
 
 // Wire up all options
