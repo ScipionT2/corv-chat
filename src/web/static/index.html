@@ -199,32 +199,62 @@ body::after{
 .quick-card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
 .quick-card-desc{font-size:12px;color:var(--text-dim)}
 
-/* ─── Model Selector ─── */
+/* ─── Custom Model Dropdown ─── */
 .model-bar{
   display:flex;align-items:center;justify-content:space-between;
   padding:0 16px 8px;
 }
-.model-select-wrap{
-  position:relative;display:flex;align-items:center;gap:6px;
+.model-dropdown{position:relative;z-index:50}
+.model-trigger{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
+  border-radius:10px;padding:7px 12px;cursor:pointer;
+  transition:all .25s;user-select:none;
 }
-.model-select-wrap svg{width:14px;height:14px;color:var(--text-dim);pointer-events:none;flex-shrink:0}
-#modelSelect{
-  appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.04);
-  border:1px solid var(--glass-border);border-radius:8px;
-  color:var(--text);font-size:12px;font-family:'Orbitron',sans-serif;
-  padding:6px 28px 6px 10px;cursor:pointer;
-  letter-spacing:.5px;outline:none;
-  transition:border-color .2s,background .2s;
+.model-trigger:hover{background:rgba(255,255,255,.06);border-color:rgba(123,97,255,.12)}
+.model-trigger.open{border-color:rgba(123,97,255,.2);background:rgba(10,15,35,.8)}
+.model-trigger-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.model-trigger-name{font-size:12px;font-family:'Orbitron',sans-serif;letter-spacing:.4px;color:var(--text);white-space:nowrap}
+.model-trigger-arrow{width:12px;height:12px;color:var(--text-dim);transition:transform .2s;margin-left:2px}
+.model-trigger.open .model-trigger-arrow{transform:rotate(180deg)}
+
+.model-menu{
+  display:none;position:absolute;bottom:calc(100% + 6px);left:0;
+  width:300px;max-height:420px;overflow-y:auto;
+  background:rgba(10,14,28,.96);border:1px solid rgba(123,97,255,.1);
+  border-radius:12px;padding:6px;
+  box-shadow:0 -12px 50px rgba(0,0,0,.5),0 0 40px rgba(123,97,255,.04);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  scrollbar-width:thin;scrollbar-color:rgba(123,97,255,.15) transparent;
 }
-#modelSelect:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
-#modelSelect:focus{border-color:rgba(123,97,255,.3)}
-#modelSelect option{background:#0a0e1c;color:var(--text)}
-#modelSelect optgroup{color:var(--text-dim);font-weight:600;font-style:normal}
-.model-select-arrow{
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;
-  color:var(--text-dim);
+.model-menu.open{display:block;animation:menuIn .2s ease}
+@keyframes menuIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.model-menu::-webkit-scrollbar{width:4px}
+.model-menu::-webkit-scrollbar-thumb{background:rgba(123,97,255,.15);border-radius:2px}
+
+.model-group-label{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 10px 4px;font-size:10px;font-family:'Orbitron',sans-serif;
+  letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;
 }
-.model-select-arrow svg{width:12px;height:12px}
+.model-group-label .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.model-group-label .dot.green{background:#34D399}
+.model-group-label .dot.key{background:#FBBF24}
+
+.model-option{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:8px;cursor:pointer;
+  transition:all .15s;position:relative;
+}
+.model-option:hover{background:rgba(255,255,255,.04)}
+.model-option.active{background:rgba(123,97,255,.08)}
+.model-option.active::before{
+  content:'\2713';position:absolute;left:10px;
+  font-size:11px;color:var(--purple);font-weight:700;
+}
+.model-option.active{padding-left:28px}
+.model-option-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.model-option-name{font-size:13px;color:var(--text);font-weight:500}
 .settings-key-btn{
   display:flex;align-items:center;gap:5px;
   background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
@@ -1401,46 +1431,48 @@ body::after {
 
     <!-- Input bar -->
     <div class="model-bar">
-      <div class="model-select-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        <select id="modelSelect">
-          <optgroup label="🟢 FREE — SMARTEST">
-            <option value="gpt-oss-120b-groq">⚡ GPT-OSS 120B (Groq)</option>
-            <option value="gpt-oss-120b-samba">GPT-OSS 120B (SambaNova)</option>
-            <option value="deepseek-v3">DeepSeek V3.1 (131K ctx)</option>
-            <option value="deepseek-v3.2">DeepSeek V3.2</option>
-            <option value="minimax-m2.7">MiniMax M2.7 (196K ctx)</option>
-          </optgroup>
-          <optgroup label="🟢 FREE — FAST">
-            <option value="llama-3.3-70b" selected>Llama 3.3 70B</option>
-            <option value="qwen3-32b">⚡ Qwen 3 32B</option>
-            <option value="llama-4-scout">Llama 4 Scout 17B</option>
-            <option value="llama-4-maverick">Llama 4 Maverick 17B</option>
-
-            <option value="llama-3.1-70b">Llama 3.1 70B</option>
-          </optgroup>
-          <optgroup label="🔑 OPENAI — FRONTIER (Your Key)">
-            <option value="gpt-5.5-pro">🌟 GPT-5.5 Pro (Strongest)</option>
-            <option value="gpt-5.5">🌟 GPT-5.5 (Frontier)</option>
-            <option value="gpt-5.5-instant">GPT-5.5 Instant (Fast)</option>
-            <option value="gpt-4.1">GPT-4.1</option>
-            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="o3-mini">o3 Mini (Reasoning)</option>
-          </optgroup>
-          <optgroup label="🔑 ANTHROPIC — FRONTIER (Your Key)">
-            <option value="claude-opus-4.7">🌟 Claude Opus 4.7 (Best Coding)</option>
-            <option value="claude-sonnet-4.6">Claude Sonnet 4.6</option>
-            <option value="claude-opus">Claude Opus 4</option>
-            <option value="claude-sonnet">Claude Sonnet 4</option>
-            <option value="claude-haiku">Claude Haiku 3.5</option>
-          </optgroup>
-          <optgroup label="🔑 OPENROUTER (Your Key)">
-            <option value="openrouter-auto">OpenRouter Auto</option>
-          </optgroup>
-        </select>
-        <span class="model-select-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+      <div class="model-dropdown" id="modelDropdown">
+        <div class="model-trigger" id="modelTrigger" onclick="toggleModelMenu()">
+          <span class="model-trigger-icon" id="triggerIcon">🦙</span>
+          <span class="model-trigger-name" id="triggerName">Llama 3.3 70B</span>
+          <svg class="model-trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="model-menu" id="modelMenu">
+          <!-- FREE — SMARTEST -->
+          <div class="model-group-label"><span class="dot green"></span>FREE — SMARTEST</div>
+          <div class="model-option" data-value="gpt-oss-120b-groq" data-icon="🔮"><span class="model-option-icon">🔮</span><span class="model-option-name">GPT-OSS 120B (Groq)</span></div>
+          <div class="model-option" data-value="gpt-oss-120b-samba" data-icon="🧪"><span class="model-option-icon">🧪</span><span class="model-option-name">GPT-OSS 120B (SambaNova)</span></div>
+          <div class="model-option" data-value="deepseek-v3" data-icon="💜"><span class="model-option-icon">💜</span><span class="model-option-name">DeepSeek V3.1 (131K ctx)</span></div>
+          <div class="model-option" data-value="deepseek-v3.2" data-icon="🔯"><span class="model-option-icon">🔯</span><span class="model-option-name">DeepSeek V3.2</span></div>
+          <div class="model-option" data-value="minimax-m2.7" data-icon="📦"><span class="model-option-icon">📦</span><span class="model-option-name">MiniMax M2.7 (196K ctx)</span></div>
+          <!-- FREE — FAST -->
+          <div class="model-group-label"><span class="dot green"></span>FREE — FAST</div>
+          <div class="model-option active" data-value="llama-3.3-70b" data-icon="🦙"><span class="model-option-icon">🦙</span><span class="model-option-name">Llama 3.3 70B</span></div>
+          <div class="model-option" data-value="qwen3-32b" data-icon="⚡"><span class="model-option-icon">⚡</span><span class="model-option-name">Qwen 3 32B</span></div>
+          <div class="model-option" data-value="llama-4-scout" data-icon="🐾"><span class="model-option-icon">🐾</span><span class="model-option-name">Llama 4 Scout 17B</span></div>
+          <div class="model-option" data-value="llama-4-maverick" data-icon="⭐"><span class="model-option-icon">⭐</span><span class="model-option-name">Llama 4 Maverick 17B</span></div>
+          <div class="model-option" data-value="llama-3.1-70b" data-icon="🦬"><span class="model-option-icon">🦬</span><span class="model-option-name">Llama 3.1 70B</span></div>
+          <!-- OPENAI -->
+          <div class="model-group-label"><span class="dot key"></span>OPENAI — FRONTIER (Your Key)</div>
+          <div class="model-option" data-value="gpt-5.5-pro" data-icon="✨"><span class="model-option-icon">✨</span><span class="model-option-name">GPT-5.5 Pro (Strongest)</span></div>
+          <div class="model-option" data-value="gpt-5.5" data-icon="💎"><span class="model-option-icon">💎</span><span class="model-option-name">GPT-5.5 (Frontier)</span></div>
+          <div class="model-option" data-value="gpt-5.5-instant" data-icon="🌀"><span class="model-option-icon">🌀</span><span class="model-option-name">GPT-5.5 Instant (Fast)</span></div>
+          <div class="model-option" data-value="gpt-4.1" data-icon="🧠"><span class="model-option-icon">🧠</span><span class="model-option-name">GPT-4.1</span></div>
+          <div class="model-option" data-value="gpt-4.1-mini" data-icon="🔵"><span class="model-option-icon">🔵</span><span class="model-option-name">GPT-4.1 Mini</span></div>
+          <div class="model-option" data-value="gpt-4o" data-icon="🟣"><span class="model-option-icon">🟣</span><span class="model-option-name">GPT-4o</span></div>
+          <div class="model-option" data-value="gpt-4o-mini" data-icon="🔘"><span class="model-option-icon">🔘</span><span class="model-option-name">GPT-4o Mini</span></div>
+          <div class="model-option" data-value="o3-mini" data-icon="🧮"><span class="model-option-icon">🧮</span><span class="model-option-name">o3 Mini (Reasoning)</span></div>
+          <!-- ANTHROPIC -->
+          <div class="model-group-label"><span class="dot key"></span>ANTHROPIC — FRONTIER (Your Key)</div>
+          <div class="model-option" data-value="claude-opus-4.7" data-icon="🐝"><span class="model-option-icon">🐝</span><span class="model-option-name">Claude Opus 4.7 (Best Coding)</span></div>
+          <div class="model-option" data-value="claude-sonnet-4.6" data-icon="🌙"><span class="model-option-icon">🌙</span><span class="model-option-name">Claude Sonnet 4.6</span></div>
+          <div class="model-option" data-value="claude-opus" data-icon="⚪"><span class="model-option-icon">⚪</span><span class="model-option-name">Claude Opus 4</span></div>
+          <div class="model-option" data-value="claude-sonnet" data-icon="🎵"><span class="model-option-icon">🎵</span><span class="model-option-name">Claude Sonnet 4</span></div>
+          <div class="model-option" data-value="claude-haiku" data-icon="⛩️"><span class="model-option-icon">⛩️</span><span class="model-option-name">Claude Haiku 3.5</span></div>
+          <!-- OPENROUTER -->
+          <div class="model-group-label"><span class="dot key"></span>OPENROUTER (Your Key)</div>
+          <div class="model-option" data-value="openrouter-auto" data-icon="🔄"><span class="model-option-icon">🔄</span><span class="model-option-name">OpenRouter DeepSeek V4</span></div>
+        </div>
       </div>
       <button class="settings-key-btn" onclick="openKeyModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1768,22 +1800,58 @@ document.getElementById('keyModal')?.addEventListener('click', e => {
   if (e.target === e.currentTarget) closeKeyModal();
 });
 
-// Model selector change — warn if BYOK needed
-document.getElementById('modelSelect')?.addEventListener('change', function() {
-  const model = this.value;
-  const prov = BYOK_PROVIDERS[model];
-  if (prov && !getStoredKeys()[prov]) {
-    openKeyModal();
+/* ─── Custom Model Dropdown Logic ─── */
+let currentModel = localStorage.getItem('nova_model') || 'llama-3.3-70b';
+
+function toggleModelMenu() {
+  const trigger = document.getElementById('modelTrigger');
+  const menu = document.getElementById('modelMenu');
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) { closeModelMenu(); } else {
+    trigger.classList.add('open');
+    menu.classList.add('open');
+    // Scroll active into view
+    const active = menu.querySelector('.model-option.active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
   }
-  localStorage.setItem('nova_model', model);
+}
+function closeModelMenu() {
+  document.getElementById('modelTrigger')?.classList.remove('open');
+  document.getElementById('modelMenu')?.classList.remove('open');
+}
+function selectModel(value, icon, name) {
+  currentModel = value;
+  localStorage.setItem('nova_model', value);
+  document.getElementById('triggerIcon').textContent = icon;
+  document.getElementById('triggerName').textContent = name;
+  // Update active state
+  document.querySelectorAll('.model-option').forEach(o => {
+    o.classList.toggle('active', o.dataset.value === value);
+  });
+  closeModelMenu();
+  // Check if BYOK key needed
+  const prov = BYOK_PROVIDERS[value];
+  if (prov && !getStoredKeys()[prov]) openKeyModal();
+}
+
+// Wire up all options
+document.querySelectorAll('.model-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    selectModel(opt.dataset.value, opt.dataset.icon, opt.querySelector('.model-option-name').textContent);
+  });
 });
 
-// Restore last model selection
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.model-dropdown')) closeModelMenu();
+});
+
+// Restore saved model on load
 (function() {
   const saved = localStorage.getItem('nova_model');
   if (saved) {
-    const sel = document.getElementById('modelSelect');
-    if (sel && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+    const opt = document.querySelector(`.model-option[data-value="${saved}"]`);
+    if (opt) selectModel(saved, opt.dataset.icon, opt.querySelector('.model-option-name').textContent);
   }
 })();
 
@@ -1798,7 +1866,7 @@ async function sendChat() {
   thinkingBubble.style.display = 'flex';
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  const model = document.getElementById('modelSelect')?.value || 'llama-3.3-70b';
+  const model = currentModel || 'llama-3.3-70b';
   const apiKey = getKeyForModel(model);
 
   try {
@@ -2176,8 +2244,9 @@ function loadSettingsState() {
 
 // Default model change from settings
 document.getElementById('settingsDefaultModel')?.addEventListener('change', function() {
-  localStorage.setItem('nova_model', this.value);
-  document.getElementById('modelSelect').value = this.value;
+  const val = this.value;
+  const opt = document.querySelector(`.model-option[data-value="${val}"]`);
+  if (opt) selectModel(val, opt.dataset.icon, opt.querySelector('.model-option-name').textContent);
 });
 
 // Profile click → settings
