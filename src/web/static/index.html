@@ -132,6 +132,31 @@ body::after{
 .profile-name{font-size:14px;font-weight:600;color:var(--text)}
 .profile-role{font-size:11px;color:var(--text-dim)}
 .profile-arrow{color:var(--text-dim);font-size:18px}
+.sidebar-sign-in{
+  padding:12px 14px;margin-top:auto;
+  border-top:1px solid rgba(255,255,255,0.10);
+}
+.sidebar-sign-btn{
+  width:100%;justify-content:center;padding:10px 16px !important;
+  font-size:13px !important;border-radius:10px !important;
+  background:rgba(123,97,255,.1) !important;border-color:rgba(123,97,255,.25) !important;
+  color:var(--text) !important;
+}
+.sidebar-sign-btn:hover{
+  background:rgba(123,97,255,.18) !important;border-color:rgba(123,97,255,.4) !important;
+}
+/* Model badge next to mic in chat bar */
+.chat-model-badge{
+  display:inline-flex;align-items:center;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(123,97,255,.08);border:1px solid rgba(123,97,255,.15);
+  font-size:11px;font-weight:500;color:var(--purple);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+  font-family:'Inter',sans-serif;letter-spacing:.2px;
+}
+.chat-model-badge:hover{
+  background:rgba(123,97,255,.15);border-color:rgba(123,97,255,.3);
+}
 
 /* ═══════════════ MAIN CONTENT ═══════════════ */
 #mainContent{
@@ -2994,11 +3019,20 @@ body {
     </a>
   </div>
 
-  <div class=sidebar-profile>
+  <!-- Sign In button (shown for guests) -->
+  <div class="sidebar-sign-in" id="sidebarSignIn" style="display:none">
+    <button class="btn-sign-in sidebar-sign-btn" onclick="window.location.href='/auth/login'">
+      <img src="https://www.google.com/favicon.ico" alt="G">
+      Sign in with Google
+    </button>
+  </div>
+
+  <!-- Profile (shown for signed-in users) -->
+  <div class="sidebar-profile" id="sidebarProfile">
     <div class="profile-avatar"></div>
     <div class="profile-info">
-      <div class="profile-name">You</div>
-      <div class="profile-role">Explorer</div>
+      <div class="profile-name">Guest</div>
+      <div class="profile-role">Sign in to save chats</div>
     </div>
     <span class="profile-arrow">›</span>
   </div>
@@ -3103,6 +3137,7 @@ body {
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
         <textarea id="chatInput" rows="1" placeholder="What's on your mind..." autocomplete="off"></textarea>
         <div class="input-right">
+          <span class="chat-model-badge" id="chatModelBadge" onclick="switchPanel('models')" title="Click to change model">Nova Auto</span>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
@@ -4272,6 +4307,8 @@ function updateProfileUI(user) {
   const name = document.querySelector('.profile-name');
   const role = document.querySelector('.profile-role');
   const avatar = document.querySelector('.sidebar-profile .profile-avatar');
+  const signInBtn = document.getElementById('sidebarSignIn');
+  const profileEl = document.getElementById('sidebarProfile');
   if (user) {
     name.textContent = user.name || 'User';
     role.textContent = user.email || 'Signed in';
@@ -4279,11 +4316,17 @@ function updateProfileUI(user) {
       avatar.style.background = 'none';
       avatar.innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
     }
+    // Show profile, hide sign-in button
+    if (signInBtn) signInBtn.style.display = 'none';
+    if (profileEl) profileEl.style.display = 'flex';
   } else {
     name.textContent = 'Guest';
-    role.textContent = 'Sign in for full features';
+    role.textContent = 'Sign in to save chats';
     avatar.style.background = '';
     avatar.innerHTML = '';
+    // Show sign-in button, hide profile
+    if (signInBtn) signInBtn.style.display = 'block';
+    if (profileEl) profileEl.style.display = 'none';
   }
 }
 
@@ -4731,9 +4774,30 @@ if (_origSelectModel) {
   window.selectModel = function(...args) {
     const r = _origSelectModel.apply(this, args);
     updateVersionUI();
+    updateChatModelBadge();
     return r;
   };
 }
+function updateChatModelBadge() {
+  const badge = document.getElementById('chatModelBadge');
+  if (!badge) return;
+  const model = window.currentModel || 'nova-auto';
+  const SHORT = {
+    'nova-auto': 'Nova Auto', 'deepseek-v4-flash': 'DeepSeek Flash',
+    'gpt-oss-120b': 'GPT-OSS 120B', 'llama-3.3-70b': 'Llama 3.3 70B',
+    'qwen3-coder': 'Qwen3 Coder', 'qwen3-next-80b': 'Qwen3 80B',
+    'nemotron-3-super': 'Nemotron Super', 'nemotron-3-nano': 'Nemotron Nano',
+    'gemma-4-31b': 'Gemma 4', 'minimax-m2.5': 'MiniMax M2.5',
+    'hermes-3-405b': 'Hermes 405B', 'trinity-thinking': 'Trinity',
+    'gpt-5.5-pro': 'GPT-5.5 Pro', 'gpt-5.5': 'GPT-5.5',
+    'gpt-4.1': 'GPT-4.1', 'gpt-4o': 'GPT-4o', 'o3-mini': 'o3 Mini',
+    'claude-opus-4.7': 'Claude Opus', 'claude-sonnet-4.6': 'Sonnet 4.6',
+    'claude-sonnet': 'Claude Sonnet', 'claude-haiku': 'Claude Haiku',
+  };
+  badge.textContent = SHORT[model] || model;
+}
+document.addEventListener('DOMContentLoaded', updateChatModelBadge);
+if (document.readyState !== 'loading') updateChatModelBadge();
 document.addEventListener('DOMContentLoaded', initVersionIndicator);
 if (document.readyState !== 'loading') initVersionIndicator();
 

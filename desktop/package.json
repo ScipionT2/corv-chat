@@ -60,7 +60,6 @@
     },
     "dmg": {
       "background": null,
-      "strictVerify": false,
       "iconSize": 80,
       "contents": [
         { "x": 130, "y": 220 },
