@@ -8907,5 +8907,1301 @@ _restoreFromLocal();
 </script>
 
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 5: CONVERSATION ENGINE
+     ═══════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PHASE 5: CONVERSATION ENGINE — Streaming, Chat Restore, Rendering, Input
+     Nova AI — Complete conversation experience overhaul
+     Generated: 2025-05-24
+     
+     Features:
+       1. Streaming Polish — typing cursor, smooth token rendering, progressive
+          markdown, graceful code blocks, "Stop generating" button, token stats
+       2. Chat Restore — proper history load, new chat reset, welcome screen mgmt
+       3. Message Rendering — full markdown, syntax highlighting labels, copy btn,
+          tables, images, LaTeX placeholders, nested lists, blockquotes
+       4. Chat Input — Shift+Enter newline, auto-resize (6 lines), char count,
+          Cmd/Ctrl+K focus, clipboard image paste
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- PHASE 5: CSS -->
+<style>
+/* ═══════════════ STREAMING POLISH ═══════════════ */
+
+/* Improved typing cursor — blinking pipe at end of streaming text */
+.streaming-cursor::after {
+  content: '│' !important;
+  display: inline !important;
+  color: var(--purple) !important;
+  animation: phase5CursorBlink 0.8s ease-in-out infinite !important;
+  margin-left: 1px !important;
+  font-weight: 400 !important;
+  font-size: 1em !important;
+  vertical-align: baseline !important;
+}
+@keyframes phase5CursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Stop generating button */
+.stop-generating-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px auto 0;
+  padding: 6px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 10px;
+  color: rgba(239, 68, 68, 0.85);
+  font-size: 12px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: stopBtnFadeIn 0.3s ease forwards;
+}
+.stop-generating-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+  transform: scale(1.02);
+}
+.stop-generating-btn svg {
+  width: 14px;
+  height: 14px;
+}
+@keyframes stopBtnFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Token stats footer below assistant messages */
+.msg-token-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  opacity: 0;
+  animation: tokenStatsFade 0.5s ease 0.3s forwards;
+  font-family: 'Inter', sans-serif;
+}
+.msg-token-stats .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.msg-token-stats .stat-icon {
+  font-size: 10px;
+  opacity: 0.6;
+}
+@keyframes tokenStatsFade {
+  to { opacity: 0.5; }
+}
+
+/* ═══════════════ MESSAGE RENDERING — ENHANCED MARKDOWN ═══════════════ */
+
+/* Headers */
+.msg-bubble h1,
+.msg-bubble h2,
+.msg-bubble h3,
+.msg-bubble h4,
+.msg-bubble h5,
+.msg-bubble h6 {
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  margin: 16px 0 8px;
+  line-height: 1.3;
+}
+.msg-bubble h1 { font-size: 1.5em; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px; }
+.msg-bubble h2 { font-size: 1.3em; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 4px; }
+.msg-bubble h3 { font-size: 1.15em; font-weight: 600; }
+.msg-bubble h4 { font-size: 1.05em; font-weight: 600; }
+.msg-bubble h5 { font-size: 1em; font-weight: 600; color: var(--text-mid); }
+.msg-bubble h6 { font-size: 0.95em; font-weight: 500; color: var(--text-dim); }
+.msg-bubble h1:first-child,
+.msg-bubble h2:first-child,
+.msg-bubble h3:first-child {
+  margin-top: 0;
+}
+
+/* Blockquotes */
+.msg-bubble blockquote {
+  border-left: 3px solid rgba(123, 97, 255, 0.4);
+  margin: 10px 0;
+  padding: 8px 14px;
+  background: rgba(123, 97, 255, 0.04);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-mid);
+  font-style: italic;
+}
+.msg-bubble blockquote p {
+  margin: 0;
+}
+
+/* Lists — proper nesting */
+.msg-bubble ul,
+.msg-bubble ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.msg-bubble ul { list-style-type: disc; }
+.msg-bubble ol { list-style-type: decimal; }
+.msg-bubble li {
+  margin: 3px 0;
+  line-height: 1.55;
+  color: var(--text);
+}
+.msg-bubble li > ul,
+.msg-bubble li > ol {
+  margin: 2px 0;
+}
+.msg-bubble ul ul { list-style-type: circle; }
+.msg-bubble ul ul ul { list-style-type: square; }
+
+/* Links */
+.msg-bubble a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(94, 235, 255, 0.2);
+  transition: all 0.2s;
+}
+.msg-bubble a:hover {
+  color: #fff;
+  border-bottom-color: var(--blue);
+}
+
+/* Tables */
+.msg-bubble table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 13px;
+  overflow-x: auto;
+  display: block;
+}
+.msg-bubble thead {
+  background: rgba(123, 97, 255, 0.08);
+}
+.msg-bubble th,
+.msg-bubble td {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  text-align: left;
+}
+.msg-bubble th {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.msg-bubble td {
+  color: var(--text-mid);
+}
+.msg-bubble tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Inline code */
+.msg-bubble code {
+  background: rgba(123, 97, 255, 0.1) !important;
+  border: 1px solid rgba(123, 97, 255, 0.12);
+  padding: 1px 6px !important;
+  border-radius: 5px !important;
+  font-size: 0.88em !important;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  color: #c4b5fd;
+}
+
+/* Code blocks */
+.msg-bubble pre {
+  position: relative !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  margin: 10px 0 !important;
+}
+.msg-bubble pre code {
+  display: block;
+  padding: 14px 16px !important;
+  overflow-x: auto;
+  background: none !important;
+  border: none !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  line-height: 1.5;
+}
+
+/* Code block header (language label + copy button) */
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+.code-block-lang {
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.code-block-copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.code-block-copy:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+.code-block-copy.copied {
+  color: var(--green);
+}
+.code-block-copy svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Images in markdown */
+.msg-bubble .md-image {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.msg-bubble .md-image:hover {
+  transform: scale(1.01);
+}
+
+/* LaTeX/math placeholder */
+.msg-bubble .math-inline {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  background: rgba(94, 235, 255, 0.06);
+  border: 1px solid rgba(94, 235, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--blue);
+  font-size: 0.9em;
+}
+.msg-bubble .math-block {
+  display: block;
+  text-align: center;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  background: rgba(94, 235, 255, 0.04);
+  border: 1px solid rgba(94, 235, 255, 0.08);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--blue);
+  margin: 10px 0;
+  font-size: 0.95em;
+  overflow-x: auto;
+}
+
+/* Horizontal rule */
+.msg-bubble hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 14px 0;
+}
+
+/* Paragraph spacing */
+.msg-bubble p {
+  margin: 0 0 10px !important;
+}
+.msg-bubble p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* ═══════════════ CHAT INPUT ENHANCEMENTS ═══════════════ */
+
+/* Auto-resize textarea (max 6 lines ≈ 144px) */
+#chatInput {
+  max-height: 144px !important;
+  transition: height 0.1s ease;
+}
+
+/* Character count indicator */
+.char-count-indicator {
+  position: absolute;
+  bottom: -18px;
+  right: 16px;
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  font-family: 'Inter', sans-serif;
+}
+.char-count-indicator.visible {
+  opacity: 0.5;
+}
+.char-count-indicator.warning {
+  color: #FBBF24;
+  opacity: 0.7;
+}
+.char-count-indicator.danger {
+  color: #EF4444;
+  opacity: 0.8;
+}
+
+/* Paste image preview toast */
+.paste-image-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(10, 14, 28, 0.95);
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.paste-image-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+</style>
+
+<!-- PHASE 5: HTML -->
+<!-- (No new HTML elements needed — all injected via JS) -->
+
+<!-- PHASE 5: JS -->
+<script>
+(function PHASE5_ConversationEngine() {
+  'use strict';
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init() {
+    console.log('[Phase5] Initializing Conversation Engine...');
+
+    // ═══════════════════════════════════════════════
+    // 1. ENHANCED MARKDOWN RENDERER (formatMessage)
+    // ═══════════════════════════════════════════════
+
+    /**
+     * Full markdown renderer with support for:
+     * - Headers (# through ######)
+     * - Bold, italic, strikethrough
+     * - Code blocks with language labels
+     * - Inline code
+     * - Ordered and unordered lists (nested)
+     * - Blockquotes
+     * - Links [text](url)
+     * - Images ![alt](url)
+     * - Tables (pipe syntax)
+     * - LaTeX/math ($..$ and $$..$$)
+     * - Horizontal rules (--- or ***)
+     * - Paragraphs with proper spacing
+     */
+    window.formatMessage = function(text) {
+      if (!text) return '';
+
+      // Preserve code blocks before any processing
+      const codeBlocks = [];
+      let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push({ lang: lang || '', code: code });
+        return `%%CODEBLOCK_${idx}%%`;
+      });
+
+      // Preserve inline code
+      const inlineCodes = [];
+      processed = processed.replace(/`([^`\n]+)`/g, (match, code) => {
+        const idx = inlineCodes.length;
+        inlineCodes.push(code);
+        return `%%INLINECODE_${idx}%%`;
+      });
+
+      // Preserve math blocks ($$...$$)
+      const mathBlocks = [];
+      processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+        const idx = mathBlocks.length;
+        mathBlocks.push(math.trim());
+        return `%%MATHBLOCK_${idx}%%`;
+      });
+
+      // Preserve inline math ($...$)
+      const inlineMaths = [];
+      processed = processed.replace(/\$([^\$\n]+)\$/g, (match, math) => {
+        const idx = inlineMaths.length;
+        inlineMaths.push(math);
+        return `%%INLINEMATH_${idx}%%`;
+      });
+
+      // Escape HTML
+      processed = processed
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Horizontal rules (must be before headers)
+      processed = processed.replace(/^([-*_]){3,}\s*$/gm, '<hr>');
+
+      // Headers (# to ######)
+      processed = processed.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+      processed = processed.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+      processed = processed.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+      processed = processed.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+      processed = processed.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+      processed = processed.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+      // Blockquotes (> text)
+      processed = processed.replace(/^&gt;\s*(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+      // Merge consecutive blockquotes
+      processed = processed.replace(/<\/blockquote>\n<blockquote>/g, '\n');
+
+      // Images ![alt](url)
+      processed = processed.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,
+        '<img class="md-image" src="$2" alt="$1" title="$1" onclick="window.open(this.src,\'_blank\')" loading="lazy">');
+
+      // Links [text](url)
+      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+      // Tables (pipe syntax)
+      processed = _renderTables(processed);
+
+      // Bold, italic, strikethrough
+      processed = processed.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      processed = processed.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+      // Lists — convert to proper HTML
+      processed = _renderLists(processed);
+
+      // Paragraphs — wrap loose lines in <p> tags
+      processed = _renderParagraphs(processed);
+
+      // Restore math blocks
+      mathBlocks.forEach((math, i) => {
+        const escaped = math.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        processed = processed.replace(`%%MATHBLOCK_${i}%%`, `<div class="math-block">${escaped}</div>`);
+      });
+      inlineMaths.forEach((math, i) => {
+        const escaped = math.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        processed = processed.replace(`%%INLINEMATH_${i}%%`, `<span class="math-inline">${escaped}</span>`);
+      });
+
+      // Restore inline code
+      inlineCodes.forEach((code, i) => {
+        const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        processed = processed.replace(`%%INLINECODE_${i}%%`, `<code>${escaped}</code>`);
+      });
+
+      // Restore code blocks with language labels and copy buttons
+      codeBlocks.forEach((block, i) => {
+        const escaped = block.code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const langLabel = block.lang ? block.lang : 'code';
+        const header = `<div class="code-block-header"><span class="code-block-lang">${langLabel}</span><button class="code-block-copy" onclick="phase5CopyCode(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div>`;
+        processed = processed.replace(`%%CODEBLOCK_${i}%%`,
+          `<pre>${header}<code class="language-${block.lang || 'text'}">${escaped}</code></pre>`);
+      });
+
+      return processed;
+    };
+
+    // Table parser
+    function _renderTables(text) {
+      const lines = text.split('\n');
+      let result = [];
+      let inTable = false;
+      let tableRows = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        // Detect table rows: must have | at start and end (or at least 2 |'s)
+        const pipeCount = (line.match(/\|/g) || []).length;
+        if (pipeCount >= 2 && line.includes('|')) {
+          // Check if this is a separator row (|---|---|)
+          const isSep = /^\|?[\s-:]+(\|[\s-:]+)+\|?$/.test(line);
+          if (!inTable && !isSep) {
+            inTable = true;
+            tableRows = [];
+          }
+          tableRows.push({ line, isSep });
+        } else {
+          if (inTable && tableRows.length > 0) {
+            result.push(_buildTable(tableRows));
+            tableRows = [];
+            inTable = false;
+          }
+          result.push(lines[i]);
+        }
+      }
+      if (inTable && tableRows.length > 0) {
+        result.push(_buildTable(tableRows));
+      }
+      return result.join('\n');
+    }
+
+    function _buildTable(rows) {
+      if (rows.length < 2) {
+        // Not enough rows for a proper table, return as-is
+        return rows.map(r => r.line).join('\n');
+      }
+
+      let html = '<table>';
+      let headerDone = false;
+
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].isSep) {
+          headerDone = true;
+          continue;
+        }
+        const cells = rows[i].line.split('|').map(c => c.trim()).filter(c => c !== '');
+        if (!headerDone && i === 0) {
+          html += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+        } else {
+          html += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+      }
+      html += '</tbody></table>';
+      return html;
+    }
+
+    // List parser — handles nested ordered and unordered lists
+    function _renderLists(text) {
+      const lines = text.split('\n');
+      let result = [];
+      let listStack = []; // Stack of { type: 'ul'|'ol', indent }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Match unordered: "  - item" or "  * item"
+        const ulMatch = line.match(/^(\s*)([-*])\s+(.+)$/);
+        // Match ordered: "  1. item"
+        const olMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
+
+        if (ulMatch || olMatch) {
+          const indent = (ulMatch || olMatch)[1].length;
+          const type = ulMatch ? 'ul' : 'ol';
+          const content = (ulMatch || olMatch)[3];
+
+          // Close deeper lists
+          while (listStack.length > 0 && listStack[listStack.length - 1].indent > indent) {
+            const popped = listStack.pop();
+            result.push(`</${popped.type}>`);
+          }
+
+          // Open new list if needed
+          if (listStack.length === 0 || listStack[listStack.length - 1].indent < indent) {
+            listStack.push({ type, indent });
+            result.push(`<${type}>`);
+          } else if (listStack[listStack.length - 1].type !== type) {
+            // Same indent but different type — close and reopen
+            const popped = listStack.pop();
+            result.push(`</${popped.type}>`);
+            listStack.push({ type, indent });
+            result.push(`<${type}>`);
+          }
+
+          result.push(`<li>${content}</li>`);
+        } else {
+          // Close all open lists
+          while (listStack.length > 0) {
+            const popped = listStack.pop();
+            result.push(`</${popped.type}>`);
+          }
+          result.push(lines[i]);
+        }
+      }
+      // Close remaining lists
+      while (listStack.length > 0) {
+        const popped = listStack.pop();
+        result.push(`</${popped.type}>`);
+      }
+
+      return result.join('\n');
+    }
+
+    // Paragraph wrapper — wraps loose text lines in <p> blocks
+    function _renderParagraphs(text) {
+      const lines = text.split('\n');
+      let result = [];
+      let paragraph = [];
+
+      const isBlock = (line) => {
+        const trimmed = line.trim();
+        return trimmed === '' ||
+          trimmed.startsWith('<h') ||
+          trimmed.startsWith('<ul') || trimmed.startsWith('</ul') ||
+          trimmed.startsWith('<ol') || trimmed.startsWith('</ol') ||
+          trimmed.startsWith('<li') ||
+          trimmed.startsWith('<blockquote') || trimmed.startsWith('</blockquote') ||
+          trimmed.startsWith('<pre') || trimmed.startsWith('</pre') ||
+          trimmed.startsWith('<table') || trimmed.startsWith('</table') ||
+          trimmed.startsWith('<thead') || trimmed.startsWith('</thead') ||
+          trimmed.startsWith('<tbody') || trimmed.startsWith('</tbody') ||
+          trimmed.startsWith('<tr') || trimmed.startsWith('</tr') ||
+          trimmed.startsWith('<hr') ||
+          trimmed.startsWith('<div') || trimmed.startsWith('</div') ||
+          trimmed.startsWith('<img') ||
+          trimmed.startsWith('%%CODEBLOCK') ||
+          trimmed.startsWith('%%MATHBLOCK');
+      };
+
+      const flushParagraph = () => {
+        if (paragraph.length > 0) {
+          result.push('<p>' + paragraph.join('<br>') + '</p>');
+          paragraph = [];
+        }
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === '') {
+          flushParagraph();
+        } else if (isBlock(line)) {
+          flushParagraph();
+          result.push(line);
+        } else {
+          paragraph.push(line);
+        }
+      }
+      flushParagraph();
+
+      return result.join('\n');
+    }
+
+    // Global copy function for code blocks
+    window.phase5CopyCode = function(btn) {
+      const pre = btn.closest('pre');
+      if (!pre) return;
+      const code = pre.querySelector('code');
+      if (!code) return;
+      const text = code.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    };
+
+    console.log('[Phase5] Enhanced formatMessage renderer installed');
+
+
+    // ═══════════════════════════════════════════════
+    // 2. STREAMING POLISH — Token rendering + Stop + Stats
+    // ═══════════════════════════════════════════════
+
+    // We need to track the active AbortController for streaming
+    let _activeAbortController = null;
+    let _activeStreamReader = null;
+
+    // Override sendChat with improved streaming
+    // First, get the real original (before Phase4's attachment wrapper)
+    // We keep the attachment wrapper — just replace the inner _baseSendChat
+    const _phase4SendChat = window.sendChat; // This is the attachment wrapper
+    const _phase4BaseSendChat = window._baseSendChat; // This is the original sendChat
+
+    // Replace the core sendChat function
+    window._baseSendChat = async function phase5SendChat() {
+      const chatInput = document.getElementById('chatInput');
+      const chatMessages = document.getElementById('chatMessages');
+      const thinkingBubble = document.getElementById('thinkingBubble');
+      const quickActions = document.getElementById('quickActions');
+
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = '';
+      _phase5AutoResize();
+
+      appendChat('user', text);
+      chatHistory.push({ role: 'user', content: text });
+      _saveToLocal();
+
+      thinkingBubble.style.display = 'flex';
+      if (thinkingBubble._showTime !== undefined) thinkingBubble._showTime = Date.now();
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const model = currentModel || 'nova-auto';
+      const apiKey = getKeyForModel(model);
+
+      // Create AbortController for stop functionality
+      const abortController = new AbortController();
+      _activeAbortController = abortController;
+
+      // Show stop button
+      const stopBtn = _createStopButton(abortController);
+
+      // Token tracking
+      let tokenCount = 0;
+      let startTime = Date.now();
+
+      try {
+        const reqBody = { message: text, model: model, history: chatHistory.slice(-20) };
+        if (currentChatId) reqBody.chat_id = currentChatId;
+        if (apiKey) reqBody.api_key = apiKey;
+        if (typeof webSearchEnabled !== 'undefined' && webSearchEnabled) {
+          reqBody.web_search = true;
+        }
+
+        const res = await fetch('/api/v2/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody),
+          signal: abortController.signal
+        });
+
+        thinkingBubble.style.display = 'none';
+
+        if (!res.ok) {
+          _removeStopButton();
+          appendChat('assistant', 'Sorry, something went wrong. (HTTP ' + res.status + ')');
+          return;
+        }
+
+        const reader = res.body.getReader();
+        _activeStreamReader = reader;
+        const decoder = new TextDecoder();
+        let buffer = '', rawReply = '', msgDiv = null, evtType = '';
+        let thinkBuf = '', inThink = false;
+
+        // For progressive rendering: track code block open state
+        let _lastRenderedLen = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              evtType = line.slice(6).trim();
+              continue;
+            }
+            if (!line.startsWith('data:')) continue;
+            const raw = line.slice(5).trim();
+            if (!raw || raw === '[DONE]') continue;
+
+            try {
+              const data = JSON.parse(raw);
+              if (evtType === 'error') {
+                const errMsg = data.error || 'Unknown error';
+                _removeStopButton();
+                if (errMsg.includes('requires an API key') || errMsg.includes('401') || errMsg.includes('403') || errMsg.includes('invalid') || errMsg.includes('Incorrect API')) {
+                  appendChat('assistant', '🔑 Invalid or missing API key. Switching back to free model.');
+                  _revertToPreviousModel();
+                } else {
+                  appendChat('assistant', 'Error: ' + errMsg);
+                }
+                return;
+              }
+              if (data.chat_id) currentChatId = data.chat_id;
+              const token = data.token || data.content || data.text || '';
+              if (token) {
+                tokenCount++;
+                rawReply += token;
+
+                // Detect <think> blocks
+                if (rawReply.includes('<think>') && !rawReply.includes('</think>')) {
+                  inThink = true;
+                  continue;
+                }
+                if (rawReply.includes('</think>')) inThink = false;
+
+                // Split thinking vs visible content
+                let visible = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+                let thinking = '';
+                const thinkMatch = rawReply.match(/<think>([\s\S]*?)<\/think>/);
+                if (thinkMatch) thinking = thinkMatch[1].trim();
+                if (inThink) continue;
+
+                if (visible) {
+                  // Progressive markdown rendering:
+                  // Only re-render if meaningful new content arrived
+                  const shouldRender = visible.length - _lastRenderedLen >= 1;
+
+                  if (shouldRender) {
+                    _lastRenderedLen = visible.length;
+
+                    // Smart rendering: use formatMessage for progressive markdown
+                    const rendered = _progressiveRender(visible);
+
+                    if (!msgDiv) {
+                      msgDiv = appendChat('assistant', '', { thinking, streaming: true, model });
+                      const bubble = msgDiv.querySelector('.msg-bubble');
+                      bubble.innerHTML = rendered;
+                      if (!bubble.classList.contains('streaming-cursor')) {
+                        bubble.classList.add('streaming-cursor');
+                      }
+                    } else {
+                      const bubble = msgDiv.querySelector('.msg-bubble');
+                      bubble.innerHTML = rendered;
+                      if (!bubble.classList.contains('streaming-cursor')) {
+                        bubble.classList.add('streaming-cursor');
+                      }
+                      // Update thinking content if present
+                      const tc = msgDiv.querySelector('.thinking-content');
+                      if (tc && thinking) tc.innerHTML = formatMessage(thinking);
+                    }
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                  }
+                }
+              }
+            } catch (_) {
+              rawReply += raw;
+              let visible = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+              if (visible) {
+                const rendered = _progressiveRender(visible);
+                if (!msgDiv) {
+                  msgDiv = appendChat('assistant', visible);
+                  msgDiv.querySelector('.msg-bubble').innerHTML = rendered;
+                } else {
+                  msgDiv.querySelector('.msg-bubble').innerHTML = rendered;
+                }
+              }
+            }
+          }
+        }
+
+        // Final cleanup
+        _removeStopButton();
+
+        if (msgDiv) {
+          const bubble = msgDiv.querySelector('.msg-bubble');
+          if (bubble) {
+            bubble.classList.remove('streaming-cursor');
+            // Final full render with formatMessage
+            let finalVisible = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+            if (finalVisible) {
+              bubble.innerHTML = formatMessage(finalVisible);
+            }
+          }
+          // Add code block copy buttons
+          _addPhase5CopyButtons(msgDiv);
+
+          // Add token stats
+          const elapsed = (Date.now() - startTime) / 1000;
+          const tokensPerSec = tokenCount > 0 ? (tokenCount / elapsed).toFixed(1) : '0';
+          _addTokenStats(msgDiv, tokenCount, tokensPerSec, elapsed);
+        }
+
+        let finalVisible = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        let finalThink = '';
+        const fm = rawReply.match(/<think>([\s\S]*?)<\/think>/);
+        if (fm) finalThink = fm[1].trim();
+        if (finalVisible) {
+          if (!msgDiv) {
+            msgDiv = appendChat('assistant', finalVisible, { thinking: finalThink });
+            _addPhase5CopyButtons(msgDiv);
+          }
+          chatHistory.push({ role: 'assistant', content: finalVisible });
+          _saveToLocal();
+        } else if (!msgDiv) {
+          appendChat('assistant', '(No response)');
+        }
+        loadRecentConversations();
+
+      } catch (err) {
+        thinkingBubble.style.display = 'none';
+        _removeStopButton();
+        if (err.name === 'AbortError') {
+          // User stopped generation
+          if (msgDiv) {
+            const bubble = msgDiv.querySelector('.msg-bubble');
+            if (bubble) {
+              bubble.classList.remove('streaming-cursor');
+              let partial = rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+              if (partial) {
+                bubble.innerHTML = formatMessage(partial);
+                _addPhase5CopyButtons(msgDiv);
+                // Add stats for partial generation
+                const elapsed = (Date.now() - startTime) / 1000;
+                const tokensPerSec = tokenCount > 0 ? (tokenCount / elapsed).toFixed(1) : '0';
+                _addTokenStats(msgDiv, tokenCount, tokensPerSec, elapsed, true);
+              }
+            }
+            chatHistory.push({ role: 'assistant', content: rawReply.replace(/<think>[\s\S]*?<\/think>/g, '').trim() });
+            _saveToLocal();
+          }
+          if (typeof showToast === 'function') showToast('⏹ Generation stopped');
+        } else {
+          appendChat('assistant', 'Connection error. Please try again.');
+        }
+      } finally {
+        _activeAbortController = null;
+        _activeStreamReader = null;
+        thinkingBubble.style.display = 'none';
+      }
+    };
+
+    // Collect the variable rawReply in a closure-safe way
+    let rawReply = '';
+
+    // Progressive render: render markdown but handle incomplete code blocks gracefully
+    function _progressiveRender(text) {
+      // Check if there's an unclosed code block
+      const openFences = (text.match(/```/g) || []).length;
+      let processText = text;
+
+      if (openFences % 2 !== 0) {
+        // Odd number of fences = unclosed code block
+        // Close it temporarily for rendering, so it doesn't break layout
+        processText = text + '\n```';
+      }
+
+      return formatMessage(processText);
+    }
+
+    // Add copy buttons to all code blocks in a message div (for final render)
+    function _addPhase5CopyButtons(container) {
+      // The new formatMessage already includes copy buttons via code-block-header
+      // But also handle any old-style pre blocks that might not have headers
+      container.querySelectorAll('pre').forEach(pre => {
+        if (pre.querySelector('.code-block-header')) return; // already has our header
+        if (pre.querySelector('.copy-code-btn')) return; // has old-style button
+        // Add old-style copy button as fallback
+        const btn = document.createElement('button');
+        btn.className = 'copy-code-btn';
+        btn.textContent = 'Copy';
+        btn.onclick = () => {
+          const code = pre.querySelector('code');
+          navigator.clipboard.writeText(code ? code.textContent : pre.textContent);
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        };
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+      });
+    }
+
+    // Create "Stop generating" button
+    function _createStopButton(abortController) {
+      _removeStopButton(); // clean up any existing
+      const btn = document.createElement('button');
+      btn.className = 'stop-generating-btn';
+      btn.id = 'stopGeneratingBtn';
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Stop generating`;
+      btn.onclick = () => {
+        abortController.abort();
+        _removeStopButton();
+      };
+      const inputContainer = document.getElementById('chatInputContainer');
+      if (inputContainer) {
+        inputContainer.insertBefore(btn, inputContainer.firstChild);
+      }
+      return btn;
+    }
+
+    function _removeStopButton() {
+      const existing = document.getElementById('stopGeneratingBtn');
+      if (existing) existing.remove();
+    }
+
+    // Add token stats below a message
+    function _addTokenStats(msgDiv, tokens, tps, elapsed, stopped) {
+      const metaArea = msgDiv.querySelector('.msg-meta') || msgDiv.querySelector('.msg-time');
+      if (!metaArea) return;
+
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'msg-token-stats';
+      statsDiv.innerHTML = `
+        <span class="stat-item"><span class="stat-icon">⚡</span>${tokens} tokens</span>
+        <span class="stat-item"><span class="stat-icon">🚀</span>${tps} tok/s</span>
+        <span class="stat-item"><span class="stat-icon">⏱</span>${elapsed.toFixed(1)}s</span>
+        ${stopped ? '<span class="stat-item" style="color:rgba(239,68,68,.6)"><span class="stat-icon">⏹</span>stopped</span>' : ''}
+      `;
+      metaArea.parentElement.appendChild(statsDiv);
+    }
+
+    console.log('[Phase5] Streaming polish with stop button + token stats installed');
+
+
+    // ═══════════════════════════════════════════════
+    // 3. CHAT RESTORE — Proper loading from server
+    // ═══════════════════════════════════════════════
+
+    // Override loadChat with a more robust version
+    window.loadChat = async function(chatId) {
+      const chatMessages = document.getElementById('chatMessages');
+      const thinkingBubble = document.getElementById('thinkingBubble');
+      const quickActions = document.getElementById('quickActions');
+
+      try {
+        const res = await fetch(`/api/chats/${chatId}/messages`);
+        if (!res.ok) {
+          if (typeof showToast === 'function') showToast('Failed to load chat');
+          return;
+        }
+        const data = await res.json();
+        const msgs = data.messages || data || [];
+        if (!msgs.length) {
+          if (typeof showToast === 'function') showToast('Chat is empty');
+          return;
+        }
+
+        // Clear current chat UI
+        chatHistory = [];
+        const existing = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
+        existing.forEach(el => { if (!el.id) el.remove(); });
+
+        // Hide welcome screen
+        const ws = document.getElementById('welcomeScreen');
+        if (ws) ws.style.display = 'none';
+
+        // Hide quick actions
+        if (quickActions) quickActions.style.display = 'none';
+
+        // Restore ALL messages with timestamps
+        msgs.forEach(m => {
+          if (m.role && m.content) {
+            const t = m.created_at
+              ? new Date(m.created_at * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+              : timeStr();
+            const div = appendChat(m.role, m.content, { time: t });
+            // Add copy buttons to code blocks
+            if (div) _addPhase5CopyButtons(div);
+            chatHistory.push({ role: m.role, content: m.content });
+          }
+        });
+
+        // Set current chat ID
+        currentChatId = chatId;
+        _saveToLocal();
+
+        // Switch to chat panel
+        switchPanel('chat');
+
+        // Hide welcome screen again (switchPanel might re-show it)
+        if (ws) ws.style.display = 'none';
+        if (quickActions) quickActions.style.display = 'none';
+
+        // Scroll to bottom
+        setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+
+      } catch (err) {
+        console.error('[Phase5] loadChat error:', err);
+        if (typeof showToast === 'function') showToast('Error loading chat');
+      }
+    };
+
+    // Override startNewChat with cleaner reset
+    const _origStartNewChat = window.startNewChat;
+    window.startNewChat = function() {
+      const chatMessages = document.getElementById('chatMessages');
+      const thinkingBubble = document.getElementById('thinkingBubble');
+      const chatInput = document.getElementById('chatInput');
+
+      // Clear localStorage
+      localStorage.removeItem('nova_active_chat');
+
+      // Clear state
+      chatHistory = [];
+      currentChatId = null;
+
+      // Clear pending attachments
+      if (typeof pendingAttachments !== 'undefined') {
+        pendingAttachments = [];
+      }
+      if (typeof renderAttachPreview === 'function') {
+        renderAttachPreview();
+      }
+
+      // Remove all messages except thinkingBubble
+      const msgs = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
+      msgs.forEach(el => { if (!el.id) el.remove(); });
+
+      // Re-add welcome message
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'message assistant';
+      welcomeDiv.innerHTML = `
+        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+        <div>
+          <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
+          <div class="msg-meta">
+            <span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+          </div>
+        </div>`;
+      chatMessages.insertBefore(welcomeDiv, thinkingBubble);
+
+      // Show welcome screen and quick actions
+      const ws = document.getElementById('welcomeScreen');
+      if (ws) ws.style.display = 'block';
+      const qa = document.getElementById('quickActions');
+      if (qa) qa.style.display = '';
+
+      // Show chat panel
+      document.getElementById('chatPanel').style.display = 'flex';
+      document.querySelectorAll('.panel-view').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.nav-item').forEach(n =>
+        n.classList.toggle('active', n.dataset.panel === 'chat'));
+
+      // Clear and focus input
+      if (chatInput) {
+        chatInput.value = '';
+        _phase5AutoResize();
+        chatInput.focus();
+      }
+
+      // Remove stop button if present
+      _removeStopButton();
+
+      console.log('[Phase5] New chat started');
+    };
+
+    console.log('[Phase5] Chat restore & new chat overrides installed');
+
+
+    // ═══════════════════════════════════════════════
+    // 4. CHAT INPUT ENHANCEMENTS
+    // ═══════════════════════════════════════════════
+
+    const chatInput = document.getElementById('chatInput');
+    if (!chatInput) return;
+
+    // 4a. Improved auto-resize (up to 6 lines max = 144px)
+    function _phase5AutoResize() {
+      chatInput.style.height = 'auto';
+      const maxH = 144; // ~6 lines
+      chatInput.style.height = Math.min(chatInput.scrollHeight, maxH) + 'px';
+    }
+    // Override the global autoResize
+    window.autoResize = _phase5AutoResize;
+
+    // Re-bind input listener for auto-resize
+    chatInput.addEventListener('input', _phase5AutoResize);
+
+    // 4b. Character count indicator
+    const charCountEl = document.createElement('div');
+    charCountEl.className = 'char-count-indicator';
+    charCountEl.id = 'charCountIndicator';
+    const inputContainer = document.getElementById('chatInputContainer');
+    if (inputContainer) {
+      inputContainer.style.position = 'relative';
+      inputContainer.appendChild(charCountEl);
+    }
+
+    chatInput.addEventListener('input', () => {
+      const len = chatInput.value.length;
+      if (len > 500) {
+        charCountEl.textContent = `${len.toLocaleString()} chars`;
+        charCountEl.classList.add('visible');
+        charCountEl.classList.remove('warning', 'danger');
+        if (len > 3000) {
+          charCountEl.classList.add('danger');
+        } else if (len > 1500) {
+          charCountEl.classList.add('warning');
+        }
+      } else {
+        charCountEl.classList.remove('visible', 'warning', 'danger');
+      }
+    });
+
+    // 4c. Cmd/Ctrl+K to focus input from anywhere (already exists, reinforce)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        chatInput.focus();
+      }
+    });
+
+    // 4d. Paste image support from clipboard
+    chatInput.addEventListener('paste', (e) => {
+      const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            // Add to pending attachments
+            if (typeof pendingAttachments === 'undefined') window.pendingAttachments = [];
+            pendingAttachments.push({
+              name: `pasted-image-${Date.now()}.png`,
+              type: file.type,
+              size: file.size,
+              data: ev.target.result,
+              isImage: true
+            });
+            if (typeof renderAttachPreview === 'function') {
+              renderAttachPreview();
+            }
+
+            // Show toast feedback
+            _showPasteToast('📎 Image pasted from clipboard');
+          };
+          reader.readAsDataURL(file);
+          break; // Only handle first image
+        }
+      }
+    });
+
+    function _showPasteToast(msg) {
+      let toast = document.getElementById('pasteImageToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'paste-image-toast';
+        toast.id = 'pasteImageToast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.remove('show');
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    console.log('[Phase5] Chat input enhancements installed');
+
+
+    // ═══════════════════════════════════════════════
+    // FINAL: Log complete
+    // ═══════════════════════════════════════════════
+    console.log('[Phase5] ✓ Conversation Engine fully initialized');
+  }
+})();
+</script>
+
+
 </body>
 </html>
