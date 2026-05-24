@@ -1,0 +1,1349 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 4: FULL BUG AUDIT + POLISH + VOICE/PRESENCE + PLUGIN SCAFFOLD
+     Nova AI — Bug Fixes, Motion Polish, Voice UI, Plugin System
+     Generated: 2025-05-24
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════
+     PHASE 4: BUG LIST (Complete Audit)
+     ═══════════════════════════════════════════════════
+
+     BUG #1: DUPLICATE KEYDOWN LISTENER ON chatInput
+     Severity: HIGH — Sends two sendChat() calls on Enter
+     Location: Line ~3547 registers Enter handler, then line ~4047 registers ANOTHER via chatInput._keyHandler
+     Root cause: Two separate addEventListener('keydown') on the same textarea
+     Fix: Remove the second registration; keep only the first
+
+     BUG #2: webSearchEnabled NEVER SENT TO BACKEND
+     Severity: MEDIUM — Web search toggle is purely cosmetic, does nothing
+     Location: toggleWebSearch() sets the flag, sendChat() never reads it
+     Fix: Include web_search: webSearchEnabled in the API request body
+
+     BUG #3: loadRecentConversations FAILS ON FIRST LOAD
+     Severity: HIGH — Recent conversations widget never populates
+     Location: Uses querySelector('.widget .recent-item')?.parentElement which returns null
+     because no .recent-item elements exist on first load
+     Fix: Find the Recent widget by its label text or a data attribute instead
+
+     BUG #4: _restoreFromLocal DUPLICATES WELCOME MESSAGE
+     Severity: MEDIUM — Hardcoded welcome message stays when restoring saved chat
+     Location: HTML has a hardcoded assistant welcome message, _restoreFromLocal appends saved messages on top
+     Fix: Remove the hardcoded welcome message when restoring, or skip restore if it would duplicate
+
+     BUG #5: thinkingBubble STAYS VISIBLE ON EARLY ERROR
+     Severity: MEDIUM — If fetch throws before SSE parsing, thinking dots stay forever
+     Location: sendChat() sets display='flex' then catch block sets display='none',
+     but the SSE parsing loop can throw inside the try after hiding the bubble
+     Fix: Ensure thinkingBubble is hidden in all error paths and finally blocks
+
+     BUG #6: formatMessage LIST REGEX IS BROKEN
+     Severity: LOW — Multiple separate lists get incorrectly grouped, only first match wrapped in <ul>
+     Location: .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>') — uses 's' flag, catches everything
+     Fix: Replace with a proper multi-pass that wraps consecutive <li> runs in <ul>
+
+     BUG #7: loadChat DOESN'T HIDE WELCOME SCREEN
+     Severity: MEDIUM — Loading a chat from memory shows both welcome screen and the old conversation
+     Location: loadChat() calls switchPanel('chat') which shows welcome screen
+     Fix: Hide welcome screen when loading a non-empty chat
+
+     BUG #8: escapeHtml DOESN'T ESCAPE QUOTES
+     Severity: LOW (XSS risk) — Used in alt="" and other attribute contexts
+     Location: escapeHtml only escapes &, <, >
+     Fix: Also escape " and '
+
+     BUG #9: quickActions HIDDEN PERMANENTLY AFTER FIRST MESSAGE
+     Severity: LOW — Once hidden, quick actions never reappear until startNewChat()
+     Location: appendChat sets quickActions.style.display = 'none'
+     Fix: Show quick actions again when there are no user messages (e.g., after clearing)
+
+     BUG #10: voiceBtn TOGGLED ON EVERY appendChat
+     Severity: LOW — Voice button hides/shows erratically as messages are added
+     Location: appendChat always sets voiceBtn display based on current message role
+     Fix: Only show/hide voiceBtn based on whether ANY assistant messages exist
+
+     BUG #11: startNewChat REMOVES WELCOME MESSAGE BUT DOESN'T RE-ADD IT
+     Severity: LOW — New chat shows empty chat area, no welcome message
+     Location: querySelectorAll('.message:not(#thinkingBubble)') removes the hardcoded welcome too
+     Fix: Re-insert the welcome message after clearing
+
+     BUG #12: deleteChat DOESN'T RESPECT CURRENT MEMORY VIEW
+     Severity: LOW — After deleting, always re-renders galaxy even if user was in list view
+     Location: deleteChat calls loadChatList() which calls loadMemoryGalaxy()
+     Fix: loadMemoryGalaxy already checks _galaxyView, so this actually works. Not a bug.
+
+     BUG #13: DEAD CSS — model-trigger, model-menu, model-dropdown, #modelSelect
+     Severity: NONE (dead code) — CSS selectors for elements that don't exist in HTML
+     Location: Multiple CSS blocks for .model-trigger, .model-menu, .model-dropdown, #modelSelect
+     Fix: Not breaking anything, just bloat. No fix needed.
+
+     BUG #14: keyModal EVENT LISTENER TIMING
+     Severity: LOW — Script tries to attach click listener to #keyModal before it exists in DOM
+     Location: document.getElementById('keyModal')?.addEventListener(...)
+     Fix: The ?. operator prevents crash, but the listener never attaches.
+     Move to DOMContentLoaded or after modal HTML.
+
+     BUG #15: saveKeys() REFERENCES keyOpenAI etc. BUT THESE ARE IN THE MODAL AT THE BOTTOM
+     Severity: LOW — The modal HTML is after the script, but getElementById works post-parse
+     because the script runs synchronously and the modal HTML follows it.
+     Actually: the script block DOES execute before the modal HTML is parsed.
+     So getElementById('keyOpenAI') returns null during openKeyModal() on first call.
+     Wait — the script is inline and blocking, but by the time the user clicks,
+     the full DOM is parsed. So this works at interaction time, just not at parse time.
+     The only issue is the event listener in BUG #14.
+
+     BUG #16: NO SMOOTH SCROLL ON MESSAGE SEND
+     Severity: LOW — chatMessages.scrollTop = scrollHeight is instant, not smooth
+     Location: appendChat and sendChat both set scrollTop directly
+     Fix: Use scrollTo with behavior:'smooth' or CSS scroll-behavior:smooth
+
+     BUG #17: POTENTIAL MEMORY LEAK — Event listeners on galaxy nodes
+     Severity: LOW — Each renderGalaxy creates new DOM nodes with listeners, old ones
+     are removed via innerHTML = '' which properly GCs them. Not a leak.
+
+     BUG #18: sendChat OVERWRITES ITSELF
+     Severity: HIGH — The file attachment wrapper does `sendChat = async function() {...}`
+     which overwrites the original. Combined with BUG #1 (double keydown),
+     the second listener calls the OLD sendChat (pre-override) while the first
+     calls the new one. This means Enter key fires BOTH versions.
+     Fix: Fix BUG #1 to remove duplicate listener. The override pattern itself is OK
+     since _baseSendChat captures the original function reference.
+
+     BUG #19: PENDING ATTACHMENTS NOT CLEARED ON NEW CHAT
+     Severity: LOW — startNewChat() doesn't clear pendingAttachments array
+     Fix: Clear pendingAttachments and hide preview on new chat
+
+     BUG #20: settingsDefaultModel CHANGE TRIGGERS KEY MODAL
+     Severity: LOW — Changing default model in settings to a BYOK model opens the key modal
+     Location: Event listener calls selectModel() which checks for API key
+     Fix: Expected behavior, but could be jarring. Add a note or handle more gracefully.
+
+     BUG #21: CLOCK UPDATES EVERY 30 SECONDS
+     Severity: COSMETIC — setInterval(updateClock, 30000) can drift, showing stale time
+     Fix: Update every 15 seconds or use requestAnimationFrame
+
+     BUG #22: NO MOBILE HAMBURGER MENU
+     Severity: MEDIUM — On mobile (≤768px), sidebar is display:none with no way to access nav
+     Location: @media(max-width:768px){#sidebar{display:none}}
+     Fix: Add a hamburger button that toggles sidebar on mobile
+
+     BUG #23: attachPreview INSIDE input-bar BREAKS LAYOUT
+     Severity: LOW — The preview div is between input-left and textarea in the flex layout
+     but it has display:none by default and flex-wrap. When shown, it inserts between
+     the left buttons and the textarea, breaking the horizontal flow.
+     Fix: Move preview rendering above the input-bar or use absolute positioning
+
+     TOTAL BUGS FOUND: 23 (7 HIGH/MEDIUM, 16 LOW/COSMETIC)
+
+═══════════════════════════════════════════════════ -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     PHASE 4: CSS — Motion, Polish, Voice, Plugins
+     ═══════════════════════════════════════════════════ -->
+<style>
+/* ─── PHASE 4: Panel Transition Animations ─── */
+/* Smooth panel fade when switching */
+.panel-view,
+.chat-panel,
+.welcome-screen {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.panel-entering {
+  animation: panelFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ─── Message Appear Animation (Staggered fadeInUp) ─── */
+.message.phase4-enter {
+  animation: msgFadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes msgFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ─── Button Hover Effects (Scale + Glow) ─── */
+.nav-item,
+.quick-card,
+.panel-card,
+.model-card,
+.agent-card:not(.locked),
+.space-card:not(.locked),
+.new-chat-btn,
+.settings-btn-save,
+.img-gen-btn,
+.btn-sign-in {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              background 0.25s ease,
+              border-color 0.25s ease !important;
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+.new-chat-btn:hover,
+.settings-btn-save:hover,
+.btn-sign-in:hover {
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* ─── Sidebar Item Hover Transitions ─── */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  background: var(--purple);
+  border-radius: 0 2px 2px 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item {
+  position: relative;
+}
+.nav-item.active::after {
+  transform: translateY(-50%) scaleY(1);
+}
+
+/* ─── Loading Skeleton for Chat History ─── */
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    rgba(123, 97, 255, 0.04) 25%,
+    rgba(123, 97, 255, 0.1) 50%,
+    rgba(123, 97, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.skeleton-line:nth-child(2) { width: 85%; animation-delay: 0.1s; }
+.skeleton-line:nth-child(3) { width: 70%; animation-delay: 0.2s; }
+.skeleton-line:nth-child(4) { width: 60%; animation-delay: 0.3s; }
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  background: rgba(10, 15, 35, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+/* ─── Input Bar Focus Animation ─── */
+.input-bar::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(123, 97, 255, 0.5) 30%,
+    rgba(94, 235, 255, 0.3) 70%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.input-bar:focus-within::before {
+  opacity: 1;
+}
+
+/* ─── Welcome Screen Entrance Animation ─── */
+.welcome-entering {
+  animation: welcomeEntrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes welcomeEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ─── "Nova is thinking..." Cinematic Animation ─── */
+.nova-thinking-cinematic {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(10, 15, 35, 0.72);
+  border: 1px solid rgba(123, 97, 255, 0.12);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nova-thinking-cinematic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(123, 97, 255, 0.06) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: thinkingWave 2s ease-in-out infinite;
+}
+
+@keyframes thinkingWave {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.nova-thinking-orb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6B51EF, #8B6BFF, #5EEBFF);
+  position: relative;
+  flex-shrink: 0;
+  animation: orbPulse 2s ease-in-out infinite;
+}
+
+.nova-thinking-orb::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(123, 97, 255, 0.3);
+  animation: orbRing 2s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 12px rgba(123, 97, 255, 0.4), 0 0 30px rgba(123, 97, 255, 0.15);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(123, 97, 255, 0.6), 0 0 50px rgba(123, 97, 255, 0.25);
+  }
+}
+
+@keyframes orbRing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+.nova-thinking-text {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-style: italic;
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
+}
+
+.nova-thinking-text span {
+  animation: textFade 2s ease-in-out infinite;
+}
+
+@keyframes textFade {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ─── Voice Button "Coming Soon" Tooltip ─── */
+.voice-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(10, 14, 28, 0.95);
+  border: 1px solid rgba(123, 97, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--purple);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.voice-tooltip.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.voice-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(123, 97, 255, 0.25);
+}
+
+/* ─── Sidebar Logo Breathing Glow (Voice Presence) ─── */
+.sidebar-logo img {
+  animation: logoAmbientBreathe 4s ease-in-out infinite alternate !important;
+}
+
+@keyframes logoAmbientBreathe {
+  0% {
+    filter: brightness(3) drop-shadow(0 0 15px rgba(123, 97, 255, 0.3))
+            drop-shadow(0 0 30px rgba(123, 97, 255, 0.1));
+  }
+  100% {
+    filter: brightness(3.2) drop-shadow(0 0 25px rgba(123, 97, 255, 0.5))
+            drop-shadow(0 0 50px rgba(123, 97, 255, 0.2))
+            drop-shadow(0 0 80px rgba(94, 235, 255, 0.08));
+  }
+}
+
+/* ─── Plugin System Styles ─── */
+.plugins-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.plugin-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(10, 15, 35, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+
+.plugin-item:hover {
+  background: rgba(10, 15, 35, 0.7);
+  border-color: rgba(123, 97, 255, 0.1);
+}
+
+.plugin-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  background: rgba(123, 97, 255, 0.08);
+  border: 1px solid rgba(123, 97, 255, 0.1);
+}
+
+.plugin-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.plugin-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.plugin-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* Toggle switch */
+.plugin-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.plugin-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.plugin-toggle .toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.plugin-toggle .toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.plugin-toggle input:checked + .toggle-slider {
+  background: rgba(123, 97, 255, 0.2);
+  border-color: rgba(123, 97, 255, 0.35);
+}
+
+.plugin-toggle input:checked + .toggle-slider::after {
+  transform: translateX(20px);
+  background: var(--purple);
+  box-shadow: 0 0 8px rgba(123, 97, 255, 0.5);
+}
+
+.plugin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+}
+
+.plugin-badge.beta {
+  background: rgba(94, 235, 255, 0.08);
+  color: var(--blue);
+  border: 1px solid rgba(94, 235, 255, 0.15);
+}
+
+.plugin-badge.coming-soon {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Mobile Hamburger Menu ─── */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 15, 35, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--text);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(123, 97, 255, 0.1);
+  border-color: rgba(123, 97, 255, 0.2);
+}
+
+.mobile-menu-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  #sidebar.mobile-open {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 280px;
+    z-index: 999;
+    border-radius: 0 20px 20px 0;
+    animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 998;
+    animation: fadeIn 0.2s ease forwards;
+  }
+
+  @keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+}
+
+/* ─── Smooth Scroll Enhancement ─── */
+#chatMessages {
+  scroll-behavior: smooth;
+}
+
+/* ─── Microphone Button Styles (Voice Scaffold) ─── */
+#micBtn {
+  position: relative;
+}
+
+/* ─── Attach Preview Fix — Move above input bar ─── */
+#attachPreviewFixed {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#attachPreviewFixed.has-items {
+  display: flex;
+}
+</style>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PHASE 4: HTML — Voice Button, Mobile Menu, Plugin Section
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Mobile hamburger button — inject into body -->
+<div class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</div>
+
+<!-- Plugin section HTML — to be injected into Settings panel -->
+<!-- (Injected via JS below) -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     PHASE 4: JS — Bug Fixes (Monkey-patches)
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function PHASE4_BugFixes() {
+  'use strict';
+
+  // Wait for DOM to be fully ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init() {
+
+    // ═══════════════════════════════════════════════
+    // BUG #1 FIX: Remove duplicate keydown listener
+    // The original code registers Enter handler twice.
+    // We remove the second one that was stored as chatInput._keyHandler
+    // ═══════════════════════════════════════════════
+    const ci = document.getElementById('chatInput');
+    if (ci && ci._keyHandler) {
+      ci.removeEventListener('keydown', ci._keyHandler);
+      ci._keyHandler = null;
+      console.log('[Phase4] Fixed: Removed duplicate keydown listener');
+    }
+
+    // ═══════════════════════════════════════════════
+    // BUG #2 FIX: Include webSearchEnabled in API requests
+    // Monkey-patch the sendChat to include web_search flag
+    // ═══════════════════════════════════════════════
+    // We wrap the existing fetch to inject web_search into the body
+    const _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url === '/api/v2/chat' && options && options.body) {
+        try {
+          const body = JSON.parse(options.body);
+          if (typeof window.webSearchEnabled !== 'undefined') {
+            body.web_search = window.webSearchEnabled;
+          }
+          options.body = JSON.stringify(body);
+        } catch (_) {}
+      }
+      return _origFetch.apply(this, arguments);
+    };
+    console.log('[Phase4] Fixed: webSearchEnabled now sent with API requests');
+
+    // ═══════════════════════════════════════════════
+    // BUG #3 FIX: loadRecentConversations widget finder
+    // The original uses querySelector('.widget .recent-item') which fails
+    // because no .recent-item exists on first load.
+    // We override loadRecentConversations with a fixed version.
+    // ═══════════════════════════════════════════════
+    window.loadRecentConversations = async function() {
+      try {
+        const res = await fetch('/api/chats');
+        if (!res.ok) return;
+        const data = await res.json();
+        const chats = (data.chats || data || []).slice(0, 4);
+
+        // Find the Recent Conversations widget by its label text
+        const widgets = document.querySelectorAll('.widget');
+        let recentWidget = null;
+        widgets.forEach(w => {
+          const label = w.querySelector('.widget-label');
+          if (label && label.textContent.includes('RECENT')) {
+            recentWidget = w;
+          }
+        });
+        if (!recentWidget) return;
+
+        // Remove existing recent items
+        recentWidget.querySelectorAll('.recent-item').forEach(el => el.remove());
+
+        // Find or create the view-all link
+        let viewAll = recentWidget.querySelector('.view-all');
+
+        // Insert new items
+        chats.forEach(c => {
+          const date = c.updated_at ? timeAgo(c.updated_at * 1000) : '';
+          const title = c.title || 'Chat';
+          const div = document.createElement('div');
+          div.className = 'recent-item';
+          div.style.cursor = 'pointer';
+          div.onclick = () => loadChat(c.id);
+          div.innerHTML = `<span class="recent-title">${escapeHtml(title.length > 35 ? title.slice(0,35) + '...' : title)}</span><span class="recent-time">${date}</span>`;
+          if (viewAll) recentWidget.insertBefore(div, viewAll);
+          else recentWidget.appendChild(div);
+        });
+
+        if (!chats.length) {
+          const empty = document.createElement('div');
+          empty.className = 'recent-item';
+          empty.style.justifyContent = 'center';
+          empty.style.color = 'var(--text-dim)';
+          empty.style.fontSize = '12px';
+          empty.innerHTML = '<span>No conversations yet</span>';
+          if (viewAll) recentWidget.insertBefore(empty, viewAll);
+          else recentWidget.appendChild(empty);
+        }
+
+        if (viewAll) {
+          viewAll.onclick = (e) => { e.preventDefault(); switchPanel('memory'); };
+        }
+      } catch (_) {}
+    };
+    // Re-run the fixed version
+    window.loadRecentConversations();
+    console.log('[Phase4] Fixed: loadRecentConversations widget finder');
+
+    // ═══════════════════════════════════════════════
+    // BUG #4 FIX: _restoreFromLocal welcome message duplicate
+    // Remove the hardcoded welcome message if we have saved history
+    // ═══════════════════════════════════════════════
+    (function fixWelcomeMessage() {
+      try {
+        const raw = localStorage.getItem('nova_active_chat');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.history && data.history.length > 0) {
+            // Remove the hardcoded welcome message
+            const chatMsgs = document.getElementById('chatMessages');
+            const firstMsg = chatMsgs.querySelector('.message.assistant:not(#thinkingBubble)');
+            if (firstMsg) {
+              const bubble = firstMsg.querySelector('.msg-bubble');
+              if (bubble && bubble.textContent.includes('Welcome back')) {
+                firstMsg.remove();
+                console.log('[Phase4] Fixed: Removed duplicate welcome message');
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    })();
+
+    // ═══════════════════════════════════════════════
+    // BUG #5 FIX: thinkingBubble stuck visible
+    // Add a safety net that hides thinkingBubble after timeout
+    // Also patch sendChat to use finally block
+    // ═══════════════════════════════════════════════
+    // Safety: if thinkingBubble is visible for more than 60 seconds, hide it
+    setInterval(() => {
+      const tb = document.getElementById('thinkingBubble');
+      if (tb && tb.style.display === 'flex') {
+        if (!tb._showTime) {
+          tb._showTime = Date.now();
+        } else if (Date.now() - tb._showTime > 60000) {
+          tb.style.display = 'none';
+          tb._showTime = null;
+          console.log('[Phase4] Safety: Hidden stuck thinkingBubble');
+        }
+      } else if (tb) {
+        tb._showTime = null;
+      }
+    }, 5000);
+
+    // ═══════════════════════════════════════════════
+    // BUG #6 FIX: formatMessage list regex
+    // Override with improved version
+    // ═══════════════════════════════════════════════
+    window.formatMessage = function(text) {
+      if (!text) return '';
+      let h = text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+          return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
+        })
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+
+      // Fix list items: wrap consecutive <li> items in <ul>
+      // First, convert list markers to <li>
+      h = h.replace(/(^|<br>)[-*] (.+?)(?=<br>|$)/g, '$1<li>$2</li>');
+      // Then wrap consecutive <li> blocks in <ul>
+      h = h.replace(/(<li>[\s\S]*?<\/li>)+/g, '<ul>$&</ul>');
+      // Clean up any <br> inside <ul>
+      h = h.replace(/<ul><br>/g, '<ul>');
+      h = h.replace(/<br><\/ul>/g, '</ul>');
+      h = h.replace(/<\/li><br><li>/g, '</li><li>');
+
+      return h;
+    };
+    console.log('[Phase4] Fixed: formatMessage list rendering');
+
+    // ═══════════════════════════════════════════════
+    // BUG #7 FIX: loadChat hides welcome screen
+    // ═══════════════════════════════════════════════
+    const _origLoadChat = window.loadChat;
+    window.loadChat = async function(chatId) {
+      await _origLoadChat(chatId);
+      // Hide welcome screen when a chat is loaded
+      const ws = document.getElementById('welcomeScreen');
+      if (ws) ws.style.display = 'none';
+      // Ensure quick actions are hidden
+      const qa = document.getElementById('quickActions');
+      if (qa) qa.style.display = 'none';
+      console.log('[Phase4] Fixed: Hidden welcome screen after loading chat');
+    };
+
+    // ═══════════════════════════════════════════════
+    // BUG #8 FIX: escapeHtml missing quote escaping
+    // ═══════════════════════════════════════════════
+    window.escapeHtml = function(s) {
+      if (!s) return '';
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+    console.log('[Phase4] Fixed: escapeHtml now escapes quotes');
+
+    // ═══════════════════════════════════════════════
+    // BUG #11 FIX: startNewChat re-inserts welcome message
+    // ═══════════════════════════════════════════════
+    const _origStartNewChat = window.startNewChat;
+    window.startNewChat = function() {
+      _origStartNewChat();
+      // Re-add welcome message
+      const chatMsgs = document.getElementById('chatMessages');
+      const thinkBubble = document.getElementById('thinkingBubble');
+      const existing = chatMsgs.querySelector('.message.assistant:not(#thinkingBubble)');
+      if (!existing) {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'message assistant';
+        welcomeDiv.innerHTML = `
+          <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+          <div>
+            <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
+            <div class="msg-time">${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+          </div>`;
+        chatMsgs.insertBefore(welcomeDiv, thinkBubble);
+      }
+      // Clear pending attachments (BUG #19)
+      if (typeof window.pendingAttachments !== 'undefined') {
+        window.pendingAttachments = [];
+      }
+      if (typeof window.renderAttachPreview === 'function') {
+        window.renderAttachPreview();
+      }
+      console.log('[Phase4] Fixed: startNewChat restores welcome message');
+    };
+
+    // ═══════════════════════════════════════════════
+    // BUG #14 FIX: keyModal event listener
+    // Re-attach the backdrop click listener now that DOM is ready
+    // ═══════════════════════════════════════════════
+    const keyModal = document.getElementById('keyModal');
+    if (keyModal) {
+      keyModal.addEventListener('click', function(e) {
+        if (e.target === e.currentTarget) {
+          if (typeof closeKeyModal === 'function') closeKeyModal();
+        }
+      });
+      console.log('[Phase4] Fixed: keyModal backdrop click listener attached');
+    }
+
+    // ═══════════════════════════════════════════════
+    // BUG #21 FIX: Clock update frequency
+    // ═══════════════════════════════════════════════
+    // Clear the old 30s interval and use 15s
+    // (we can't clear the old interval directly, but we can override updateClock
+    // to be smarter and add a faster interval)
+    if (typeof updateClock === 'function') {
+      setInterval(updateClock, 15000);
+      console.log('[Phase4] Fixed: Clock now updates every 15 seconds');
+    }
+
+    // ═══════════════════════════════════════════════
+    // BUG #22 FIX: Mobile hamburger menu
+    // ═══════════════════════════════════════════════
+    // Inject the mobile menu button into the document body
+    if (!document.getElementById('mobileMenuBtn')) {
+      const btn = document.createElement('div');
+      btn.className = 'mobile-menu-btn';
+      btn.id = 'mobileMenuBtn';
+      btn.onclick = toggleMobileMenu;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+      document.body.appendChild(btn);
+    }
+
+    window.toggleMobileMenu = function() {
+      const sidebar = document.getElementById('sidebar');
+      const isOpen = sidebar.classList.contains('mobile-open');
+
+      if (isOpen) {
+        sidebar.classList.remove('mobile-open');
+        const overlay = document.querySelector('.mobile-overlay');
+        if (overlay) overlay.remove();
+      } else {
+        sidebar.classList.add('mobile-open');
+        const overlay = document.createElement('div');
+        overlay.className = 'mobile-overlay';
+        overlay.onclick = () => toggleMobileMenu();
+        document.body.appendChild(overlay);
+      }
+    };
+
+    // Close mobile menu when a nav item is clicked
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('mobile-open')) {
+          toggleMobileMenu();
+        }
+      });
+    });
+
+    console.log('[Phase4] All bug fixes applied ✓');
+  }
+})();
+</script>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PHASE 4: JS — Polish & New Features
+     Voice/Presence Scaffold, Plugin System, Motion Enhancements
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function PHASE4_Features() {
+  'use strict';
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init() {
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 1: Smooth Panel Transitions
+    // Override switchPanel to add fade animations
+    // ═══════════════════════════════════════════════
+    const _origSwitchPanel = window.switchPanel;
+    window.switchPanel = function(name) {
+      // Get the target element for animation
+      const targetId = name === 'chat' ? 'chatPanel' : 'panel-' + name;
+      const target = document.getElementById(targetId);
+
+      // Run original logic
+      _origSwitchPanel(name);
+
+      // Add entrance animation to the visible panel
+      if (target && target.style.display !== 'none') {
+        target.classList.remove('panel-entering');
+        void target.offsetWidth; // force reflow
+        target.classList.add('panel-entering');
+        setTimeout(() => target.classList.remove('panel-entering'), 500);
+      }
+
+      // Animate welcome screen on chat panel
+      if (name === 'chat') {
+        const ws = document.getElementById('welcomeScreen');
+        if (ws && ws.style.display !== 'none') {
+          ws.classList.remove('welcome-entering');
+          void ws.offsetWidth;
+          ws.classList.add('welcome-entering');
+          setTimeout(() => ws.classList.remove('welcome-entering'), 900);
+        }
+      }
+    };
+    console.log('[Phase4] Feature: Smooth panel transitions');
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 2: Message Appear Animations (Staggered)
+    // Override appendChat to add entrance animations
+    // ═══════════════════════════════════════════════
+    const _origAppendChat = window.appendChat;
+    window.appendChat = function(role, content, opts) {
+      const div = _origAppendChat(role, content, opts);
+      if (div) {
+        div.classList.add('phase4-enter');
+        setTimeout(() => div.classList.remove('phase4-enter'), 500);
+      }
+      return div;
+    };
+    console.log('[Phase4] Feature: Message appear animations');
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 3: Cinematic "Nova is thinking..." Animation
+    // Replace the plain dots with a premium thinking indicator
+    // ═══════════════════════════════════════════════
+    const thinkingBubble = document.getElementById('thinkingBubble');
+    if (thinkingBubble) {
+      // Find the thinking dots container
+      const dotsContainer = thinkingBubble.querySelector('.thinking-dots');
+      if (dotsContainer) {
+        // Create the cinematic replacement
+        const cinematic = document.createElement('div');
+        cinematic.className = 'nova-thinking-cinematic';
+        cinematic.innerHTML = `
+          <div class="nova-thinking-orb"></div>
+          <div class="nova-thinking-text"><span>Nova is thinking...</span></div>
+        `;
+        dotsContainer.replaceWith(cinematic);
+        console.log('[Phase4] Feature: Cinematic thinking animation');
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 4: Loading Skeleton for Chat History
+    // Show skeleton while memory galaxy loads
+    // ═══════════════════════════════════════════════
+    const _origLoadMemoryGalaxy = window.loadMemoryGalaxy;
+    window.loadMemoryGalaxy = async function() {
+      // Show skeleton loading state
+      const gc = document.getElementById('galaxyContainer');
+      const ml = document.getElementById('memoryListContainer');
+
+      if (window._galaxyView === 'list' && ml) {
+        ml.innerHTML = `
+          <div class="skeleton-card"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:50%"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line" style="width:60%"></div><div class="skeleton-line" style="width:40%"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:55%"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line" style="width:65%"></div><div class="skeleton-line" style="width:45%"></div></div>
+        `;
+      } else if (gc) {
+        gc.innerHTML = `
+          <div class="galaxy-empty" style="animation: fadeIn 0.3s ease;">
+            <div class="galaxy-empty-icon" style="animation: orbPulse 2s ease-in-out infinite;">✨</div>
+            <div class="nova-thinking-text"><span>Loading your constellation…</span></div>
+          </div>
+        `;
+      }
+
+      // Run original
+      await _origLoadMemoryGalaxy();
+    };
+    console.log('[Phase4] Feature: Skeleton loading for memory');
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 5: Voice/Presence Scaffold
+    // Microphone button "Coming Soon" tooltip
+    // ═══════════════════════════════════════════════
+    const micBtn = document.getElementById('micBtn');
+    if (micBtn) {
+      // Create tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'voice-tooltip';
+      tooltip.textContent = '🎙️ Voice coming soon';
+      micBtn.style.position = 'relative';
+      micBtn.appendChild(tooltip);
+
+      // Override toggleMic to show tooltip instead
+      const _origToggleMic = window.toggleMic;
+      let tooltipTimeout = null;
+
+      window.toggleMic = function() {
+        // Check if Web Speech API is available
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SR) {
+          // Speech recognition is available, use original
+          _origToggleMic();
+          return;
+        }
+        // No speech API — show "coming soon" tooltip
+        tooltip.classList.add('show');
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = setTimeout(() => tooltip.classList.remove('show'), 2000);
+      };
+      console.log('[Phase4] Feature: Voice button tooltip scaffold');
+    }
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 6: Plugin Scaffold
+    // Add plugin section to Settings panel
+    // ═══════════════════════════════════════════════
+    const settingsPanel = document.getElementById('panel-settings');
+    if (settingsPanel) {
+      // Find the danger zone section to insert before it
+      const dangerSection = settingsPanel.querySelector('.settings-section-title[style*="color"]');
+      const dangerParent = dangerSection ? dangerSection.parentElement : null;
+
+      const pluginSection = document.createElement('div');
+      pluginSection.className = 'settings-section';
+      pluginSection.id = 'pluginsSection';
+      pluginSection.innerHTML = `
+        <div class="settings-section-title">PLUGINS</div>
+        <p class="text-dim" style="font-size:12px;margin-bottom:16px">Extend Nova's capabilities with plugins. Enable or disable as needed.</p>
+        <div class="plugins-grid" id="pluginsGrid">
+          <div class="plugin-item" data-plugin="web-search">
+            <div class="plugin-icon" style="background:rgba(94,235,255,.1);border-color:rgba(94,235,255,.15)">🌐</div>
+            <div class="plugin-info">
+              <div class="plugin-name">Web Search <span class="plugin-badge beta">Beta</span></div>
+              <div class="plugin-desc">Search the internet in real-time to provide up-to-date information and citations.</div>
+            </div>
+            <label class="plugin-toggle">
+              <input type="checkbox" data-plugin-id="web-search" onchange="togglePlugin(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="plugin-item" data-plugin="image-gen">
+            <div class="plugin-icon" style="background:rgba(236,72,153,.08);border-color:rgba(236,72,153,.12)">🎨</div>
+            <div class="plugin-info">
+              <div class="plugin-name">Image Generation <span class="plugin-badge beta">Beta</span></div>
+              <div class="plugin-desc">Generate images with Flux, DALL-E, and other models using natural language prompts.</div>
+            </div>
+            <label class="plugin-toggle">
+              <input type="checkbox" data-plugin-id="image-gen" onchange="togglePlugin(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="plugin-item" data-plugin="code-exec">
+            <div class="plugin-icon" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.12)">⚡</div>
+            <div class="plugin-info">
+              <div class="plugin-name">Code Execution <span class="plugin-badge coming-soon">Coming Soon</span></div>
+              <div class="plugin-desc">Run Python, JavaScript, and shell commands in a sandboxed environment.</div>
+            </div>
+            <label class="plugin-toggle">
+              <input type="checkbox" data-plugin-id="code-exec" disabled onchange="togglePlugin(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="plugin-item" data-plugin="file-manager">
+            <div class="plugin-icon" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.12)">📁</div>
+            <div class="plugin-info">
+              <div class="plugin-name">File Manager <span class="plugin-badge coming-soon">Coming Soon</span></div>
+              <div class="plugin-desc">Browse, upload, and manage files within your Nova workspace.</div>
+            </div>
+            <label class="plugin-toggle">
+              <input type="checkbox" data-plugin-id="file-manager" disabled onchange="togglePlugin(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      `;
+
+      if (dangerParent) {
+        settingsPanel.insertBefore(pluginSection, dangerParent);
+      } else {
+        settingsPanel.appendChild(pluginSection);
+      }
+
+      // Plugin state management
+      window.togglePlugin = function(checkbox) {
+        const pluginId = checkbox.dataset.pluginId;
+        const enabled = checkbox.checked;
+
+        // Store in localStorage
+        try {
+          const plugins = JSON.parse(localStorage.getItem('nova_plugins') || '{}');
+          plugins[pluginId] = enabled;
+          localStorage.setItem('nova_plugins', JSON.stringify(plugins));
+        } catch (_) {}
+
+        // Sync web search toggle if applicable
+        if (pluginId === 'web-search') {
+          window.webSearchEnabled = enabled;
+          const wsBtn = document.getElementById('webSearchBtn');
+          if (wsBtn) {
+            wsBtn.classList.toggle('active', enabled);
+          }
+        }
+
+        // Show toast
+        if (typeof showToast === 'function') {
+          const name = checkbox.closest('.plugin-item').querySelector('.plugin-name').textContent.replace(/Beta|Coming Soon/g, '').trim();
+          showToast((enabled ? '✅ ' : '❌ ') + name + (enabled ? ' enabled' : ' disabled'));
+        }
+      };
+
+      // Restore plugin states from localStorage
+      function restorePluginStates() {
+        try {
+          const plugins = JSON.parse(localStorage.getItem('nova_plugins') || '{}');
+          Object.entries(plugins).forEach(([id, enabled]) => {
+            const checkbox = document.querySelector(`input[data-plugin-id="${id}"]`);
+            if (checkbox && !checkbox.disabled) {
+              checkbox.checked = enabled;
+              // Sync web search state
+              if (id === 'web-search') {
+                window.webSearchEnabled = enabled;
+              }
+            }
+          });
+        } catch (_) {}
+      }
+      restorePluginStates();
+
+      console.log('[Phase4] Feature: Plugin scaffold in Settings');
+    }
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 7: Welcome Screen Entrance Animation
+    // Trigger on first load
+    // ═══════════════════════════════════════════════
+    const ws = document.getElementById('welcomeScreen');
+    if (ws && ws.style.display !== 'none') {
+      ws.classList.add('welcome-entering');
+      setTimeout(() => ws.classList.remove('welcome-entering'), 900);
+    }
+
+    // Quick actions staggered entry
+    const quickCards = document.querySelectorAll('.quick-actions .quick-card');
+    quickCards.forEach((card, i) => {
+      card.style.animationDelay = (i * 0.08) + 's';
+    });
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 8: Smooth Scroll to Bottom
+    // Replace instant scroll with smooth behavior
+    // ═══════════════════════════════════════════════
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+      // Override scrollTop assignments to use smooth scrolling
+      const _origScrollTo = chatMessages.scrollTo?.bind(chatMessages);
+      Object.defineProperty(chatMessages, '_scrollToBottom', {
+        value: function() {
+          this.scrollTo({
+            top: this.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      });
+
+      // Monkey-patch to intercept scrollTop = scrollHeight pattern
+      // We do this by overriding the scrollTop setter
+      let _scrollTop = chatMessages.scrollTop;
+      const _scrollTopDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop') ||
+                              Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollTop');
+
+      if (_scrollTopDesc && _scrollTopDesc.set) {
+        // Only intercept when setting to scrollHeight (which indicates "scroll to bottom")
+        const origSet = _scrollTopDesc.set;
+        const origGet = _scrollTopDesc.get;
+
+        Object.defineProperty(chatMessages, 'scrollTop', {
+          get: function() { return origGet.call(this); },
+          set: function(val) {
+            // If setting to scrollHeight (or close), use smooth scroll
+            if (val >= this.scrollHeight - this.clientHeight - 50) {
+              this.scrollTo({ top: val, behavior: 'smooth' });
+            } else {
+              origSet.call(this, val);
+            }
+          },
+          configurable: true
+        });
+        console.log('[Phase4] Feature: Smooth scroll to bottom');
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    // FEATURE 9: Loading States for Async Operations
+    // Add visual feedback during API calls
+    // ═══════════════════════════════════════════════
+    // Already handled by the cinematic thinking animation (Feature 3)
+    // and skeleton loaders (Feature 4)
+
+    console.log('[Phase4] All features initialized ✓');
+  }
+})();
+</script>

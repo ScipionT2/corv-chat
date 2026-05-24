@@ -1,0 +1,1502 @@
+<!-- ═══════════════════════════════════════════════════
+     PHASE 3: AGENT FRAMEWORK + WORKSPACE SYSTEM
+     Functional agents, workspaces, tasks, knowledge
+     ═══════════════════════════════════════════════════ -->
+
+<!-- PHASE 3: CSS -->
+<style>
+
+/* ═══════════════ AGENT SYSTEM ═══════════════ */
+
+/* Agent card — active glow border */
+.agent-card.active {
+  border-color: var(--agent-glow, rgba(123,97,255,.35)) !important;
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 30%, transparent),
+    0 0 50px color-mix(in srgb, var(--agent-glow, #7B61FF) 12%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 6%, transparent) !important;
+  animation: agentCardBreathe 3s ease-in-out infinite;
+}
+.agent-card.active::after {
+  content: 'Active' !important;
+  position: absolute !important;
+  top: 10px !important;
+  right: 12px !important;
+  font-size: 9px !important;
+  font-family: 'Orbitron', sans-serif !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  color: var(--agent-glow, var(--purple)) !important;
+  background: color-mix(in srgb, var(--agent-glow, #7B61FF) 12%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--agent-glow, #7B61FF) 20%, transparent) !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  font-weight: 600 !important;
+}
+@keyframes agentCardBreathe {
+  0%, 100% {
+    box-shadow:
+      0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 25%, transparent),
+      0 0 50px color-mix(in srgb, var(--agent-glow, #7B61FF) 10%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 5%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--agent-glow, #7B61FF) 35%, transparent),
+      0 0 60px color-mix(in srgb, var(--agent-glow, #7B61FF) 15%, transparent),
+      inset 0 0 25px color-mix(in srgb, var(--agent-glow, #7B61FF) 8%, transparent);
+  }
+}
+
+/* Agent personality tooltip on hover */
+.agent-card .agent-personality {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,14,28,.95);
+  border: 1px solid color-mix(in srgb, var(--agent-glow, #7B61FF) 25%, transparent);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.5;
+  width: 220px;
+  max-width: 90vw;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  backdrop-filter: blur(16px);
+  text-align: left;
+}
+.agent-card .agent-personality .personality-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--agent-glow, var(--purple));
+  margin-bottom: 6px;
+}
+.agent-card:hover .agent-personality {
+  display: block;
+  animation: fadeIn .2s ease;
+}
+
+/* Custom agent — delete button */
+.agent-card .agent-delete-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(239,68,68,.2);
+  background: rgba(239,68,68,.08);
+  color: rgba(239,68,68,.6);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all .2s;
+  z-index: 5;
+}
+.agent-card:hover .agent-delete-btn {
+  opacity: 1;
+}
+.agent-card .agent-delete-btn:hover {
+  background: rgba(239,68,68,.2);
+  color: #EF4444;
+  border-color: rgba(239,68,68,.4);
+}
+
+/* Create agent button */
+.agent-create-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255,255,255,.02);
+  border: 2px dashed rgba(255,255,255,.1);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  min-height: 160px;
+}
+.agent-create-btn:hover {
+  background: rgba(123,97,255,.06);
+  border-color: rgba(123,97,255,.25);
+  transform: translateY(-3px);
+}
+.agent-create-btn svg {
+  width: 32px;
+  height: 32px;
+  color: var(--text-dim);
+  transition: color .2s;
+}
+.agent-create-btn:hover svg {
+  color: var(--purple);
+}
+.agent-create-btn span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  transition: color .2s;
+}
+.agent-create-btn:hover span {
+  color: var(--purple);
+}
+
+/* Chat area agent tint overlay */
+#agentTintOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+  transition: background .5s ease;
+}
+
+/* ═══════════════ WORKSPACE SYSTEM ═══════════════ */
+
+/* Active workspace indicator in chat header */
+.workspace-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  margin: 8px 16px 0;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  transition: all .3s;
+}
+.workspace-indicator .ws-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 8px rgba(123,97,255,.4);
+}
+.workspace-indicator .ws-name {
+  color: var(--text-mid);
+  font-weight: 600;
+}
+
+/* Space card active — glow with space color */
+.space-card.active {
+  border-color: color-mix(in srgb, var(--agent-glow, #7B61FF) 40%, transparent) !important;
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 25%, transparent),
+    0 0 50px color-mix(in srgb, var(--agent-glow, #7B61FF) 10%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--agent-glow, #7B61FF) 5%, transparent) !important;
+}
+.space-card.active::after {
+  content: 'Active' !important;
+  font-size: 9px !important;
+  font-family: 'Orbitron', sans-serif !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  color: var(--agent-glow, var(--purple)) !important;
+  background: color-mix(in srgb, var(--agent-glow, #7B61FF) 12%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--agent-glow, #7B61FF) 20%, transparent) !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+}
+
+/* ═══════════════ TASKS PANEL ═══════════════ */
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.tasks-header h2 { margin-bottom: 0 !important; }
+.tasks-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg,#5B41DF,#7B61FF);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 0 20px rgba(123,97,255,.3);
+}
+.tasks-add-btn:hover {
+  box-shadow: 0 0 30px rgba(123,97,255,.5);
+  transform: translateY(-1px);
+}
+.tasks-add-btn svg { width: 14px; height: 14px; }
+
+.tasks-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tasks-filter-btn {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+}
+.tasks-filter-btn:hover {
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+}
+.tasks-filter-btn.active {
+  background: rgba(123,97,255,.12);
+  border-color: rgba(123,97,255,.2);
+  color: var(--purple);
+}
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(10,15,35,.5);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .25s;
+}
+.task-item:hover {
+  background: rgba(10,15,35,.7);
+  border-color: rgba(123,97,255,.1);
+  transform: translateY(-1px);
+}
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,.15);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+  font-size: 12px;
+  color: transparent;
+}
+.task-checkbox:hover {
+  border-color: var(--purple);
+}
+.task-checkbox.checked {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #fff;
+}
+.task-item.done .task-title {
+  text-decoration: line-through;
+  opacity: .5;
+}
+.task-info { flex: 1; min-width: 0; }
+.task-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.task-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-status-badge {
+  font-size: 10px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.task-status-badge.todo {
+  background: rgba(255,255,255,.06);
+  color: var(--text-dim);
+}
+.task-status-badge.in-progress {
+  background: rgba(94,235,255,.1);
+  color: var(--blue);
+  border: 1px solid rgba(94,235,255,.15);
+}
+.task-status-badge.done {
+  background: rgba(52,211,153,.1);
+  color: var(--green);
+  border: 1px solid rgba(52,211,153,.15);
+}
+.task-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all .2s;
+  opacity: 0;
+}
+.task-item:hover .task-delete-btn { opacity: 1; }
+.task-delete-btn:hover {
+  color: #EF4444;
+  background: rgba(239,68,68,.1);
+}
+
+/* ═══════════════ KNOWLEDGE PANEL ═══════════════ */
+
+.knowledge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.knowledge-header h2 { margin-bottom: 0 !important; }
+.knowledge-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg,#5B41DF,#7B61FF);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 0 20px rgba(123,97,255,.3);
+}
+.knowledge-upload-btn:hover {
+  box-shadow: 0 0 30px rgba(123,97,255,.5);
+  transform: translateY(-1px);
+}
+.knowledge-upload-btn svg { width: 14px; height: 14px; }
+
+.knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.knowledge-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(10,15,35,.5);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 12px;
+  transition: all .25s;
+}
+.knowledge-item:hover {
+  background: rgba(10,15,35,.7);
+  border-color: rgba(123,97,255,.1);
+}
+.knowledge-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(123,97,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.knowledge-info { flex: 1; min-width: 0; }
+.knowledge-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knowledge-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.knowledge-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all .2s;
+  opacity: 0;
+}
+.knowledge-item:hover .knowledge-delete-btn { opacity: 1; }
+.knowledge-delete-btn:hover {
+  color: #EF4444;
+  background: rgba(239,68,68,.1);
+}
+
+/* Drop zone styling for knowledge */
+.knowledge-drop-zone {
+  border: 2px dashed rgba(123,97,255,.15);
+  border-radius: 14px;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  transition: all .2s;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.knowledge-drop-zone:hover,
+.knowledge-drop-zone.dragover {
+  border-color: rgba(123,97,255,.35);
+  background: rgba(123,97,255,.04);
+  color: var(--text-mid);
+}
+.knowledge-drop-zone .drop-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: .5;
+}
+
+/* ═══════════════ MODALS ═══════════════ */
+
+.p3-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.p3-modal-overlay.active { display: flex; }
+
+.p3-modal {
+  background: rgba(10,14,28,.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 28px;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 40px rgba(123,97,255,.06);
+  animation: modalIn .25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+.p3-modal h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+  letter-spacing: .5px;
+}
+.p3-modal p {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+.p3-modal-field {
+  margin-bottom: 14px;
+}
+.p3-modal-field label {
+  display: block;
+  font-size: 11px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.p3-modal-field input,
+.p3-modal-field textarea,
+.p3-modal-field select {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+}
+.p3-modal-field input::placeholder,
+.p3-modal-field textarea::placeholder {
+  color: rgba(169,177,214,.4);
+}
+.p3-modal-field input:focus,
+.p3-modal-field textarea:focus,
+.p3-modal-field select:focus {
+  border-color: rgba(123,97,255,.3);
+}
+.p3-modal-field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.p3-modal-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.p3-modal-field select option {
+  background: #0a0e1c;
+  color: var(--text);
+}
+.p3-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.p3-modal-actions button {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .5px;
+  transition: all .2s;
+}
+.p3-btn-cancel {
+  background: rgba(255,255,255,.06);
+  color: var(--text-dim);
+}
+.p3-btn-cancel:hover {
+  background: rgba(255,255,255,.1);
+  color: var(--text);
+}
+.p3-btn-save {
+  background: linear-gradient(135deg,#5B41DF,#7B61FF);
+  color: #fff;
+}
+.p3-btn-save:hover {
+  box-shadow: 0 0 20px rgba(123,97,255,.4);
+}
+
+/* ═══════════════ NAV BADGES ═══════════════ */
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--purple);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-left: auto;
+  box-shadow: 0 0 10px rgba(123,97,255,.4);
+}
+.nav-badge:empty { display: none; }
+
+</style>
+
+<!-- PHASE 3: HTML additions (modals) -->
+
+<!-- Create Agent Modal -->
+<div class="p3-modal-overlay" id="createAgentModal">
+  <div class="p3-modal">
+    <h3>⚡ Create Agent</h3>
+    <p>Create a custom AI agent with its own personality and purpose.</p>
+    <div class="p3-modal-field">
+      <label>AGENT NAME</label>
+      <input type="text" id="newAgentName" placeholder="e.g. CODY" maxlength="20" />
+    </div>
+    <div class="p3-modal-field">
+      <label>ROLE</label>
+      <input type="text" id="newAgentRole" placeholder="e.g. Code Assistant" maxlength="40" />
+    </div>
+    <div class="p3-modal-field">
+      <label>SYSTEM PROMPT</label>
+      <textarea id="newAgentPrompt" placeholder="Describe this agent's personality, expertise, and behavior..."></textarea>
+    </div>
+    <div class="p3-modal-field">
+      <label>ACCENT COLOR</label>
+      <input type="color" id="newAgentColor" value="#7B61FF" style="height:38px;padding:4px;cursor:pointer" />
+    </div>
+    <div class="p3-modal-actions">
+      <button class="p3-btn-cancel" onclick="closeCreateAgentModal()">Cancel</button>
+      <button class="p3-btn-save" onclick="saveNewAgent()">Create Agent</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="p3-modal-overlay" id="createTaskModal">
+  <div class="p3-modal">
+    <h3>📋 New Task</h3>
+    <p>Add a task to track your work.</p>
+    <div class="p3-modal-field">
+      <label>TITLE</label>
+      <input type="text" id="newTaskTitle" placeholder="What needs to be done?" maxlength="100" />
+    </div>
+    <div class="p3-modal-field">
+      <label>DESCRIPTION (OPTIONAL)</label>
+      <textarea id="newTaskDesc" placeholder="Additional details..."></textarea>
+    </div>
+    <div class="p3-modal-field">
+      <label>STATUS</label>
+      <select id="newTaskStatus">
+        <option value="todo">To Do</option>
+        <option value="in-progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+    </div>
+    <div class="p3-modal-actions">
+      <button class="p3-btn-cancel" onclick="closeCreateTaskModal()">Cancel</button>
+      <button class="p3-btn-save" onclick="saveNewTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for knowledge uploads -->
+<input type="file" id="knowledgeFileInput" accept=".txt,.md,.pdf" style="display:none" />
+
+
+<!-- PHASE 3: JS -->
+<script>
+/* ═══════════════════════════════════════════════════
+   PHASE 3: AGENT FRAMEWORK + WORKSPACE SYSTEM
+   ═══════════════════════════════════════════════════ */
+
+(function() {
+  'use strict';
+
+  // ─────────────────────────────────────────────────
+  //  1. AGENT SYSTEM
+  // ─────────────────────────────────────────────────
+
+  const CORE_AGENTS = {
+    nova:  { name: 'Nova',  role: 'General AI Assistant',  color: '#7B61FF', desc: 'Your primary AI companion', personality: 'Versatile, thoughtful, and always ready to help. Nova adapts to any task — coding, writing, analysis, brainstorming. The generalist that does it all.' },
+    desi:  { name: 'DESI',  role: 'Visual Intelligence',   color: '#FF6B9D', desc: 'UI design, branding, visual creation', personality: 'Creative and aesthetically driven. DESI thinks in color palettes, layouts, and visual harmony. Expert at making things beautiful and functional.' },
+    lesi:  { name: 'LESI',  role: 'Design Verification',   color: '#34D399', desc: 'Consistency analysis, design QA', personality: 'Detail-oriented perfectionist. LESI catches inconsistencies, misalignments, and edge cases. The quality gatekeeper for all visual work.' },
+    redi:  { name: 'REDI',  role: 'Quality Control',       color: '#FF8C42', desc: 'Polish evaluation, refinement', personality: 'Obsessed with polish and refinement. REDI evaluates outputs against high standards and pushes everything to premium quality.' },
+  };
+
+  const COMING_AGENTS = {
+    vexi:  { name: 'VEXI',  role: 'Engineering',           color: '#5EEBFF', desc: 'Code architecture, systems' },
+    astri: { name: 'ASTRI', role: 'Research',               color: '#E879F9', desc: 'Deep research, analysis' },
+    lumi:  { name: 'LUMI',  role: 'Emotional Intelligence', color: '#FCD34D', desc: 'Empathy, emotional support' },
+    kyro:  { name: 'KYRO',  role: 'Automation',             color: '#818CF8', desc: 'Workflows, task automation' },
+  };
+
+  // Get user prefix for localStorage scoping
+  function _userPrefix() {
+    return (typeof currentUser !== 'undefined' && currentUser && currentUser.id)
+      ? currentUser.id : 'anon';
+  }
+
+  // Custom agents stored in localStorage
+  function getCustomAgents() {
+    try { return JSON.parse(localStorage.getItem('nova_custom_agents') || '[]'); }
+    catch (_) { return []; }
+  }
+  function setCustomAgents(agents) {
+    localStorage.setItem('nova_custom_agents', JSON.stringify(agents));
+  }
+
+  // Override the existing selectAgent
+  const _origSelectAgent = window.selectAgent;
+  window.selectAgent = function(name) {
+    const agent = CORE_AGENTS[name] || getCustomAgents().find(a => a.id === name);
+    if (!agent && !COMING_AGENTS[name]) return;
+    if (COMING_AGENTS[name]) return; // locked
+
+    window.currentAgent = typeof agent === 'object' && agent.id ? agent.id : name;
+    localStorage.setItem('nova_agent', window.currentAgent);
+
+    // Try to call backend
+    fetch('/api/agents/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent: window.currentAgent })
+    }).catch(() => {});
+
+    syncAgentCardsP3();
+    applyAgentTint();
+    updateWelcomeForAgent();
+    showToast('Switched to ' + (agent ? (agent.name || name) : name));
+  };
+
+  // Enhanced sync that rebuilds cards
+  function syncAgentCardsP3() {
+    const ca = window.currentAgent || 'nova';
+
+    // Sync existing core cards
+    document.querySelectorAll('.agent-card:not(.locked)').forEach(c => {
+      const agentId = c.dataset.agent;
+      c.classList.toggle('active', agentId === ca);
+    });
+
+    // Update active bar name
+    const el = document.getElementById('agentsActiveName');
+    if (el) {
+      const coreAgent = CORE_AGENTS[ca];
+      const customAgent = getCustomAgents().find(a => a.id === ca);
+      el.textContent = coreAgent ? coreAgent.name : (customAgent ? customAgent.name : ca);
+    }
+
+    // Add personality tooltips to core cards if not present
+    document.querySelectorAll('.agent-card[data-agent]').forEach(card => {
+      const agentId = card.dataset.agent;
+      const agentDef = CORE_AGENTS[agentId];
+      if (agentDef && agentDef.personality && !card.querySelector('.agent-personality')) {
+        const tip = document.createElement('div');
+        tip.className = 'agent-personality';
+        tip.innerHTML = `<div class="personality-title">Personality</div>${agentDef.personality}`;
+        card.appendChild(tip);
+      }
+    });
+
+    // Render custom agents section
+    renderCustomAgentsSection();
+  }
+
+  // Override existing sync too
+  window.syncAgentCards = syncAgentCardsP3;
+
+  function renderCustomAgentsSection() {
+    const panel = document.getElementById('panel-agents');
+    if (!panel) return;
+
+    // Remove old custom section if it exists
+    const oldSection = document.getElementById('customAgentsSection');
+    if (oldSection) oldSection.remove();
+
+    const customs = getCustomAgents();
+    const ca = window.currentAgent || 'nova';
+
+    // Build custom section
+    const section = document.createElement('div');
+    section.id = 'customAgentsSection';
+    section.className = 'agents-section';
+    section.innerHTML = `
+      <div class="agents-section-title"><span class="dot" style="background:var(--purple)"></span> YOUR AGENTS</div>
+      <div class="agents-grid" id="customAgentsGrid"></div>
+    `;
+
+    const grid = section.querySelector('#customAgentsGrid');
+
+    // Render each custom agent
+    customs.forEach(agent => {
+      const card = document.createElement('div');
+      card.className = 'agent-card' + (agent.id === ca ? ' active' : '');
+      card.dataset.agent = agent.id;
+      card.style.setProperty('--agent-glow', agent.color || '#7B61FF');
+      card.onclick = () => window.selectAgent(agent.id);
+
+      const initial = (agent.name || '?')[0].toUpperCase();
+      card.innerHTML = `
+        <button class="agent-delete-btn" onclick="event.stopPropagation();deleteCustomAgent('${agent.id}')" title="Delete agent">✕</button>
+        <div class="agent-avatar" style="background:linear-gradient(135deg,${agent.color || '#7B61FF'},${lightenColor(agent.color || '#7B61FF', 30)})">${initial}</div>
+        <div class="agent-card-name">${escapeHtml(agent.name)}</div>
+        <div class="agent-card-role">${escapeHtml(agent.role || 'Custom Agent')}</div>
+        <div class="agent-card-desc">${escapeHtml(agent.desc || '')}</div>
+        ${agent.personality ? `<div class="agent-personality"><div class="personality-title">Personality</div>${escapeHtml(agent.personality)}</div>` : ''}
+      `;
+      grid.appendChild(card);
+    });
+
+    // Create agent button
+    const createBtn = document.createElement('div');
+    createBtn.className = 'agent-create-btn';
+    createBtn.onclick = openCreateAgentModal;
+    createBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Create Agent</span>
+    `;
+    grid.appendChild(createBtn);
+
+    panel.appendChild(section);
+  }
+
+  function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + Math.round(255 * percent / 100));
+    const g = Math.min(255, ((num >> 8) & 0xFF) + Math.round(255 * percent / 100));
+    const b = Math.min(255, (num & 0xFF) + Math.round(255 * percent / 100));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  // Agent tint overlay on chat area
+  function applyAgentTint() {
+    const chatPanel = document.getElementById('chatPanel');
+    if (!chatPanel) return;
+
+    let overlay = document.getElementById('agentTintOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'agentTintOverlay';
+      chatPanel.style.position = 'relative';
+      chatPanel.insertBefore(overlay, chatPanel.firstChild);
+    }
+
+    const ca = window.currentAgent || 'nova';
+    const agent = CORE_AGENTS[ca] || getCustomAgents().find(a => a.id === ca);
+    const color = agent ? agent.color : '#7B61FF';
+
+    overlay.style.background = `radial-gradient(ellipse 80% 60% at 50% 0%, ${hexToRGBA(color, 0.04)} 0%, transparent 70%)`;
+  }
+
+  function hexToRGBA(hex, alpha) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    return `rgba(${(num >> 16) & 0xFF},${(num >> 8) & 0xFF},${num & 0xFF},${alpha})`;
+  }
+
+  function updateWelcomeForAgent() {
+    const ws = document.getElementById('welcomeScreen');
+    if (!ws) return;
+    const ca = window.currentAgent || 'nova';
+    const agent = CORE_AGENTS[ca] || getCustomAgents().find(a => a.id === ca);
+    const h1 = ws.querySelector('h1');
+    const p = ws.querySelector('p');
+    if (h1 && agent) {
+      h1.innerHTML = `Hello, I'm <span class="purple">${escapeHtml(agent.name || ca)}.</span>`;
+    }
+    if (p && agent && agent.personality) {
+      p.textContent = agent.desc || 'How can I help you today?';
+    }
+  }
+
+  // Create agent modal
+  window.openCreateAgentModal = function() {
+    document.getElementById('newAgentName').value = '';
+    document.getElementById('newAgentRole').value = '';
+    document.getElementById('newAgentPrompt').value = '';
+    document.getElementById('newAgentColor').value = '#7B61FF';
+    document.getElementById('createAgentModal').classList.add('active');
+  };
+  window.closeCreateAgentModal = function() {
+    document.getElementById('createAgentModal').classList.remove('active');
+  };
+  window.saveNewAgent = function() {
+    const name = document.getElementById('newAgentName').value.trim();
+    const role = document.getElementById('newAgentRole').value.trim();
+    const prompt = document.getElementById('newAgentPrompt').value.trim();
+    const color = document.getElementById('newAgentColor').value;
+
+    if (!name) { showToast('Agent name is required'); return; }
+
+    const id = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]/g, '') + '-' + Date.now().toString(36);
+    const agents = getCustomAgents();
+    agents.push({
+      id, name, role: role || 'Custom Agent',
+      desc: (prompt || '').slice(0, 80),
+      personality: prompt,
+      color: color || '#7B61FF',
+      systemPrompt: prompt,
+      createdAt: Date.now()
+    });
+    setCustomAgents(agents);
+
+    // Also register in agentNames for compatibility
+    window.agentNames = window.agentNames || {};
+    window.agentNames[id] = name;
+
+    closeCreateAgentModal();
+    syncAgentCardsP3();
+    showToast('Agent "' + name + '" created!');
+  };
+
+  window.deleteCustomAgent = function(agentId) {
+    if (!confirm('Delete this custom agent?')) return;
+    let agents = getCustomAgents();
+    agents = agents.filter(a => a.id !== agentId);
+    setCustomAgents(agents);
+
+    // If we deleted the active agent, switch to nova
+    if (window.currentAgent === agentId) {
+      window.selectAgent('nova');
+    }
+    syncAgentCardsP3();
+    showToast('Agent deleted');
+  };
+
+  // Click on backdrop to close modal
+  document.getElementById('createAgentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeCreateAgentModal();
+  });
+
+
+  // ─────────────────────────────────────────────────
+  //  2. WORKSPACE SYSTEM
+  // ─────────────────────────────────────────────────
+
+  const WORKSPACE_DEFS = {
+    general: {
+      name: 'General',
+      icon: '💬',
+      color: '#7B61FF',
+      welcome: 'How can I help you today?',
+      welcomeTitle: null, // uses agent name
+      systemPrefix: '',
+      quickActions: [
+        { icon: '💡', title: 'Explain', desc: 'AI topics', prompt: 'Explain AI topics' },
+        { icon: '✍️', title: 'Help me write', desc: 'Something', prompt: 'Help me write something' },
+        { icon: '📄', title: 'Summarize', desc: 'This document', prompt: 'Summarize this document' },
+        { icon: '🎨', title: 'Create', desc: 'An image', prompt: 'Create an image' },
+      ]
+    },
+    code: {
+      name: 'Code',
+      icon: '🖥️',
+      color: '#34D399',
+      welcome: 'Ready to code. What are we building?',
+      systemPrefix: 'You are in Code workspace mode. Focus on code, programming, debugging, and software engineering. Provide code-first responses with clear explanations. Use code blocks liberally.',
+      quickActions: [
+        { icon: '🐛', title: 'Debug', desc: 'Fix my code', prompt: 'Help me debug this code' },
+        { icon: '🏗️', title: 'Architecture', desc: 'Design systems', prompt: 'Help me design a system architecture for' },
+        { icon: '📝', title: 'Code Review', desc: 'Review my code', prompt: 'Review this code for issues' },
+        { icon: '⚡', title: 'Optimize', desc: 'Make it faster', prompt: 'Optimize this code for performance' },
+      ]
+    },
+    research: {
+      name: 'Research',
+      icon: '🔬',
+      color: '#5EEBFF',
+      welcome: 'What should we investigate?',
+      systemPrefix: 'You are in Research workspace mode. Focus on thorough research, analysis, and fact-finding. Cite sources when possible. Be comprehensive and analytical.',
+      quickActions: [
+        { icon: '🔍', title: 'Deep Dive', desc: 'Research a topic', prompt: 'Do a deep research dive on' },
+        { icon: '📊', title: 'Compare', desc: 'Analyze options', prompt: 'Compare and contrast' },
+        { icon: '📈', title: 'Trends', desc: 'Market analysis', prompt: 'Analyze current trends in' },
+        { icon: '🧪', title: 'Fact Check', desc: 'Verify claims', prompt: 'Fact-check this claim:' },
+      ]
+    },
+    writing: {
+      name: 'Writing',
+      icon: '✍️',
+      color: '#FCD34D',
+      welcome: 'Ready to write. What\'s the story?',
+      systemPrefix: 'You are in Writing workspace mode. Focus on creative writing, content creation, and editing. Be eloquent, expressive, and help craft compelling narratives.',
+      quickActions: [
+        { icon: '📧', title: 'Email', desc: 'Draft an email', prompt: 'Help me write a professional email about' },
+        { icon: '📝', title: 'Blog Post', desc: 'Write content', prompt: 'Write a blog post about' },
+        { icon: '✨', title: 'Creative', desc: 'Story or poem', prompt: 'Write a creative piece about' },
+        { icon: '📋', title: 'Edit', desc: 'Improve writing', prompt: 'Edit and improve this text:' },
+      ]
+    }
+  };
+
+  const _origSelectWorkspace = window.selectWorkspace;
+  window.selectWorkspace = function(name) {
+    const ws = WORKSPACE_DEFS[name];
+    if (!ws) return;
+
+    window.currentWorkspace = name;
+    localStorage.setItem('nova_workspace', name);
+
+    syncSpaceCardsP3();
+    applyWorkspaceUI();
+    showToast('Switched to ' + ws.name + ' workspace');
+  };
+
+  function syncSpaceCardsP3() {
+    const cw = window.currentWorkspace || 'general';
+    document.querySelectorAll('.space-card:not(.locked)').forEach(c => {
+      c.classList.toggle('active', c.dataset.space === cw);
+    });
+    const el = document.getElementById('spacesActiveName');
+    if (el) {
+      const ws = WORKSPACE_DEFS[cw];
+      el.textContent = ws ? ws.name : cw;
+    }
+  }
+  window.syncSpaceCards = syncSpaceCardsP3;
+
+  function applyWorkspaceUI() {
+    const cw = window.currentWorkspace || 'general';
+    const ws = WORKSPACE_DEFS[cw];
+    if (!ws) return;
+
+    // Update welcome message
+    const welcomeP = document.querySelector('#welcomeScreen p');
+    if (welcomeP) welcomeP.textContent = ws.welcome;
+
+    // Update quick action cards
+    const quickActionsEl = document.getElementById('quickActions');
+    if (quickActionsEl && ws.quickActions) {
+      quickActionsEl.innerHTML = ws.quickActions.map(qa => `
+        <div class="quick-card" onclick="prefillChat('${escapeHtml(qa.prompt)}')">
+          <div class="quick-card-icon">${qa.icon}</div>
+          <div class="quick-card-title">${escapeHtml(qa.title)}</div>
+          <div class="quick-card-desc">${escapeHtml(qa.desc)}</div>
+        </div>
+      `).join('');
+    }
+
+    // Add/update workspace indicator in chat
+    let wsIndicator = document.getElementById('workspaceIndicator');
+    if (!wsIndicator) {
+      wsIndicator = document.createElement('div');
+      wsIndicator.id = 'workspaceIndicator';
+      wsIndicator.className = 'workspace-indicator';
+      const chatPanel = document.getElementById('chatPanel');
+      if (chatPanel) {
+        chatPanel.insertBefore(wsIndicator, chatPanel.querySelector('#chatMessages'));
+      }
+    }
+    wsIndicator.innerHTML = `<span class="ws-dot" style="background:${ws.color};box-shadow:0 0 8px ${ws.color}60"></span> <span class="ws-name">${ws.icon} ${ws.name} Workspace</span>`;
+    if (cw === 'general') wsIndicator.style.display = 'none';
+    else wsIndicator.style.display = 'flex';
+  }
+
+  // Patch sendChat to include workspace context
+  const _p3WrappedSendChat = window.sendChat;
+  window.sendChat = async function() {
+    const cw = window.currentWorkspace || 'general';
+    const ws = WORKSPACE_DEFS[cw];
+    // Inject workspace system prefix into history if needed
+    if (ws && ws.systemPrefix && window.chatHistory && window.chatHistory.length === 0) {
+      // First message: prefix the system context
+      // We don't modify the user message, but we add a system hint
+      // This is handled by the backend, so we pass workspace info
+    }
+    return _p3WrappedSendChat();
+  };
+
+
+  // ─────────────────────────────────────────────────
+  //  3. TASKS SYSTEM
+  // ─────────────────────────────────────────────────
+
+  function _taskKey() { return 'nova_tasks_' + _userPrefix(); }
+
+  function getTasks() {
+    try { return JSON.parse(localStorage.getItem(_taskKey()) || '[]'); }
+    catch (_) { return []; }
+  }
+  function setTasks(tasks) {
+    localStorage.setItem(_taskKey(), JSON.stringify(tasks));
+    updateTaskBadge();
+  }
+
+  function updateTaskBadge() {
+    const tasks = getTasks();
+    const active = tasks.filter(t => t.status !== 'done').length;
+    const navBtn = document.querySelector('.nav-item[data-panel="tasks"]');
+    if (!navBtn) return;
+
+    let badge = navBtn.querySelector('.nav-badge');
+    if (active > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'nav-badge';
+        navBtn.appendChild(badge);
+      }
+      badge.textContent = active;
+    } else {
+      if (badge) badge.remove();
+    }
+  }
+
+  let _taskFilter = 'all';
+
+  function renderTasksPanel() {
+    const panel = document.getElementById('panel-tasks');
+    if (!panel) return;
+
+    const tasks = getTasks();
+    const filtered = _taskFilter === 'all' ? tasks
+      : tasks.filter(t => t.status === _taskFilter);
+
+    panel.innerHTML = `
+      <div class="tasks-header">
+        <div>
+          <h2>Tasks</h2>
+          <p>${tasks.length} task${tasks.length !== 1 ? 's' : ''} · ${tasks.filter(t => t.status !== 'done').length} active</p>
+        </div>
+        <button class="tasks-add-btn" onclick="openCreateTaskModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Task
+        </button>
+      </div>
+      <div class="tasks-filters">
+        <button class="tasks-filter-btn${_taskFilter === 'all' ? ' active' : ''}" onclick="filterTasks('all')">All</button>
+        <button class="tasks-filter-btn${_taskFilter === 'todo' ? ' active' : ''}" onclick="filterTasks('todo')">To Do</button>
+        <button class="tasks-filter-btn${_taskFilter === 'in-progress' ? ' active' : ''}" onclick="filterTasks('in-progress')">In Progress</button>
+        <button class="tasks-filter-btn${_taskFilter === 'done' ? ' active' : ''}" onclick="filterTasks('done')">Done</button>
+      </div>
+      <div class="tasks-list" id="tasksList"></div>
+    `;
+
+    const list = panel.querySelector('#tasksList');
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div class="panel-empty">
+          <div class="panel-empty-icon">📋</div>
+          <div>${_taskFilter === 'all' ? 'No tasks yet.' : 'No ' + _taskFilter + ' tasks.'}</div>
+          <div class="text-dim" style="font-size:13px;margin-top:4px">Click "Add Task" to get started.</div>
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(task => {
+      const item = document.createElement('div');
+      item.className = 'task-item' + (task.status === 'done' ? ' done' : '');
+      item.innerHTML = `
+        <div class="task-checkbox${task.status === 'done' ? ' checked' : ''}" onclick="event.stopPropagation();toggleTaskDone('${task.id}')">
+          ${task.status === 'done' ? '✓' : ''}
+        </div>
+        <div class="task-info">
+          <div class="task-title">${escapeHtml(task.title)}</div>
+          ${task.desc ? `<div class="task-desc">${escapeHtml(task.desc)}</div>` : ''}
+        </div>
+        <span class="task-status-badge ${task.status}">${task.status === 'in-progress' ? 'In Progress' : task.status === 'done' ? 'Done' : 'To Do'}</span>
+        <button class="task-delete-btn" onclick="event.stopPropagation();deleteTask('${task.id}')" title="Delete">✕</button>
+      `;
+      item.onclick = () => cycleTaskStatus(task.id);
+      list.appendChild(item);
+    });
+  }
+
+  window.filterTasks = function(filter) {
+    _taskFilter = filter;
+    renderTasksPanel();
+  };
+
+  window.openCreateTaskModal = function() {
+    document.getElementById('newTaskTitle').value = '';
+    document.getElementById('newTaskDesc').value = '';
+    document.getElementById('newTaskStatus').value = 'todo';
+    document.getElementById('createTaskModal').classList.add('active');
+  };
+  window.closeCreateTaskModal = function() {
+    document.getElementById('createTaskModal').classList.remove('active');
+  };
+  window.saveNewTask = function() {
+    const title = document.getElementById('newTaskTitle').value.trim();
+    const desc = document.getElementById('newTaskDesc').value.trim();
+    const status = document.getElementById('newTaskStatus').value;
+    if (!title) { showToast('Task title is required'); return; }
+
+    const tasks = getTasks();
+    tasks.unshift({
+      id: 't-' + Date.now().toString(36),
+      title, desc, status,
+      createdAt: Date.now()
+    });
+    setTasks(tasks);
+    closeCreateTaskModal();
+    renderTasksPanel();
+    showToast('Task added!');
+  };
+
+  window.toggleTaskDone = function(taskId) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    task.status = task.status === 'done' ? 'todo' : 'done';
+    setTasks(tasks);
+    renderTasksPanel();
+  };
+
+  window.cycleTaskStatus = function(taskId) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const cycle = ['todo', 'in-progress', 'done'];
+    const idx = cycle.indexOf(task.status);
+    task.status = cycle[(idx + 1) % cycle.length];
+    setTasks(tasks);
+    renderTasksPanel();
+  };
+
+  window.deleteTask = function(taskId) {
+    if (!confirm('Delete this task?')) return;
+    let tasks = getTasks();
+    tasks = tasks.filter(t => t.id !== taskId);
+    setTasks(tasks);
+    renderTasksPanel();
+    showToast('Task deleted');
+  };
+
+  // Close task modal on backdrop
+  document.getElementById('createTaskModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeCreateTaskModal();
+  });
+
+
+  // ─────────────────────────────────────────────────
+  //  4. KNOWLEDGE SYSTEM
+  // ─────────────────────────────────────────────────
+
+  function _knowledgeKey() { return 'nova_knowledge_' + _userPrefix(); }
+
+  function getKnowledgeDocs() {
+    try { return JSON.parse(localStorage.getItem(_knowledgeKey()) || '[]'); }
+    catch (_) { return []; }
+  }
+  function setKnowledgeDocs(docs) {
+    localStorage.setItem(_knowledgeKey(), JSON.stringify(docs));
+    updateKnowledgeBadge();
+  }
+
+  function updateKnowledgeBadge() {
+    const docs = getKnowledgeDocs();
+    const navBtn = document.querySelector('.nav-item[data-panel="knowledge"]');
+    if (!navBtn) return;
+
+    let badge = navBtn.querySelector('.nav-badge');
+    if (docs.length > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'nav-badge';
+        navBtn.appendChild(badge);
+      }
+      badge.textContent = docs.length;
+    } else {
+      if (badge) badge.remove();
+    }
+  }
+
+  function renderKnowledgePanel() {
+    const panel = document.getElementById('panel-knowledge');
+    if (!panel) return;
+
+    const docs = getKnowledgeDocs();
+
+    panel.innerHTML = `
+      <div class="knowledge-header">
+        <div>
+          <h2>Knowledge</h2>
+          <p>${docs.length} document${docs.length !== 1 ? 's' : ''} uploaded</p>
+        </div>
+        <button class="knowledge-upload-btn" onclick="triggerKnowledgeUpload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Document
+        </button>
+      </div>
+      <div class="knowledge-drop-zone" id="knowledgeDropZone">
+        <div class="drop-icon">📂</div>
+        <div>Drop files here or click to upload</div>
+        <div class="text-dim" style="font-size:11px;margin-top:4px">Accepts .txt, .md, .pdf (stored locally)</div>
+      </div>
+      <div class="knowledge-list" id="knowledgeList"></div>
+    `;
+
+    const list = panel.querySelector('#knowledgeList');
+    if (!docs.length) {
+      list.innerHTML = `
+        <div class="panel-empty" style="padding:24px 0">
+          <div class="panel-empty-icon">📚</div>
+          <div>No documents yet.</div>
+          <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Nova to reference in conversations.</div>
+        </div>
+      `;
+    } else {
+      docs.forEach(doc => {
+        const icon = doc.name.endsWith('.pdf') ? '📄' : doc.name.endsWith('.md') ? '📝' : '📃';
+        const sizeStr = doc.size < 1024 ? doc.size + ' B' : (doc.size / 1024).toFixed(1) + ' KB';
+        const dateStr = new Date(doc.uploadedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const item = document.createElement('div');
+        item.className = 'knowledge-item';
+        item.innerHTML = `
+          <div class="knowledge-icon">${icon}</div>
+          <div class="knowledge-info">
+            <div class="knowledge-name">${escapeHtml(doc.name)}</div>
+            <div class="knowledge-meta">${sizeStr} · ${dateStr}</div>
+          </div>
+          <button class="knowledge-delete-btn" onclick="deleteKnowledgeDoc('${doc.id}')" title="Delete">✕</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Setup drop zone
+    const dropZone = panel.querySelector('#knowledgeDropZone');
+    if (dropZone) {
+      dropZone.onclick = () => triggerKnowledgeUpload();
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(f => processKnowledgeFile(f));
+      });
+    }
+  }
+
+  window.triggerKnowledgeUpload = function() {
+    const input = document.getElementById('knowledgeFileInput');
+    if (input) {
+      input.onchange = function(e) {
+        Array.from(e.target.files).forEach(f => processKnowledgeFile(f));
+        e.target.value = '';
+      };
+      input.click();
+    }
+  };
+
+  function processKnowledgeFile(file) {
+    const allowed = ['.txt', '.md', '.pdf'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) {
+      showToast('Unsupported file type. Use .txt, .md, or .pdf');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large (max 5MB)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const docs = getKnowledgeDocs();
+      const doc = {
+        id: 'doc-' + Date.now().toString(36),
+        name: file.name,
+        size: file.size,
+        type: file.type || ext,
+        content: e.target.result,
+        uploadedAt: Date.now()
+      };
+      docs.unshift(doc);
+      setKnowledgeDocs(docs);
+      renderKnowledgePanel();
+      showToast('"' + file.name + '" uploaded!');
+    };
+    reader.readAsText(file);
+  }
+
+  window.deleteKnowledgeDoc = function(docId) {
+    if (!confirm('Delete this document?')) return;
+    let docs = getKnowledgeDocs();
+    docs = docs.filter(d => d.id !== docId);
+    setKnowledgeDocs(docs);
+    renderKnowledgePanel();
+    showToast('Document deleted');
+  };
+
+
+  // ─────────────────────────────────────────────────
+  //  5. PATCH switchPanel FOR NEW PANELS
+  // ─────────────────────────────────────────────────
+
+  const _origSwitchPanel = window.switchPanel;
+  window.switchPanel = function(name) {
+    // Call original to handle nav state, show/hide, etc.
+    _origSwitchPanel(name);
+
+    // Additional panel-specific init
+    if (name === 'tasks') renderTasksPanel();
+    if (name === 'knowledge') renderKnowledgePanel();
+    if (name === 'agents') syncAgentCardsP3();
+    if (name === 'spaces') syncSpaceCardsP3();
+  };
+
+
+  // ─────────────────────────────────────────────────
+  //  6. INIT ON LOAD
+  // ─────────────────────────────────────────────────
+
+  function p3Init() {
+    // Restore agent from localStorage
+    const savedAgent = localStorage.getItem('nova_agent');
+    if (savedAgent) {
+      // Validate it's a real agent (core or custom)
+      if (CORE_AGENTS[savedAgent] || getCustomAgents().find(a => a.id === savedAgent)) {
+        window.currentAgent = savedAgent;
+      }
+    }
+
+    // Restore workspace from localStorage
+    const savedWs = localStorage.getItem('nova_workspace');
+    if (savedWs && WORKSPACE_DEFS[savedWs]) {
+      window.currentWorkspace = savedWs;
+    }
+
+    // Apply UI states
+    applyAgentTint();
+    applyWorkspaceUI();
+    updateTaskBadge();
+    updateKnowledgeBadge();
+    updateWelcomeForAgent();
+
+    // Update agent card colors to match spec
+    updateAgentCardColors();
+  }
+
+  function updateAgentCardColors() {
+    // Ensure core agent cards use the specified accent colors
+    const colorMap = {
+      nova: '#7B61FF',
+      desi: '#FF6B9D',
+      lesi: '#34D399',
+      redi: '#FF8C42',
+    };
+    Object.entries(colorMap).forEach(([id, color]) => {
+      const card = document.querySelector(`.agent-card[data-agent="${id}"]`);
+      if (card) {
+        card.style.setProperty('--agent-glow', color);
+        const avatar = card.querySelector('.agent-avatar');
+        if (avatar) {
+          avatar.style.background = `linear-gradient(135deg, ${color}, ${lightenColor(color, 20)})`;
+        }
+      }
+    });
+  }
+
+  // Run init after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(p3Init, 150));
+  } else {
+    setTimeout(p3Init, 150);
+  }
+
+  // Escape key closes all phase 3 modals
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.getElementById('createAgentModal')?.classList.remove('active');
+      document.getElementById('createTaskModal')?.classList.remove('active');
+    }
+  });
+
+})();
+</script>
