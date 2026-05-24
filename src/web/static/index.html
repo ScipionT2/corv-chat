@@ -2807,13 +2807,17 @@ body {
     inset 0 1px 2px rgba(255, 255, 255, 0.25) !important;
 }
 
-/* Model cards active glow */
+/* Model cards active glow — use card-safe animation (no translate!) */
 .model-card.active {
   box-shadow:
     0 0 25px rgba(123, 97, 255, 0.18),
     inset 0 0 25px rgba(123, 97, 255, 0.06),
     0 4px 20px rgba(0, 0, 0, 0.3) !important;
-  animation: breatheGlow 4s ease-in-out infinite alternate !important;
+  animation: cardBreathe 4s ease-in-out infinite alternate !important;
+}
+@keyframes cardBreathe {
+  0%   { box-shadow: 0 0 20px rgba(123,97,255,.12), inset 0 0 20px rgba(123,97,255,.04), 0 4px 16px rgba(0,0,0,.25); }
+  100% { box-shadow: 0 0 30px rgba(123,97,255,.22), inset 0 0 30px rgba(123,97,255,.08), 0 4px 24px rgba(0,0,0,.35); }
 }
 
 /* New chat button glow on hover */
