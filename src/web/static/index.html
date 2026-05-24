@@ -729,6 +729,8 @@ body::after{
 }
 .models-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;
+  grid-auto-rows:1fr;
+  align-items:stretch;
 }
 .model-card{
   background:rgba(255,255,255,.03);border:1px solid var(--glass-border);
@@ -4969,15 +4971,30 @@ _restoreFromLocal();
 
 /* Override existing model-card to accommodate new badges */
 .model-card {
-  padding: 18px 14px 14px !important;
-  gap: 6px !important;
+  padding: 18px 14px 12px !important;
+  gap: 4px !important;
   min-height: 140px;
+  overflow: hidden;
+}
+/* Ensure all cards stay in grid flow — no popover/overlap */
+.model-card, .model-card.active, .model-card:hover {
+  position: relative;
+  z-index: 1;
+}
+.model-card:hover {
+  z-index: 2;
 }
 
 /* Model card active override — move checkmark since we have status dot */
 .model-card.active::after {
   display: none !important;
 }
+
+/* Compact badges so cards don't overflow */
+.model-provider-badge { margin-top: 2px !important; padding: 1px 6px !important; font-size: 8px !important; }
+.model-speed-badge { margin-top: 0 !important; font-size: 8px !important; }
+.model-context-badge { margin-top: 0 !important; font-size: 8px !important; }
+.model-recommended-badge { font-size: 7px !important; padding: 1px 5px !important; }
 
 
 /* ═══════════════ 2. OFFLINE MODE FOUNDATION ═══════════════ */
