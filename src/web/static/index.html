@@ -567,15 +567,57 @@ body::after{
 .memory-galaxy{
   position:relative;width:100%;aspect-ratio:1/1;max-height:60vh;
   margin:0 auto;overflow:hidden;border-radius:50%;
-  background:radial-gradient(ellipse at center,rgba(123,97,255,.04) 0%,transparent 70%);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(123,97,255,0.06) 0%, rgba(123,97,255,0.02) 35%, transparent 70%),
+    radial-gradient(ellipse at 30% 70%, rgba(94,235,255,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(168,85,247,0.03) 0%, transparent 50%);
   animation:galaxyRotate 120s linear infinite;
 }
 @keyframes galaxyRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
+/* Galaxy search input */
+.galaxy-search{
+  width:100%;padding:8px 14px;margin-bottom:12px;
+  background:rgba(10,15,35,.6);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;color:var(--text);font-size:13px;
+  outline:none;transition:border-color .25s,box-shadow .25s;
+  font-family:inherit;
+}
+.galaxy-search::placeholder{color:var(--text-dim);opacity:.6}
+.galaxy-search:focus{
+  border-color:rgba(123,97,255,.4);
+  box-shadow:0 0 12px rgba(123,97,255,.15);
+}
+
+/* Galaxy core (center piece) */
+.galaxy-core{
+  position:absolute;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle, #7B61FF 0%, rgba(123,97,255,0.3) 50%, transparent 70%);
+  box-shadow:0 0 30px rgba(123,97,255,0.5), 0 0 60px rgba(123,97,255,0.2), 0 0 90px rgba(123,97,255,0.1);
+  animation:galaxyCorePulse 3s ease-in-out infinite;
+  z-index:2;pointer-events:none;
+}
+@keyframes galaxyCorePulse{
+  0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.9}
+  50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}
+}
+
+/* Cluster labels */
+.galaxy-cluster-label{
+  position:absolute;font-size:9px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(123,97,255,0.35);
+  pointer-events:none;z-index:1;white-space:nowrap;
+}
+.galaxy-cluster-ring{
+  position:absolute;border-radius:50%;pointer-events:none;
+  border:1px dashed rgba(123,97,255,0.08);
+  transform:translate(-50%,-50%);
+}
+
 /* Connection lines */
 .galaxy-line{
   position:absolute;height:1px;transform-origin:left center;
-  background:linear-gradient(90deg,rgba(123,97,255,.15),rgba(94,235,255,.08),transparent);
+  background:linear-gradient(90deg, transparent 0%, rgba(123,97,255,0.2) 20%, rgba(94,235,255,0.1) 50%, rgba(123,97,255,0.2) 80%, transparent 100%);
   pointer-events:none;opacity:.4;
 }
 
@@ -584,7 +626,7 @@ body::after{
   position:absolute;width:10px;height:10px;border-radius:50%;
   cursor:pointer;transition:transform .3s,box-shadow .3s;
   transform:translate(-50%,-50%);
-  animation:galaxyNodePulse 3s ease-in-out infinite alternate;
+  animation:galaxyNodePulse 4s ease-in-out infinite;
 }
 .galaxy-node::before{
   content:'';position:absolute;inset:-4px;border-radius:50%;
@@ -595,9 +637,27 @@ body::after{
   box-shadow:0 0 20px rgba(123,97,255,.6),0 0 40px rgba(123,97,255,.3);
   z-index:10;
 }
+.galaxy-node.search-dimmed{
+  opacity:0.08 !important;transition:opacity .3s;
+}
 @keyframes galaxyNodePulse{
-  0%{opacity:.7;filter:brightness(1)}
-  100%{opacity:1;filter:brightness(1.3)}
+  0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+}
+
+/* Empty state particles */
+.galaxy-empty-particles{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.galaxy-particle{
+  position:absolute;width:2px;height:2px;border-radius:50%;
+  background:rgba(123,97,255,0.5);animation:galaxyParticleDrift linear infinite;
+}
+@keyframes galaxyParticleDrift{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:0.8}
+  90%{opacity:0.8}
+  100%{transform:translateY(-120px) translateX(30px);opacity:0}
 }
 
 /* Tooltip */
@@ -3044,6 +3104,8 @@ body {
         <button onclick="toggleMemoryView('list')" id="toggleList">📋 List</button>
       </div>
     </div>
+    <input type="text" id="galaxySearch" class="galaxy-search" placeholder="Search conversations…"
+      oninput="filterGalaxy(this.value)" />
     <div id="galaxyContainer" class="memory-galaxy">
       <div class="galaxy-empty"><div class="galaxy-empty-icon">✨</div><div>Loading your constellation…</div></div>
     </div>
@@ -3809,6 +3871,9 @@ async function sendChat() {
     const reqBody = { message: text, model: model, history: chatHistory.slice(-20) };
     if (currentChatId) reqBody.chat_id = currentChatId;
     if (apiKey) reqBody.api_key = apiKey;
+    if (window.currentAgent && window.currentAgent !== 'nova') reqBody.agent = window.currentAgent;
+    const ws = window.WORKSPACE_DEFS && window.WORKSPACE_DEFS[window.currentWorkspace];
+    if (ws && ws.systemPrefix) reqBody.workspace_prefix = ws.systemPrefix;
 
     const res = await fetch('/api/v2/chat', {
       method: 'POST',
@@ -4218,7 +4283,7 @@ function renderGalaxy() {
   const gc = document.getElementById('galaxyContainer');
   const chats = _galaxyChats;
   if (!chats.length) {
-    gc.innerHTML = '<div class="galaxy-empty"><div class="galaxy-empty-icon">✨</div><div>No conversations yet.</div><div class="text-dim" style="font-size:13px;margin-top:4px">Start chatting to see your galaxy form.</div></div>';
+    gc.innerHTML = renderGalaxyEmptyState();
     return;
   }
   gc.innerHTML = '';
@@ -4230,6 +4295,35 @@ function renderGalaxy() {
   const oldest = chats.length > 1 ? chats[chats.length - 1].updated_at || now : now;
   const newest = chats[0]?.updated_at || now;
   const range = Math.max(newest - oldest, 1);
+
+  // ── Galaxy core (glowing Nova center) ──
+  const core = document.createElement('div');
+  core.className = 'galaxy-core';
+  core.style.cssText = `left:${cx}px;top:${cy}px;transform:translate(-50%,-50%)`;
+  gc.appendChild(core);
+
+  // ── Cluster rings & labels ──
+  const dayMs = 86400;
+  const todayCutoff = now - dayMs;
+  const weekCutoff = now - dayMs * 7;
+  // Inner ring = Today, Mid ring = This Week, Outer = Older
+  const clusters = [
+    { label: 'Today', radiusFrac: 0.25 },
+    { label: 'This Week', radiusFrac: 0.55 },
+    { label: 'Older', radiusFrac: 0.85 },
+  ];
+  clusters.forEach(cl => {
+    const r = maxR * cl.radiusFrac * 2;
+    const ring = document.createElement('div');
+    ring.className = 'galaxy-cluster-ring';
+    ring.style.cssText = `left:${cx}px;top:${cy}px;width:${r}px;height:${r}px;`;
+    gc.appendChild(ring);
+    const lbl = document.createElement('div');
+    lbl.className = 'galaxy-cluster-label';
+    lbl.textContent = cl.label;
+    lbl.style.cssText = `left:${cx + maxR * cl.radiusFrac * 0.7}px;top:${cy - maxR * cl.radiusFrac - 8}px;`;
+    gc.appendChild(lbl);
+  });
 
   // Build node positions
   const nodes = chats.map((c, i) => {
@@ -4269,8 +4363,9 @@ function renderGalaxy() {
   nodes.forEach(n => {
     const dot = document.createElement('div');
     dot.className = 'galaxy-node';
+    dot.dataset.title = n.c.title || 'Chat';
     const color = `hsl(${n.hue},${n.saturation}%,${n.lightness}%)`;
-    dot.style.cssText = `left:${n.x}px;top:${n.y}px;width:${n.size}px;height:${n.size}px;background:${color};box-shadow:0 0 ${4 + n.t * 8}px ${color};animation-delay:${(Math.random() * 3).toFixed(1)}s;`;
+    dot.style.cssText = `left:${n.x}px;top:${n.y}px;width:${n.size}px;height:${n.size}px;background:${color};box-shadow:0 0 ${4 + n.t * 8}px ${color};animation-delay:${(Math.random() * 4).toFixed(1)}s;`;
     dot.addEventListener('mouseenter', e => {
       const date = n.c.updated_at ? new Date(n.c.updated_at * 1000).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '';
       tooltip.innerHTML = `${escapeHtml(n.c.title || 'Chat')}<div class="tooltip-meta">${n.c.agent_name || 'Nova'} · ${date}</div>`;
@@ -4289,6 +4384,40 @@ function renderGalaxy() {
       loadChat(n.c.id);
     });
     gc.appendChild(dot);
+  });
+}
+
+function renderGalaxyEmptyState() {
+  // Cinematic empty state with animated particles
+  let particles = '';
+  for (let i = 0; i < 20; i++) {
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    const dur = 4 + Math.random() * 6;
+    const delay = Math.random() * 5;
+    const size = 1 + Math.random() * 2;
+    const hue = 250 + Math.random() * 30;
+    particles += `<div class="galaxy-particle" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;background:hsla(${hue},80%,70%,0.6);animation-duration:${dur.toFixed(1)}s;animation-delay:${delay.toFixed(1)}s;"></div>`;
+  }
+  return `
+    <div class="galaxy-empty-particles">${particles}</div>
+    <div class="galaxy-empty">
+      <div class="galaxy-empty-icon" style="animation:galaxyCorePulse 3s ease-in-out infinite;font-size:56px;opacity:.6;">✦</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text-mid);margin-top:4px;">Your galaxy awaits</div>
+      <div class="text-dim" style="font-size:12px;margin-top:4px;opacity:.5;">Start a conversation and watch your universe unfold.</div>
+    </div>`;
+}
+
+function filterGalaxy(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.galaxy-node').forEach(node => {
+    const title = (node.dataset.title || '').toLowerCase();
+    if (!q || title.includes(q)) {
+      node.classList.remove('search-dimmed');
+      node.style.opacity = '';
+    } else {
+      node.classList.add('search-dimmed');
+    }
   });
 }
 
@@ -6671,7 +6800,7 @@ _restoreFromLocal();
     fetch('/api/agents/switch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agent: window.currentAgent })
+      body: JSON.stringify({ name: agent ? agent.name : name })
     }).catch(() => {});
 
     syncAgentCardsP3();
@@ -6851,6 +6980,17 @@ _restoreFromLocal();
     });
     setCustomAgents(agents);
 
+    // Also create on backend
+    fetch('/api/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        system_prompt: prompt || `You are ${name}, a helpful assistant.`,
+        model: ''
+      })
+    }).catch(() => {});
+
     // Also register in agentNames for compatibility
     window.agentNames = window.agentNames || {};
     window.agentNames[id] = name;
@@ -6884,7 +7024,7 @@ _restoreFromLocal();
   //  2. WORKSPACE SYSTEM
   // ─────────────────────────────────────────────────
 
-  const WORKSPACE_DEFS = {
+  const WORKSPACE_DEFS = window.WORKSPACE_DEFS = {
     general: {
       name: 'General',
       icon: '💬',
@@ -7006,14 +7146,6 @@ _restoreFromLocal();
   // Patch sendChat to include workspace context
   const _p3WrappedSendChat = window.sendChat;
   window.sendChat = async function() {
-    const cw = window.currentWorkspace || 'general';
-    const ws = WORKSPACE_DEFS[cw];
-    // Inject workspace system prefix into history if needed
-    if (ws && ws.systemPrefix && window.chatHistory && window.chatHistory.length === 0) {
-      // First message: prefix the system context
-      // We don't modify the user message, but we add a system hint
-      // This is handled by the backend, so we pass workspace info
-    }
     return _p3WrappedSendChat();
   };
 
