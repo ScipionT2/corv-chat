@@ -355,6 +355,50 @@ body::after{
   padding:0 16px 16px;border-top:1px solid var(--glass-border);
   position:relative;overflow:visible;
 }
+/* Version indicator below input */
+.version-indicator{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:6px 0 8px;cursor:pointer;user-select:none;position:relative;
+}
+.version-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:#34D399;box-shadow:0 0 6px rgba(52,211,153,.5);
+  transition:background .3s,box-shadow .3s;
+}
+.version-dot.offline{
+  background:#FBBF24;box-shadow:0 0 6px rgba(251,191,36,.5);
+}
+.version-label{
+  font-size:13px;font-weight:500;color:var(--text-dim);
+  font-family:'Inter',sans-serif;letter-spacing:.2px;
+}
+.version-arrow{
+  color:var(--text-dim);transition:transform .2s;
+}
+.version-indicator.open .version-arrow{transform:rotate(180deg)}
+.version-menu{
+  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:rgba(10,15,35,.95);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:6px;min-width:200px;z-index:100;
+  backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.version-indicator.open .version-menu{display:block}
+.version-menu-item{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:8px;cursor:pointer;
+  transition:background .15s;font-size:12px;color:var(--text);
+}
+.version-menu-item:hover{background:rgba(255,255,255,.05)}
+.version-menu-item.active{background:rgba(123,97,255,.1)}
+.vm-dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.vm-dot.online{background:#34D399}
+.vm-dot.offline{background:#FBBF24}
+.vm-desc{
+  margin-left:auto;font-size:10px;color:var(--text-dim);
+}
 .input-bar{
   display:flex;align-items:flex-end;gap:8px;
   background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
@@ -3019,6 +3063,19 @@ body {
     </div>
 
     <div id="chatInputContainer">
+      <div class="version-indicator" id="versionIndicator" onclick="toggleVersionMenu()">
+        <span class="version-dot" id="versionDot"></span>
+        <span class="version-label" id="versionLabel">Flash</span>
+        <svg class="version-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="version-menu" id="versionMenu">
+          <div class="version-menu-item active" data-mode="online" onclick="switchVersion('online')">
+            <span class="vm-dot online"></span> Online <span class="vm-desc">Cloud AI · Fast</span>
+          </div>
+          <div class="version-menu-item" data-mode="offline" onclick="switchVersion('offline')">
+            <span class="vm-dot offline"></span> Offline <span class="vm-desc">Local Ollama · Private</span>
+          </div>
+        </div>
+      </div>
       <div class="input-bar">
         <div class="input-left">
           <div style="position:relative">
@@ -3881,7 +3938,14 @@ async function sendChat() {
     const ws = window.WORKSPACE_DEFS && window.WORKSPACE_DEFS[window.currentWorkspace];
     if (ws && ws.systemPrefix) reqBody.workspace_prefix = ws.systemPrefix;
 
-    const res = await fetch('/api/v2/chat', {
+    // Route to offline endpoint if in offline mode
+    const isOffline = (typeof novaMode !== 'undefined' && novaMode === 'offline');
+    if (isOffline) {
+      reqBody.model = localStorage.getItem('nova_ollama_model') || '';
+    }
+    const chatEndpoint = isOffline ? '/api/v2/chat/offline' : '/api/v2/chat';
+
+    const res = await fetch(chatEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody)
@@ -4599,6 +4663,79 @@ document.querySelector('.sidebar-profile')?.addEventListener('click', () => swit
    FILE ATTACHMENT SYSTEM
    ═══════════════════════════════════════════════════ */
 let pendingAttachments = [];
+
+/* ─── Version Indicator (Online/Offline) ─── */
+let novaMode = localStorage.getItem('nova_mode') || 'online';
+function initVersionIndicator() {
+  updateVersionUI();
+  // Close menu on outside click
+  document.addEventListener('click', e => {
+    const vi = document.getElementById('versionIndicator');
+    if (vi && !vi.contains(e.target)) vi.classList.remove('open');
+  });
+}
+function toggleVersionMenu() {
+  const vi = document.getElementById('versionIndicator');
+  if (vi) vi.classList.toggle('open');
+}
+function switchVersion(mode) {
+  novaMode = mode;
+  localStorage.setItem('nova_mode', mode);
+  updateVersionUI();
+  const vi = document.getElementById('versionIndicator');
+  if (vi) vi.classList.remove('open');
+  if (mode === 'offline') {
+    showToast('Switched to Offline (Local Ollama)');
+    // Check Ollama status
+    fetch('/api/ollama/status').then(r => r.json()).then(data => {
+      if (!data.online) {
+        showToast('⚠️ Ollama not detected — install & run Ollama for offline mode');
+      } else {
+        const models = data.models || [];
+        if (models.length && !localStorage.getItem('nova_ollama_model')) {
+          localStorage.setItem('nova_ollama_model', models[0]);
+        }
+      }
+    }).catch(() => {});
+  } else {
+    showToast('Switched to Online (Cloud)');
+  }
+}
+function updateVersionUI() {
+  const dot = document.getElementById('versionDot');
+  const label = document.getElementById('versionLabel');
+  const items = document.querySelectorAll('.version-menu-item');
+  if (novaMode === 'offline') {
+    if (dot) { dot.classList.add('offline'); }
+    if (label) { label.textContent = 'Offline'; }
+  } else {
+    if (dot) { dot.classList.remove('offline'); }
+    // Show current model short name
+    const model = window.currentModel || 'nova-auto';
+    const SHORT_NAMES = {
+      'nova-auto': 'Nova Auto', 'deepseek-v4-flash': 'Flash', 'gpt-oss-120b': 'GPT-OSS',
+      'llama-3.3-70b': 'Llama 70B', 'qwen3-coder': 'Qwen Coder', 'qwen3-next-80b': 'Qwen 80B',
+      'nemotron-3-super': 'Nemotron', 'gemma-4-31b': 'Gemma 4', 'minimax-m2.5': 'MiniMax',
+      'hermes-3-405b': 'Hermes 405B', 'gpt-5.5-pro': 'GPT-5.5 Pro', 'gpt-4.1': 'GPT-4.1',
+      'claude-opus-4.7': 'Claude Opus', 'claude-sonnet': 'Claude Sonnet',
+    };
+    if (label) { label.textContent = SHORT_NAMES[model] || model; }
+  }
+  items.forEach(item => {
+    item.classList.toggle('active', item.dataset.mode === novaMode);
+  });
+}
+// Update label when model changes
+const _origSelectModel = window.selectModel;
+if (_origSelectModel) {
+  window.selectModel = function(...args) {
+    const r = _origSelectModel.apply(this, args);
+    updateVersionUI();
+    return r;
+  };
+}
+document.addEventListener('DOMContentLoaded', initVersionIndicator);
+if (document.readyState !== 'loading') initVersionIndicator();
 
 function toggleAttachMenu() {
   const menu = document.getElementById('attachMenu');

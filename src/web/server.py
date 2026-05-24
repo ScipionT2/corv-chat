@@ -1132,6 +1132,8 @@ class ChatV2Request(BaseModel):
     history: list[dict] = []
     api_key: str | None = None  # BYOK — never stored
     chat_id: Optional[int] = None
+    agent: str | None = None          # active agent name
+    workspace_prefix: str | None = None  # workspace context to prepend
 
 
 async def _stream_openai_compat(messages, model_id, api_key, base_url="https://api.openai.com/v1"):
@@ -1303,20 +1305,23 @@ async def v2_chat(request: Request, body: ChatV2Request):
     now = time.time()
 
     chat_id = body.chat_id
+    agent_name = body.agent or _active_agents.get(uid, "Nova")
+
     if not chat_id:
         title = body.message[:50].strip() or "New Chat"
         cursor = await db.execute(
             "INSERT INTO chats (user_id, agent_name, title, created_at, updated_at) VALUES (?,?,?,?,?)",
-            (uid, "Nova", title, now, now),
+            (uid, agent_name, title, now, now),
         )
         await db.commit()
         chat_id = cursor.lastrowid
     else:
         rows = await db.execute_fetchall(
-            "SELECT id FROM chats WHERE id=? AND user_id=?", (chat_id, uid)
+            "SELECT id, agent_name FROM chats WHERE id=? AND user_id=?", (chat_id, uid)
         )
         if not rows:
             return JSONResponse({"error": "Chat not found"}, 404)
+        agent_name = rows[0]["agent_name"]
 
     # Save user message
     await db.execute(
@@ -1336,7 +1341,23 @@ async def v2_chat(request: Request, body: ChatV2Request):
     if len(db_history) > 50:
         db_history = db_history[-50:]
 
-    system_msg = {"role": "system", "content": CUSTOM_SYSTEM_PROMPT or NOVA_DEFAULT_SYSTEM}
+    # Resolve agent system prompt (mirrors v1 /api/chat pattern)
+    agent_rows = await db.execute_fetchall(
+        "SELECT system_prompt, model FROM agents WHERE user_id=? AND name=?",
+        (uid, agent_name),
+    )
+    if agent_rows and agent_rows[0]["system_prompt"]:
+        base_system = agent_rows[0]["system_prompt"]
+    else:
+        base_system = CUSTOM_SYSTEM_PROMPT or NOVA_DEFAULT_SYSTEM
+
+    # Prepend workspace prefix if provided
+    if body.workspace_prefix:
+        system_content = body.workspace_prefix + "\n\n" + base_system
+    else:
+        system_content = base_system
+
+    system_msg = {"role": "system", "content": system_content}
     messages = [system_msg] + db_history
 
     async def _stream():
@@ -1396,5 +1417,139 @@ async def v2_chat(request: Request, body: ChatV2Request):
         await save_db.commit()
 
         yield {"event": "done", "data": json.dumps({"content": full, "model": model_key, "provider": used_provider, "chat_id": chat_id})}
+
+    return EventSourceResponse(_stream())
+
+
+# ---------------------------------------------------------------------------
+# Offline Mode — Ollama Proxy
+# ---------------------------------------------------------------------------
+
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
+
+
+class OfflineChatRequest(BaseModel):
+    message: str
+    model: str = ""
+    chat_id: Optional[int] = None
+    history: list[dict] = []
+
+
+@app.get("/api/ollama/status")
+async def ollama_status():
+    """Check if Ollama is reachable."""
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{OLLAMA_URL}/api/tags")
+            if resp.status_code == 200:
+                data = resp.json()
+                models = [m["name"] for m in data.get("models", [])]
+                return {"online": True, "models": models, "url": OLLAMA_URL}
+    except Exception:
+        pass
+    return {"online": False, "models": [], "url": OLLAMA_URL}
+
+
+@app.post("/api/v2/chat/offline")
+async def v2_chat_offline(request: Request, body: OfflineChatRequest):
+    """Stream a chat response from local Ollama instance."""
+    uid = request.state.user_id
+    db = await get_db()
+    now = time.time()
+    model = body.model or OLLAMA_DEFAULT_MODEL
+
+    # Check Ollama is reachable
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{OLLAMA_URL}/api/tags")
+            if resp.status_code != 200:
+                return JSONResponse({"error": "Ollama is not running. Start Ollama to use offline mode."}, 503)
+    except Exception:
+        return JSONResponse({"error": "Cannot reach Ollama at " + OLLAMA_URL + ". Make sure Ollama is running locally."}, 503)
+
+    # Persist chat
+    chat_id = body.chat_id
+    if not chat_id:
+        title = body.message[:50].strip() or "New Chat"
+        cursor = await db.execute(
+            "INSERT INTO chats (user_id, agent_name, title, created_at, updated_at) VALUES (?,?,?,?,?)",
+            (uid, "Nova (Offline)", title, now, now),
+        )
+        await db.commit()
+        chat_id = cursor.lastrowid
+    else:
+        rows = await db.execute_fetchall(
+            "SELECT id FROM chats WHERE id=? AND user_id=?", (chat_id, uid)
+        )
+        if not rows:
+            return JSONResponse({"error": "Chat not found"}, 404)
+
+    # Save user message
+    await db.execute(
+        "INSERT INTO messages (chat_id, role, content, created_at) VALUES (?,?,?,?)",
+        (chat_id, "user", body.message, now),
+    )
+    await db.execute("UPDATE chats SET updated_at=? WHERE id=?", (now, chat_id))
+    await db.commit()
+
+    # Build history from DB
+    history_rows = await db.execute_fetchall(
+        "SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC",
+        (chat_id,),
+    )
+    db_history = [{"role": r["role"], "content": r["content"]} for r in history_rows]
+    if len(db_history) > 50:
+        db_history = db_history[-50:]
+
+    system_msg = {"role": "system", "content": CUSTOM_SYSTEM_PROMPT or NOVA_DEFAULT_SYSTEM}
+    messages = [system_msg] + db_history
+
+    async def _stream():
+        full = ""
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream(
+                    "POST",
+                    f"{OLLAMA_URL}/api/chat",
+                    json={"model": model, "messages": messages, "stream": True},
+                ) as resp:
+                    if resp.status_code != 200:
+                        body_text = await resp.aread()
+                        yield {"event": "error", "data": json.dumps({"error": f"Ollama error: {body_text.decode()[:200]}"})}
+                        return
+                    async for line in resp.aiter_lines():
+                        if not line.strip():
+                            continue
+                        try:
+                            chunk = json.loads(line)
+                            token = chunk.get("message", {}).get("content", "")
+                            if token:
+                                full += token
+                                yield {"event": "token", "data": json.dumps({"token": token})}
+                            if chunk.get("done"):
+                                break
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as exc:
+            if not full:
+                yield {"event": "error", "data": json.dumps({"error": f"Ollama stream failed: {str(exc)[:200]}"})}
+                return
+
+        if not full:
+            yield {"event": "error", "data": json.dumps({"error": "No response from Ollama."})}
+            return
+
+        # Save response
+        save_time = time.time()
+        save_db = await get_db()
+        await save_db.execute(
+            "INSERT INTO messages (chat_id, role, content, created_at) VALUES (?,?,?,?)",
+            (chat_id, "assistant", full, save_time),
+        )
+        await save_db.execute("UPDATE chats SET updated_at=? WHERE id=?", (save_time, chat_id))
+        await save_db.commit()
+
+        yield {"event": "done", "data": json.dumps({"content": full, "model": model, "provider": "ollama", "chat_id": chat_id})}
 
     return EventSourceResponse(_stream())
