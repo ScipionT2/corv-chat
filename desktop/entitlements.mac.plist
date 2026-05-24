@@ -8,5 +8,8 @@
   <!-- Network access for connecting to nov-assistant.com -->
   <key>com.apple.security.network.client</key>
   <true/>
+  <!-- Microphone access for voice input -->
+  <key>com.apple.security.device.audio-input</key>
+  <true/>
 </dict>
 </plist>

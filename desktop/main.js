@@ -1,15 +1,40 @@
-const { app, BrowserWindow, Menu, shell, nativeTheme, session, dialog } = require('electron');
+const { app, BrowserWindow, Menu, Tray, shell, nativeTheme, session, dialog, globalShortcut, ipcMain, Notification, net } = require('electron');
 const path = require('path');
+const { execFile } = require('child_process');
+const fs = require('fs');
+const http = require('http');
 
 // ── Config ──────────────────────────────────────────────────────────
 const NOVA_URL = 'https://nov-assistant.com';
 const ALLOWED_HOSTS = ['nov-assistant.com', 'www.nov-assistant.com'];
 const APP_NAME = 'Nova AI';
+const OLLAMA_URL = 'http://localhost:11434';
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
 
 let mainWindow = null;
+let tray = null;
+let isOnlineMode = true;
+let ollamaAvailable = false;
+let settings = loadSettings();
 
 // ── Force dark mode ─────────────────────────────────────────────────
 nativeTheme.themeSource = 'dark';
+
+// ── Settings persistence ────────────────────────────────────────────
+function loadSettings() {
+  try {
+    if (fs.existsSync(SETTINGS_PATH)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+    }
+  } catch (_) {}
+  return { autoStart: false, ollamaModel: '', ollamaUrl: OLLAMA_URL };
+}
+
+function saveSettings() {
+  try {
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+  } catch (_) {}
+}
 
 // ── Single instance lock ────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
@@ -29,9 +54,120 @@ function isAllowedURL(url) {
   try {
     const parsed = new URL(url);
     return ALLOWED_HOSTS.includes(parsed.hostname) && parsed.protocol === 'https:';
+  } catch { return false; }
+}
+
+// ── Ollama helpers ──────────────────────────────────────────────────
+function ollamaRequest(path, options = {}) {
+  const url = (settings.ollamaUrl || OLLAMA_URL) + path;
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const reqOptions = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || 11434,
+      path: urlObj.pathname,
+      method: options.method || 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      timeout: options.timeout || 5000,
+    };
+    const req = http.request(reqOptions, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, data: JSON.parse(data) }); }
+        catch { resolve({ status: res.statusCode, data: data }); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    if (options.body) req.write(JSON.stringify(options.body));
+    req.end();
+  });
+}
+
+async function checkOllama() {
+  try {
+    const res = await ollamaRequest('/api/tags', { timeout: 3000 });
+    ollamaAvailable = res.status === 200;
+    return ollamaAvailable;
   } catch {
+    ollamaAvailable = false;
     return false;
   }
+}
+
+async function getOllamaModels() {
+  try {
+    const res = await ollamaRequest('/api/tags', { timeout: 5000 });
+    if (res.status === 200 && res.data.models) {
+      return res.data.models.map(m => m.name);
+    }
+  } catch {}
+  return [];
+}
+
+// ── Ollama streaming chat (returns full response) ───────────────────
+function ollamaChat(messages, model) {
+  return new Promise((resolve, reject) => {
+    const url = new URL((settings.ollamaUrl || OLLAMA_URL) + '/api/chat');
+    const body = JSON.stringify({ model: model || settings.ollamaModel || 'llama3.2:3b', messages, stream: false });
+    const reqOptions = {
+      hostname: url.hostname,
+      port: url.port || 11434,
+      path: url.pathname,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+      timeout: 120000,
+    };
+    const req = http.request(reqOptions, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed.message?.content || '');
+        } catch { reject(new Error('Invalid response from Ollama')); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Ollama timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+// ── TTS (macOS native say, fallback: no-op on Windows) ──────────────
+function speak(text) {
+  return new Promise((resolve) => {
+    if (process.platform === 'darwin') {
+      // Use macOS 'say' command
+      const voice = settings.voice || 'Samantha';
+      execFile('say', ['-v', voice, text], (err) => resolve(!err));
+    } else if (process.platform === 'win32') {
+      // PowerShell TTS on Windows
+      const ps = `Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Speak('${text.replace(/'/g, "''")}')`;
+      execFile('powershell', ['-Command', ps], (err) => resolve(!err));
+    } else {
+      resolve(false);
+    }
+  });
+}
+
+function stopSpeaking() {
+  if (process.platform === 'darwin') {
+    execFile('killall', ['say'], () => {});
+  }
+}
+
+// ── Check if nov-assistant.com is reachable ─────────────────────────
+function checkOnline() {
+  return new Promise((resolve) => {
+    const req = net.request({ method: 'HEAD', url: NOVA_URL });
+    req.on('response', () => resolve(true));
+    req.on('error', () => resolve(false));
+    setTimeout(() => { req.abort(); resolve(false); }, 5000);
+    req.end();
+  });
 }
 
 // ── Create window ───────────────────────────────────────────────────
@@ -47,110 +183,201 @@ function createWindow() {
     backgroundColor: '#050816',
     show: false,
     webPreferences: {
-      // ── SECURITY: Maximum isolation ──
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,       // Isolate preload from renderer
-      nodeIntegration: false,        // No Node.js in renderer
+      contextIsolation: true,
+      nodeIntegration: false,
       nodeIntegrationInWorker: false,
-      nodeIntegrationInSubFrames: false,
-      sandbox: true,                 // OS-level sandbox
-      webviewTag: false,             // No <webview> tags
+      sandbox: true,
+      webviewTag: false,
       allowRunningInsecureContent: false,
-      experimentalFeatures: false,
-      enableBlinkFeatures: '',       // No extra Blink features
-      webSecurity: true,             // Enforce same-origin
+      webSecurity: true,
       spellcheck: true,
-      navigateOnDragDrop: false,     // Prevent drag-drop navigation
+      navigateOnDragDrop: false,
     },
     icon: path.join(__dirname, 'icons', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
   });
 
-  // Graceful show after load
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
   });
 
-  // Load Nova
-  mainWindow.loadURL(NOVA_URL);
+  // Decide what to load
+  loadAppropriateContent();
 
-  // ── SECURITY: Block all new windows except Nova domains ──
+  // Block navigation to non-Nova URLs
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isAllowedURL(url)) {
-      return { action: 'allow' };
-    }
+    if (isAllowedURL(url)) return { action: 'allow' };
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('close', (e) => {
+    // Hide to tray instead of quitting (on macOS)
+    if (process.platform === 'darwin' && tray) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
   });
 }
 
-// ── SECURITY: Permission handlers ───────────────────────────────────
+async function loadAppropriateContent() {
+  if (!isOnlineMode) {
+    mainWindow.loadFile(path.join(__dirname, 'offline.html'));
+    return;
+  }
+  const online = await checkOnline();
+  if (online) {
+    mainWindow.loadURL(NOVA_URL);
+  } else {
+    // Fallback to offline
+    isOnlineMode = false;
+    mainWindow.loadFile(path.join(__dirname, 'offline.html'));
+  }
+}
+
+// ── System Tray ─────────────────────────────────────────────────────
+function createTray() {
+  const iconPath = path.join(__dirname, 'icons', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+  tray = new Tray(iconPath);
+  tray.setToolTip(APP_NAME);
+  updateTrayMenu();
+  tray.on('click', () => {
+    if (mainWindow) {
+      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    }
+  });
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+  const template = [
+    { label: mainWindow?.isVisible() ? 'Hide Nova' : 'Show Nova', click: () => mainWindow?.isVisible() ? mainWindow.hide() : mainWindow?.show() },
+    { type: 'separator' },
+    { label: 'Online Mode', type: 'radio', checked: isOnlineMode, click: () => switchMode(true) },
+    { label: 'Offline Mode', type: 'radio', checked: !isOnlineMode, click: () => switchMode(false) },
+    { type: 'separator' },
+    { label: `Ollama: ${ollamaAvailable ? '● Connected' : '○ Not found'}`, enabled: false },
+    { type: 'separator' },
+    { label: 'Auto-Start', type: 'checkbox', checked: settings.autoStart, click: (item) => { settings.autoStart = item.checked; saveSettings(); app.setLoginItemSettings({ openAtLogin: item.checked }); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } },
+  ];
+  tray.setContextMenu(Menu.buildFromTemplate(template));
+}
+
+function switchMode(online) {
+  isOnlineMode = online;
+  loadAppropriateContent();
+  updateTrayMenu();
+  mainWindow?.webContents.send('mode:changed', online);
+}
+
+// ── Global Shortcuts ────────────────────────────────────────────────
+function registerShortcuts() {
+  const mod = process.platform === 'darwin' ? 'CommandOrControl+Shift' : 'Ctrl+Shift';
+  globalShortcut.register(`${mod}+N`, () => {
+    if (mainWindow) {
+      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    }
+  });
+  globalShortcut.register(`${mod}+V`, () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.webContents.send('voice:hotkey');
+    }
+  });
+}
+
+// ── IPC Handlers ────────────────────────────────────────────────────
+function setupIPC() {
+  ipcMain.handle('ollama:chat', async (_e, messages, model) => {
+    try { return { ok: true, content: await ollamaChat(messages, model) }; }
+    catch (err) { return { ok: false, error: err.message }; }
+  });
+
+  ipcMain.handle('ollama:status', async () => {
+    const available = await checkOllama();
+    return { online: available, url: settings.ollamaUrl || OLLAMA_URL };
+  });
+
+  ipcMain.handle('ollama:models', async () => {
+    return await getOllamaModels();
+  });
+
+  ipcMain.handle('voice:speak', async (_e, text) => {
+    return await speak(text);
+  });
+
+  ipcMain.handle('voice:stop', async () => {
+    stopSpeaking();
+    return true;
+  });
+
+  ipcMain.handle('notification:show', (_e, title, body) => {
+    if (Notification.isSupported()) {
+      new Notification({ title, body, icon: path.join(__dirname, 'icons', 'icon.png') }).show();
+      return true;
+    }
+    return false;
+  });
+
+  ipcMain.handle('app:info', () => ({
+    version: '2.0.0',
+    platform: process.platform,
+    online: isOnlineMode,
+    ollamaAvailable,
+  }));
+
+  ipcMain.handle('app:getSettings', () => settings);
+
+  ipcMain.handle('app:setSetting', (_e, key, val) => {
+    settings[key] = val;
+    saveSettings();
+    if (key === 'autoStart') app.setLoginItemSettings({ openAtLogin: val });
+    return true;
+  });
+
+  ipcMain.handle('app:switchMode', (_e, online) => {
+    switchMode(online);
+    return true;
+  });
+
+  ipcMain.handle('app:openExternal', (_e, url) => {
+    shell.openExternal(url);
+    return true;
+  });
+}
+
+// ── Permissions ─────────────────────────────────────────────────────
 function setupPermissions() {
   const ses = session.defaultSession;
-
-  // Only allow specific permissions
-  const ALLOWED_PERMISSIONS = [
-    'clipboard-read',
-    'clipboard-sanitized-write',
-    'pointerLock',
-    'fullscreen',
-    'notifications',
-  ];
+  const ALLOWED_PERMISSIONS = ['clipboard-read', 'clipboard-sanitized-write', 'pointerLock', 'fullscreen', 'notifications', 'media'];
 
   ses.setPermissionRequestHandler((webContents, permission, callback) => {
     const url = webContents.getURL();
-    if (isAllowedURL(url) && ALLOWED_PERMISSIONS.includes(permission)) {
+    if ((isAllowedURL(url) || url.startsWith('file://')) && ALLOWED_PERMISSIONS.includes(permission)) {
       callback(true);
-    } else {
-      console.log(`[Security] Denied permission: ${permission} for ${url}`);
-      callback(false);
-    }
+    } else { callback(false); }
   });
 
   ses.setPermissionCheckHandler((webContents, permission) => {
     if (!webContents) return false;
     const url = webContents.getURL();
-    return isAllowedURL(url) && ALLOWED_PERMISSIONS.includes(permission);
-  });
-
-  // ── SECURITY: Content Security Policy ──
-  ses.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' https://nov-assistant.com https://www.nov-assistant.com; " +
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://nov-assistant.com https://www.nov-assistant.com https://accounts.google.com https://apis.google.com; " +
-          "style-src 'self' 'unsafe-inline' https://nov-assistant.com https://www.nov-assistant.com https://fonts.googleapis.com; " +
-          "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; " +
-          "img-src 'self' data: blob: https: http:; " +
-          "connect-src 'self' https://nov-assistant.com https://www.nov-assistant.com wss://nov-assistant.com https://accounts.google.com https://apis.google.com https://openrouter.ai https://api.openai.com https://api.anthropic.com https://api.groq.com https://api.sambanova.ai; " +
-          "frame-src https://accounts.google.com; " +
-          "media-src 'self' blob: data:; " +
-          "object-src 'none'; " +
-          "base-uri 'self';"
-        ],
-      },
-    });
+    return (isAllowedURL(url) || url.startsWith('file://')) && ALLOWED_PERMISSIONS.includes(permission);
   });
 }
 
-// ── SECURITY: Navigation guard ──────────────────────────────────────
+// ── Navigation Security ─────────────────────────────────────────────
 function setupNavigationSecurity() {
   app.on('web-contents-created', (_, contents) => {
-    // Block navigation to non-Nova URLs
     contents.on('will-navigate', (event, url) => {
-      if (!isAllowedURL(url)) {
+      if (!isAllowedURL(url) && !url.startsWith('file://')) {
         event.preventDefault();
         shell.openExternal(url);
       }
     });
-
-    // Block new window creation for non-Nova URLs
     contents.setWindowOpenHandler(({ url }) => {
       if (!isAllowedURL(url)) {
         shell.openExternal(url);
@@ -158,145 +385,96 @@ function setupNavigationSecurity() {
       }
       return { action: 'allow' };
     });
-
-    // Prevent attaching webviews
-    contents.on('will-attach-webview', (event) => {
-      event.preventDefault();
-    });
+    contents.on('will-attach-webview', (event) => event.preventDefault());
   });
 }
 
-// ── App menu ────────────────────────────────────────────────────────
+// ── App Menu ────────────────────────────────────────────────────────
 function createMenu() {
   const isMac = process.platform === 'darwin';
-
   const template = [
     ...(isMac ? [{
       label: APP_NAME,
       submenu: [
         { role: 'about' },
         { type: 'separator' },
-        {
-          label: 'Check for Updates...',
-          click: () => shell.openExternal('https://nov-assistant.com/site/download.html'),
-        },
+        { label: 'Check for Updates...', click: () => shell.openExternal('https://nov-assistant.com/site/download.html') },
         { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
+        { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
         { type: 'separator' },
         { role: 'quit' },
       ],
     }] : []),
+    { label: 'Edit', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
+    { label: 'View', submenu: [{ role: 'reload' }, { role: 'forceReload' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
     {
-      label: 'Edit',
+      label: 'Nova',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { label: 'Home', accelerator: isMac ? 'Cmd+Shift+H' : 'Ctrl+Shift+H', click: () => { isOnlineMode = true; loadAppropriateContent(); } },
+        { label: 'New Chat', accelerator: isMac ? 'Cmd+N' : 'Ctrl+N', click: () => mainWindow?.webContents.executeJavaScript('if(typeof startNewChat==="function")startNewChat()') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        { label: 'Toggle Online/Offline', accelerator: isMac ? 'Cmd+Shift+O' : 'Ctrl+Shift+O', click: () => switchMode(!isOnlineMode) },
+        { label: 'Voice Input', accelerator: isMac ? 'Cmd+Shift+V' : 'Ctrl+Shift+V', click: () => mainWindow?.webContents.send('voice:hotkey') },
+        { type: 'separator' },
+        { label: 'Features', click: () => { isOnlineMode = true; mainWindow?.loadURL(`${NOVA_URL}/site/features.html`); } },
+        { label: 'Pricing', click: () => { isOnlineMode = true; mainWindow?.loadURL(`${NOVA_URL}/site/pricing.html`); } },
       ],
     },
-    {
-      label: 'View',
-      submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ],
-    },
-    {
-      label: 'Navigate',
-      submenu: [
-        {
-          label: 'Home',
-          accelerator: isMac ? 'Cmd+Shift+H' : 'Ctrl+Shift+H',
-          click: () => mainWindow?.loadURL(NOVA_URL),
-        },
-        {
-          label: 'New Chat',
-          accelerator: isMac ? 'Cmd+N' : 'Ctrl+N',
-          click: () => mainWindow?.webContents.executeJavaScript('if(typeof startNewChat==="function")startNewChat()'),
-        },
-        { type: 'separator' },
-        {
-          label: 'Features',
-          click: () => mainWindow?.loadURL(`${NOVA_URL}/site/features.html`),
-        },
-        {
-          label: 'Pricing',
-          click: () => mainWindow?.loadURL(`${NOVA_URL}/site/pricing.html`),
-        },
-      ],
-    },
-    {
-      label: 'Window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(isMac ? [
-          { type: 'separator' },
-          { role: 'front' },
-        ] : [
-          { role: 'close' },
-        ]),
-      ],
-    },
-    {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'Nova Website',
-          click: () => shell.openExternal('https://nov-assistant.com/site/'),
-        },
-        {
-          label: 'GitHub',
-          click: () => shell.openExternal('https://github.com/escipionpedroza147-commits/Nova'),
-        },
-        { type: 'separator' },
-        {
-          label: 'Report Issue',
-          click: () => shell.openExternal('https://github.com/escipionpedroza147-commits/Nova/issues'),
-        },
-      ],
-    },
+    { label: 'Window', submenu: [{ role: 'minimize' }, { role: 'zoom' }, ...(isMac ? [{ type: 'separator' }, { role: 'front' }] : [{ role: 'close' }])] },
+    { label: 'Help', submenu: [
+      { label: 'Nova Website', click: () => shell.openExternal('https://nov-assistant.com/site/') },
+      { label: 'GitHub', click: () => shell.openExternal('https://github.com/escipionpedroza147-commits/Nova') },
+      { type: 'separator' },
+      { label: 'Report Issue', click: () => shell.openExternal('https://github.com/escipionpedroza147-commits/Nova/issues') },
+    ]},
   ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 // ── App lifecycle ───────────────────────────────────────────────────
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   setupPermissions();
   setupNavigationSecurity();
+  setupIPC();
   createMenu();
   createWindow();
+  createTray();
+  registerShortcuts();
+
+  // Check Ollama status
+  await checkOllama();
+  updateTrayMenu();
+
+  // Periodic Ollama check
+  setInterval(async () => {
+    const prev = ollamaAvailable;
+    await checkOllama();
+    if (prev !== ollamaAvailable) {
+      updateTrayMenu();
+      mainWindow?.webContents.send('ollama:status-changed', ollamaAvailable);
+    }
+  }, 30000);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    else mainWindow?.show();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
 
-// ── SECURITY: Disable remote module entirely ────────────────────────
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+});
+
+app.isQuitting = false;
+app.on('before-quit', () => { app.isQuitting = true; });
+
+// ── Security: Disable remote module ─────────────────────────────────
 app.on('remote-require', (event) => event.preventDefault());
 app.on('remote-get-builtin', (event) => event.preventDefault());
 app.on('remote-get-global', (event) => event.preventDefault());
