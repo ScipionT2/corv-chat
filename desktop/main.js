@@ -9,12 +9,20 @@ const NOVA_URL = 'https://nov-assistant.com';
 const ALLOWED_HOSTS = ['nov-assistant.com', 'www.nov-assistant.com'];
 const APP_NAME = 'Nova AI';
 const OLLAMA_URL = 'http://localhost:11434';
+const OLLAMA_MODEL = 'llama3.2:3b';
 const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+
+// Bundled Ollama binary path
+const OLLAMA_BIN = app.isPackaged
+  ? path.join(process.resourcesPath, 'bin', 'ollama')
+  : path.join(__dirname, 'bin', 'ollama');
 
 let mainWindow = null;
 let tray = null;
+let ollamaProcess = null;
 let isOnlineMode = true;
 let ollamaAvailable = false;
+let setupComplete = false;
 let settings = loadSettings();
 
 // ── Force dark mode ─────────────────────────────────────────────────
@@ -55,6 +63,86 @@ function isAllowedURL(url) {
     const parsed = new URL(url);
     return ALLOWED_HOSTS.includes(parsed.hostname) && parsed.protocol === 'https:';
   } catch { return false; }
+}
+
+// ── Ollama sidecar management ───────────────────────────────────────
+function startOllamaSidecar() {
+  if (ollamaProcess) return;
+  const binPath = OLLAMA_BIN;
+  if (!fs.existsSync(binPath)) {
+    console.log('[Nova] Ollama binary not found at', binPath);
+    return;
+  }
+  const env = { ...process.env, OLLAMA_HOST: '127.0.0.1:11434' };
+  // Add bin dir to DYLD path so Ollama finds its dylibs
+  const binDir = path.dirname(binPath);
+  env.DYLD_LIBRARY_PATH = binDir + (env.DYLD_LIBRARY_PATH ? ':' + env.DYLD_LIBRARY_PATH : '');
+  env.LD_LIBRARY_PATH = binDir + (env.LD_LIBRARY_PATH ? ':' + env.LD_LIBRARY_PATH : '');
+
+  ollamaProcess = require('child_process').spawn(binPath, ['serve'], {
+    env,
+    stdio: 'ignore',
+    detached: false,
+  });
+  ollamaProcess.on('error', (err) => {
+    console.error('[Nova] Ollama start error:', err.message);
+    ollamaProcess = null;
+  });
+  ollamaProcess.on('exit', (code) => {
+    console.log('[Nova] Ollama exited with code', code);
+    ollamaProcess = null;
+  });
+  console.log('[Nova] Ollama sidecar started, PID:', ollamaProcess.pid);
+}
+
+function stopOllamaSidecar() {
+  if (ollamaProcess) {
+    ollamaProcess.kill();
+    ollamaProcess = null;
+  }
+}
+
+async function ensureModelPulled() {
+  const model = settings.ollamaModel || OLLAMA_MODEL;
+  // Check if model already exists
+  try {
+    const res = await ollamaRequest('/api/tags', { timeout: 5000 });
+    if (res.status === 200 && res.data.models) {
+      const names = res.data.models.map(m => m.name);
+      if (names.some(n => n.startsWith(model.split(':')[0]))) {
+        setupComplete = true;
+        return true; // Already have it
+      }
+    }
+  } catch {}
+  // Need to pull — tell renderer to show setup screen
+  if (mainWindow) mainWindow.webContents.send('setup:pulling', model);
+  return new Promise((resolve) => {
+    const binPath = OLLAMA_BIN;
+    const env = { ...process.env, OLLAMA_HOST: '127.0.0.1:11434' };
+    const binDir = path.dirname(binPath);
+    env.DYLD_LIBRARY_PATH = binDir + (env.DYLD_LIBRARY_PATH ? ':' + env.DYLD_LIBRARY_PATH : '');
+    env.LD_LIBRARY_PATH = binDir + (env.LD_LIBRARY_PATH ? ':' + env.LD_LIBRARY_PATH : '');
+    const pull = require('child_process').spawn(binPath, ['pull', model], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+    let progress = '';
+    pull.stdout.on('data', (d) => {
+      progress = d.toString().trim();
+      if (mainWindow) mainWindow.webContents.send('setup:progress', progress);
+    });
+    pull.stderr.on('data', (d) => {
+      progress = d.toString().trim();
+      if (mainWindow) mainWindow.webContents.send('setup:progress', progress);
+    });
+    pull.on('exit', (code) => {
+      setupComplete = (code === 0);
+      if (mainWindow) mainWindow.webContents.send('setup:done', code === 0);
+      resolve(code === 0);
+    });
+    pull.on('error', () => {
+      if (mainWindow) mainWindow.webContents.send('setup:done', false);
+      resolve(false);
+    });
+  });
 }
 
 // ── Ollama helpers ──────────────────────────────────────────────────
@@ -328,7 +416,21 @@ function setupIPC() {
     platform: process.platform,
     online: isOnlineMode,
     ollamaAvailable,
+    setupComplete,
+    ollamaBin: OLLAMA_BIN,
   }));
+
+  ipcMain.handle('ollama:ensure', async () => {
+    startOllamaSidecar();
+    // Wait for Ollama to be ready (up to 10s)
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 500));
+      if (await checkOllama()) break;
+    }
+    if (!ollamaAvailable) return { ok: false, error: 'Ollama failed to start' };
+    const pulled = await ensureModelPulled();
+    return { ok: pulled };
+  });
 
   ipcMain.handle('app:getSettings', () => settings);
 
@@ -443,9 +545,18 @@ app.whenReady().then(async () => {
   createTray();
   registerShortcuts();
 
-  // Check Ollama status
+  // Start bundled Ollama sidecar
+  startOllamaSidecar();
+
+  // Wait a moment then check status
+  await new Promise(r => setTimeout(r, 2000));
   await checkOllama();
   updateTrayMenu();
+
+  // If Ollama is up, ensure model is ready
+  if (ollamaAvailable) {
+    await ensureModelPulled();
+  }
 
   // Periodic Ollama check
   setInterval(async () => {
@@ -469,6 +580,7 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  stopOllamaSidecar();
 });
 
 app.isQuitting = false;

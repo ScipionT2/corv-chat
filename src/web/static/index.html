@@ -4710,10 +4710,17 @@ let pendingAttachments = [];
 /* ─── Version Indicator (Online/Offline) ─── */
 let novaMode = localStorage.getItem('nova_mode') || 'online';
 function initVersionIndicator() {
+  // Only show offline option in desktop app
+  const vi = document.getElementById('versionIndicator');
+  if (!window.novaDesktop || !window.novaDesktop.isDesktop) {
+    // Web user: hide version indicator entirely, always online
+    if (vi) vi.style.display = 'none';
+    novaMode = 'online';
+    return;
+  }
   updateVersionUI();
   // Close menu on outside click
   document.addEventListener('click', e => {
-    const vi = document.getElementById('versionIndicator');
     if (vi && !vi.contains(e.target)) vi.classList.remove('open');
   });
 }
@@ -5755,6 +5762,8 @@ _restoreFromLocal();
 
   // ── Offline settings section — inject into settings panel ──
   function injectOfflineSettings() {
+    // Only show offline settings in desktop app
+    if (!window.novaDesktop || !window.novaDesktop.isDesktop) return;
     const settingsPanel = document.getElementById('panel-settings');
     if (!settingsPanel || document.getElementById('offlineSettingsSection')) return;
 

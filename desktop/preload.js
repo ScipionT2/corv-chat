@@ -34,9 +34,14 @@ contextBridge.exposeInMainWorld('novaDesktop', {
     openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   },
 
+  // ── Setup (first-run model download) ──
+  setup: {
+    ensure: () => ipcRenderer.invoke('ollama:ensure'),
+  },
+
   // ── Events from main → renderer ──
   on: (channel, callback) => {
-    const allowed = ['voice:hotkey', 'mode:changed', 'ollama:status-changed'];
+    const allowed = ['voice:hotkey', 'mode:changed', 'ollama:status-changed', 'setup:pulling', 'setup:progress', 'setup:done'];
     if (allowed.includes(channel)) {
       ipcRenderer.on(channel, (_event, ...args) => callback(...args));
     }

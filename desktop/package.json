@@ -30,6 +30,13 @@
       "icons/**/*",
       "!icons/icon.iconset/**"
     ],
+    "extraResources": [
+      {
+        "from": "bin/",
+        "to": "bin/",
+        "filter": ["**/*"]
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "icons/icon.icns",
@@ -39,7 +46,7 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": ["arm64"]
         }
       ],
       "darkModeSupport": true,
