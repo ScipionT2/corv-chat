@@ -8,6 +8,8 @@ const { registerDesktopIPC } = require('./ipc-handlers');
 // ── Config ──────────────────────────────────────────────────────────
 const NOVA_URL = 'https://nov-assistant.com';
 const ALLOWED_HOSTS = ['nov-assistant.com', 'www.nov-assistant.com'];
+// Google OAuth requires navigating to these hosts
+const OAUTH_HOSTS = ['accounts.google.com', 'www.google.com', 'content.googleapis.com', 'lh3.googleusercontent.com'];
 const APP_NAME = 'Nova AI';
 
 // Set the app name so macOS menu bar shows "Nova AI" instead of "Electron"
@@ -66,7 +68,8 @@ if (!gotLock) {
 function isAllowedURL(url) {
   try {
     const parsed = new URL(url);
-    return ALLOWED_HOSTS.includes(parsed.hostname) && parsed.protocol === 'https:';
+    if (parsed.protocol !== 'https:') return false;
+    return ALLOWED_HOSTS.includes(parsed.hostname) || OAUTH_HOSTS.includes(parsed.hostname);
   } catch { return false; }
 }
 
@@ -321,8 +324,8 @@ function createWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.on('close', (e) => {
-    // Hide to tray instead of quitting (on macOS)
-    if (process.platform === 'darwin' && tray) {
+    // Hide to tray instead of quitting (on macOS) — unless user chose Quit
+    if (process.platform === 'darwin' && tray && !app.isQuitting) {
       e.preventDefault();
       mainWindow.hide();
     }

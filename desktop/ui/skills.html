@@ -121,8 +121,9 @@ body{
   display:flex;align-items:center;justify-content:center;
   font-size:18px;flex-shrink:0;
 }
-.skill-icon.builtin{background:var(--cyan-dim)}
-.skill-icon.installed{background:var(--purple-dim)}
+.skill-icon svg{width:20px;height:20px}
+.skill-icon.builtin{background:var(--cyan-dim);color:var(--cyan)}
+.skill-icon.installed{background:var(--purple-dim);color:var(--purple)}
 .skill-name{font-size:14px;font-weight:600;flex:1}
 .skill-version{
   font-size:11px;color:var(--dim);
@@ -256,7 +257,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'web-search',
     name: 'Web Search',
-    icon: '🌐',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
     category: 'utility',
     version: '1.0.0',
     description: 'Search the web using DuckDuckGo or Google. Returns structured results with titles, URLs, and snippets.',
@@ -265,7 +266,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'file-ops',
     name: 'File Operations',
-    icon: '📁',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>',
     category: 'system',
     version: '1.0.0',
     description: 'Read, write, copy, move, and delete files and directories. Supports glob patterns and recursive operations.',
@@ -274,7 +275,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'shell-exec',
     name: 'Shell Execute',
-    icon: '⚙️',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
     category: 'system',
     version: '1.0.0',
     description: 'Run shell commands and scripts with timeout support. Captures stdout, stderr, and exit codes.',
@@ -283,7 +284,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'calculator',
     name: 'Calculator',
-    icon: '🧮',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/></svg>',
     category: 'utility',
     version: '1.0.0',
     description: 'Evaluate mathematical expressions, unit conversions, and basic statistics. Safe sandboxed execution.',
@@ -292,7 +293,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'timer',
     name: 'Timer',
-    icon: '⏱️',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
     category: 'automation',
     version: '1.0.0',
     description: 'Set timers, alarms, and reminders. Triggers desktop notifications when time is up.',
@@ -301,7 +302,7 @@ const BUILTIN_SKILLS = [
   {
     id: 'weather',
     name: 'Weather',
-    icon: '🌤️',
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 00-5-5 5 5 0 00-5 5"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 5 12 9 8 5"/></svg>',
     category: 'data',
     version: '1.0.0',
     description: 'Current weather and forecasts for any location. Uses wttr.in — no API key required.',
