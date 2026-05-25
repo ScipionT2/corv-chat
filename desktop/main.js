@@ -9,6 +9,10 @@ const { registerDesktopIPC } = require('./ipc-handlers');
 const NOVA_URL = 'https://nov-assistant.com';
 const ALLOWED_HOSTS = ['nov-assistant.com', 'www.nov-assistant.com'];
 const APP_NAME = 'Nova AI';
+
+// Set the app name so macOS menu bar shows "Nova AI" instead of "Electron"
+if (app.setName) app.setName(APP_NAME);
+if (app.name !== undefined) app.name = APP_NAME;
 const OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_MODEL = 'llama3.2:3b';
 const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');

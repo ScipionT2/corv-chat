@@ -64,6 +64,7 @@
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "extendInfo": {
+        "CFBundleDisplayName": "Nova AI",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
           "NSExceptionDomains": {

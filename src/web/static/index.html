@@ -3950,9 +3950,12 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
+let _sendChatLock = false;
 async function sendChat() {
+  if (_sendChatLock) return; // Prevent double-fire from duplicate listeners
   const text = chatInput.value.trim();
   if (!text) return;
+  _sendChatLock = true;
   chatInput.value = '';
   autoResize();
   appendChat('user', text);
@@ -4098,6 +4101,8 @@ async function sendChat() {
   } catch (err) {
     thinkingBubble.style.display = 'none';
     appendChat('assistant', 'Connection error. Please try again.');
+  } finally {
+    _sendChatLock = false;
   }
 }
 
@@ -4107,6 +4112,7 @@ function autoResize() {
   chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
 }
 chatInput.addEventListener('input', autoResize);
+// Single Enter key handler (Phase 4 removes duplicates)
 chatInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
 });
@@ -4205,11 +4211,8 @@ async function generateImage() {
   }
 }
 
-// Enter key handler
-chatInput._keyHandler = e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-};
-chatInput.addEventListener('keydown', chatInput._keyHandler);
+// NOTE: Duplicate keydown listener removed — the one above (line ~4111) handles Enter.
+// Phase 4 also removes this as a safety net.
 
 /* ─── Keyboard shortcuts ─── */
 document.addEventListener('keydown', e => {
@@ -4895,7 +4898,8 @@ function removeAttachment(index) {
 }
 
 // Wrap sendChat to handle /image command + attachments
-const _baseSendChat = sendChat;
+// Use window._baseSendChat so Phase 5 can replace the inner function
+window._baseSendChat = sendChat;
 sendChat = async function() {
   // Check /image command
   const val = chatInput.value.trim();
@@ -4928,7 +4932,7 @@ sendChat = async function() {
     pendingAttachments = [];
     renderAttachPreview();
   }
-  return _baseSendChat();
+  return window._baseSendChat();
 };
 
 // Drag & drop support
@@ -9866,6 +9870,7 @@ _restoreFromLocal();
 
     // Replace the core sendChat function
     window._baseSendChat = async function phase5SendChat() {
+      if (window._sendChatLock) return; // Prevent double-fire
       const chatInput = document.getElementById('chatInput');
       const chatMessages = document.getElementById('chatMessages');
       const thinkingBubble = document.getElementById('thinkingBubble');
@@ -9873,6 +9878,7 @@ _restoreFromLocal();
 
       const text = chatInput.value.trim();
       if (!text) return;
+      window._sendChatLock = true;
       chatInput.value = '';
       _phase5AutoResize();
 
@@ -10096,6 +10102,7 @@ _restoreFromLocal();
         _activeAbortController = null;
         _activeStreamReader = null;
         thinkingBubble.style.display = 'none';
+        window._sendChatLock = false;
       }
     };
 
