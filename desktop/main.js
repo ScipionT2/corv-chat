@@ -322,15 +322,25 @@ function createWindow() {
     loadAppropriateContent();
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
-  mainWindow.on('close', (e) => {
-    // On macOS, clicking the red × hides to tray.
-    // Cmd+Q / menu Quit / tray Quit all set app.isQuitting first.
-    if (process.platform === 'darwin' && !app.isQuitting) {
-      e.preventDefault();
-      mainWindow.hide();
+  // Auto-recover: if we end up stuck on a non-Nova page (e.g. after OAuth),
+  // navigate back to Nova after a short delay.
+  mainWindow.webContents.on('did-finish-load', () => {
+    const url = mainWindow.webContents.getURL();
+    if (url && !url.includes('nov-assistant.com') && !url.startsWith('file://')) {
+      // We're on a Google/external page — probably OAuth just finished
+      // Wait a moment then go home
+      setTimeout(() => {
+        const currentUrl = mainWindow.webContents.getURL();
+        if (currentUrl && !currentUrl.includes('nov-assistant.com') && !currentUrl.startsWith('file://')) {
+          console.log('[Nova] Stuck on external page, navigating home:', currentUrl);
+          mainWindow.loadURL(NOVA_URL);
+        }
+      }, 3000);
     }
   });
+
+  mainWindow.on('closed', () => { mainWindow = null; });
+  // No hide-to-tray — closing the window quits the app cleanly.
 }
 
 async function loadAppropriateContent() {
@@ -631,7 +641,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });
 
 app.on('will-quit', () => {
