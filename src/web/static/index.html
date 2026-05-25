@@ -4307,10 +4307,12 @@ async function checkAuth() {
     const res = await fetch('/auth/me');
     if (res.ok) {
       const data = await res.json();
-      if (data.user && !data.user.id.startsWith('anon_')) {
-        currentUser = data.user;
-        updateProfileUI(data.user);
-        updateSettingsAccount(data.user);
+      // Server returns user fields at top level (id, email, name, avatar)
+      const user = data.user || data;
+      if (user && user.id && !user.id.startsWith('anon_') && !data.anonymous) {
+        currentUser = user;
+        updateProfileUI(user);
+        updateSettingsAccount(user);
         return;
       }
     }
