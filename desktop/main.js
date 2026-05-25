@@ -289,6 +289,8 @@ function createWindow() {
       webSecurity: true,
       spellcheck: true,
       navigateOnDragDrop: false,
+      // Persist cookies/localStorage across app restarts (auth, settings)
+      partition: 'persist:nova',
     },
     icon: path.join(__dirname, 'icons', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
   });
@@ -494,7 +496,8 @@ function setupIPC() {
 
 // ── Permissions ─────────────────────────────────────────────────────
 function setupPermissions() {
-  const ses = session.defaultSession;
+  // Use the same persistent partition as the BrowserWindow
+  const ses = session.fromPartition('persist:nova');
   const ALLOWED_PERMISSIONS = ['clipboard-read', 'clipboard-sanitized-write', 'pointerLock', 'fullscreen', 'notifications', 'media'];
 
   ses.setPermissionRequestHandler((webContents, permission, callback) => {
