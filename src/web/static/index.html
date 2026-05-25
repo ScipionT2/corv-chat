@@ -63,7 +63,12 @@ body::after{
   border-radius:20px;padding:24px 12px 16px;
   display:flex;flex-direction:column;z-index:2;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  overflow-y:auto;overflow-x:hidden;
 }
+#sidebar::-webkit-scrollbar{width:4px}
+#sidebar::-webkit-scrollbar-track{background:transparent}
+#sidebar::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:4px}
+#sidebar::-webkit-scrollbar-thumb:hover{background:rgba(139,92,246,.5)}
 .sidebar-logo{
   display:flex;align-items:center;justify-content:center;
   padding:8px 4px 24px;
