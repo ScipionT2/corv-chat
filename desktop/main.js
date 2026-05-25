@@ -324,8 +324,9 @@ function createWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.on('close', (e) => {
-    // Hide to tray instead of quitting (on macOS) — unless user chose Quit
-    if (process.platform === 'darwin' && tray && !app.isQuitting) {
+    // On macOS, clicking the red × hides to tray.
+    // Cmd+Q / menu Quit / tray Quit all set app.isQuitting first.
+    if (process.platform === 'darwin' && !app.isQuitting) {
       e.preventDefault();
       mainWindow.hide();
     }
@@ -503,18 +504,40 @@ function setupPermissions() {
 // ── Navigation Security ─────────────────────────────────────────────
 function setupNavigationSecurity() {
   app.on('web-contents-created', (_, contents) => {
+    // Allow in-window navigation to Nova + Google OAuth (same window).
+    // Google OAuth redirects through many subdomains (accounts.google.com,
+    // content.googleapis.com, play.google.com, etc.) so we allow any
+    // google.com subdomain and our own domain. Everything else opens externally.
     contents.on('will-navigate', (event, url) => {
-      if (!isAllowedURL(url) && !url.startsWith('file://')) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:' && !url.startsWith('file://')) {
+          event.preventDefault();
+          return;
+        }
+        const host = parsed.hostname;
+        const isNova = host === 'nov-assistant.com' || host === 'www.nov-assistant.com';
+        const isGoogle = host.endsWith('.google.com') || host.endsWith('.googleapis.com') || host === 'google.com';
+        const isLocal = url.startsWith('file://');
+        if (!isNova && !isGoogle && !isLocal) {
+          event.preventDefault();
+          shell.openExternal(url);
+        }
+      } catch {
         event.preventDefault();
-        shell.openExternal(url);
       }
     });
+    // Block new-window popups to non-Nova hosts
     contents.setWindowOpenHandler(({ url }) => {
-      if (!isAllowedURL(url)) {
-        shell.openExternal(url);
-        return { action: 'deny' };
-      }
-      return { action: 'allow' };
+      try {
+        const parsed = new URL(url);
+        const host = parsed.hostname;
+        if (host === 'nov-assistant.com' || host === 'www.nov-assistant.com') {
+          return { action: 'allow' };
+        }
+      } catch {}
+      shell.openExternal(url);
+      return { action: 'deny' };
     });
     contents.on('will-attach-webview', (event) => event.preventDefault());
   });
@@ -535,7 +558,7 @@ function createMenu() {
         { type: 'separator' },
         { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' },
+        { label: 'Quit Nova AI', accelerator: 'CmdOrCtrl+Q', click: () => { app.isQuitting = true; app.quit(); } },
       ],
     }] : []),
     { label: 'Edit', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
@@ -617,7 +640,9 @@ app.on('will-quit', () => {
 });
 
 app.isQuitting = false;
-app.on('before-quit', () => { app.isQuitting = true; });
+app.on('before-quit', () => {
+  app.isQuitting = true;
+});
 
 // ── Security: Disable remote module ─────────────────────────────────
 app.on('remote-require', (event) => event.preventDefault());
