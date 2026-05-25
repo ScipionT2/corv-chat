@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "description": "Nova AI — Your Personal AI Operating System",
   "main": "main.js",
+  "bin": {
+    "nova": "./cli/nova-cli.js"
+  },
   "author": "Escipion Pedroza",
   "license": "MIT",
   "homepage": "https://nov-assistant.com",
@@ -26,7 +29,15 @@
     "files": [
       "main.js",
       "preload.js",
+      "preload-desktop.js",
+      "ipc-handlers.js",
       "offline.html",
+      "agents/**/*",
+      "skills/**/*",
+      "memory/**/*",
+      "scheduler/**/*",
+      "cli/**/*",
+      "ui/**/*",
       "icons/**/*",
       "!icons/icon.iconset/**"
     ],

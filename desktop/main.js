@@ -3,6 +3,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const fs = require('fs');
 const http = require('http');
+const { registerDesktopIPC } = require('./ipc-handlers');
 
 // ── Config ──────────────────────────────────────────────────────────
 const NOVA_URL = 'https://nov-assistant.com';
@@ -271,7 +272,7 @@ function createWindow() {
     backgroundColor: '#050816',
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload-desktop.js'),
       contextIsolation: true,
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
@@ -298,6 +299,20 @@ function createWindow() {
     if (isAllowedURL(url)) return { action: 'allow' };
     shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  // Desktop-only page navigation via IPC
+  ipcMain.handle('navigate:agents', () => {
+    mainWindow.loadFile(path.join(__dirname, 'ui', 'agents.html'));
+  });
+  ipcMain.handle('navigate:skills', () => {
+    mainWindow.loadFile(path.join(__dirname, 'ui', 'skills.html'));
+  });
+  ipcMain.handle('navigate:memory', () => {
+    mainWindow.loadFile(path.join(__dirname, 'ui', 'memory.html'));
+  });
+  ipcMain.handle('navigate:home', () => {
+    loadAppropriateContent();
   });
 
   mainWindow.on('closed', () => { mainWindow = null; });
@@ -343,6 +358,10 @@ function updateTrayMenu() {
   const template = [
     { label: mainWindow?.isVisible() ? 'Hide Nova' : 'Show Nova', click: () => mainWindow?.isVisible() ? mainWindow.hide() : mainWindow?.show() },
     { type: 'separator' },
+    { label: '🤖 Agents', click: () => { mainWindow?.show(); mainWindow?.loadFile(path.join(__dirname, 'ui', 'agents.html')); } },
+    { label: '🧩 Skills', click: () => { mainWindow?.show(); mainWindow?.loadFile(path.join(__dirname, 'ui', 'skills.html')); } },
+    { label: '🧠 Memory', click: () => { mainWindow?.show(); mainWindow?.loadFile(path.join(__dirname, 'ui', 'memory.html')); } },
+    { type: 'separator' },
     { label: 'Online Mode', type: 'radio', checked: isOnlineMode, click: () => switchMode(true) },
     { label: 'Offline Mode', type: 'radio', checked: !isOnlineMode, click: () => switchMode(false) },
     { type: 'separator' },
@@ -380,6 +399,9 @@ function registerShortcuts() {
 
 // ── IPC Handlers ────────────────────────────────────────────────────
 function setupIPC() {
+  // Register desktop-only agent/skills/memory/scheduler IPC handlers
+  registerDesktopIPC(ipcMain, () => mainWindow);
+
   ipcMain.handle('ollama:chat', async (_e, messages, model) => {
     try { return { ok: true, content: await ollamaChat(messages, model) }; }
     catch (err) { return { ok: false, error: err.message }; }
@@ -519,6 +541,10 @@ function createMenu() {
         { type: 'separator' },
         { label: 'Toggle Online/Offline', accelerator: isMac ? 'Cmd+Shift+O' : 'Ctrl+Shift+O', click: () => switchMode(!isOnlineMode) },
         { label: 'Voice Input', accelerator: isMac ? 'Cmd+Shift+V' : 'Ctrl+Shift+V', click: () => mainWindow?.webContents.send('voice:hotkey') },
+        { type: 'separator' },
+        { label: '🤖 Agents', accelerator: isMac ? 'Cmd+Shift+A' : 'Ctrl+Shift+A', click: () => mainWindow?.loadFile(path.join(__dirname, 'ui', 'agents.html')) },
+        { label: '🧩 Skills', accelerator: isMac ? 'Cmd+Shift+S' : 'Ctrl+Shift+S', click: () => mainWindow?.loadFile(path.join(__dirname, 'ui', 'skills.html')) },
+        { label: '🧠 Memory', accelerator: isMac ? 'Cmd+Shift+M' : 'Ctrl+Shift+M', click: () => mainWindow?.loadFile(path.join(__dirname, 'ui', 'memory.html')) },
         { type: 'separator' },
         { label: 'Features', click: () => { isOnlineMode = true; mainWindow?.loadURL(`${NOVA_URL}/site/features.html`); } },
         { label: 'Pricing', click: () => { isOnlineMode = true; mainWindow?.loadURL(`${NOVA_URL}/site/pricing.html`); } },

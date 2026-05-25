@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — Skills</title>
+<style>
+/* ── Reset & Tokens ─────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050816;
+  --bg2:#0A0F24;
+  --surface:rgba(255,255,255,0.04);
+  --surface-hover:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);
+  --border-glow:rgba(139,92,246,0.25);
+  --text:#E8E6F0;
+  --dim:rgba(232,230,240,0.5);
+  --purple:#8B5CF6;
+  --purple-dim:rgba(139,92,246,0.15);
+  --cyan:#38BDF8;
+  --cyan-dim:rgba(56,189,248,0.12);
+  --green:#34D399;
+  --green-dim:rgba(52,211,153,0.12);
+  --amber:#FBBF24;
+  --amber-dim:rgba(251,191,36,0.12);
+  --rose:#F472B6;
+  --rose-dim:rgba(244,114,182,0.12);
+  --red:#EF4444;
+  --red-dim:rgba(239,68,68,0.12);
+  --radius:14px;
+  --radius-sm:8px;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
+}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+
+/* ── Top Bar ─────────────────────────────────────────────────────── */
+.topbar{
+  height:56px;display:flex;align-items:center;gap:16px;
+  padding:0 24px;border-bottom:1px solid var(--border);
+  background:rgba(5,8,22,0.85);backdrop-filter:blur(20px);
+  -webkit-app-region:drag;flex-shrink:0;z-index:100;
+}
+.topbar *{-webkit-app-region:no-drag}
+.back{
+  color:var(--dim);text-decoration:none;font-size:13px;
+  display:flex;align-items:center;gap:4px;transition:color .2s;
+}
+.back:hover{color:var(--text)}
+.topbar h1{font-size:16px;font-weight:600;flex:1}
+.search-box{
+  width:260px;height:34px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);
+  padding:0 12px;color:var(--text);font-size:13px;outline:none;
+  transition:border-color .2s;
+}
+.search-box:focus{border-color:var(--border-glow)}
+.search-box::placeholder{color:var(--dim)}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn{
+  padding:8px 16px;border-radius:var(--radius-sm);border:none;
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#7C4DDB;box-shadow:0 0 16px rgba(139,92,246,0.3)}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.btn-danger{background:var(--red-dim);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-sm{padding:6px 12px;font-size:11px}
+
+/* ── Content ─────────────────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:24px}
+.section-title{
+  font-size:12px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--dim);margin:0 0 14px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title .count{
+  background:var(--surface);padding:2px 8px;border-radius:10px;
+  font-size:11px;color:var(--text);font-weight:500;
+}
+.skills-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;margin-bottom:32px;
+}
+
+/* ── Skill Card ──────────────────────────────────────────────────── */
+.skill-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:transform .2s,border-color .3s,box-shadow .3s;
+  position:relative;overflow:hidden;
+}
+.skill-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 70% -30%,rgba(56,189,248,0.06),transparent 60%);
+  pointer-events:none;
+}
+.skill-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(56,189,248,0.2);
+  box-shadow:0 0 20px rgba(56,189,248,0.06);
+}
+.skill-header{display:flex;align-items:center;gap:10px}
+.skill-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.skill-icon.builtin{background:var(--cyan-dim)}
+.skill-icon.installed{background:var(--purple-dim)}
+.skill-name{font-size:14px;font-weight:600;flex:1}
+.skill-version{
+  font-size:11px;color:var(--dim);
+  background:var(--surface);padding:2px 7px;border-radius:6px;
+}
+.skill-desc{font-size:13px;color:var(--dim);line-height:1.5}
+.skill-footer{display:flex;align-items:center;gap:8px;margin-top:auto}
+.category-badge{
+  font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  padding:3px 8px;border-radius:20px;
+}
+.cat-utility{background:var(--cyan-dim);color:var(--cyan)}
+.cat-ai{background:var(--purple-dim);color:var(--purple)}
+.cat-system{background:var(--amber-dim);color:var(--amber)}
+.cat-data{background:var(--green-dim);color:var(--green)}
+.cat-automation{background:var(--rose-dim);color:var(--rose)}
+
+/* ── Install Actions ─────────────────────────────────────────────── */
+.install-bar{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;
+}
+
+/* ── Modal ────────────────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+  z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;width:480px;max-width:90vw;
+  animation:modalIn .3s ease;
+}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:16px;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--dim);margin-bottom:16px}
+.modal input{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-size:13px;font-family:inherit;outline:none;
+  transition:border-color .2s;
+}
+.modal input:focus{border-color:var(--border-glow)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 20px;
+  font-size:13px;z-index:300;
+  transition:transform .3s ease,opacity .3s;opacity:0;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{border-color:rgba(52,211,153,0.3)}
+.toast.error{border-color:rgba(239,68,68,0.3)}
+
+/* ── Animation ───────────────────────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.skill-card{animation:fadeIn .3s ease both}
+.skill-card:nth-child(2){animation-delay:.04s}
+.skill-card:nth-child(3){animation-delay:.08s}
+.skill-card:nth-child(4){animation-delay:.12s}
+.skill-card:nth-child(5){animation-delay:.16s}
+.skill-card:nth-child(6){animation-delay:.2s}
+
+@media(max-width:640px){
+  .skills-grid{grid-template-columns:1fr}
+  .search-box{width:160px}
+  .install-bar{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Top Bar ───────────────────────────────────────────────────── -->
+<div class="topbar">
+  <a class="back" href="#" onclick="goBack()" title="Back to Nova">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+    Back to Nova
+  </a>
+  <h1>🧩 Skills</h1>
+  <input class="search-box" id="searchBox" type="text" placeholder="Search skills..." oninput="filterSkills()">
+</div>
+
+<!-- ─── Content ───────────────────────────────────────────────────── -->
+<div class="content">
+
+  <!-- Install bar -->
+  <div class="install-bar">
+    <button class="btn btn-primary" onclick="openInstallModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install from GitHub
+    </button>
+    <span style="font-size:12px;color:var(--dim)">Add custom skills from any GitHub repository</span>
+  </div>
+
+  <!-- Built-in Skills -->
+  <div class="section-title">Built-in Skills <span class="count" id="builtinCount">6</span></div>
+  <div class="skills-grid" id="builtinGrid"></div>
+
+  <!-- Installed Skills -->
+  <div class="section-title">Installed Skills <span class="count" id="installedCount">0</span></div>
+  <div class="skills-grid" id="installedGrid"></div>
+  <div id="emptyInstalled" style="text-align:center;padding:32px;color:var(--dim);font-size:13px;display:none">
+    No custom skills installed yet. Click <strong>"Install from GitHub"</strong> to add one.
+  </div>
+</div>
+
+<!-- ─── Install Modal ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="installModal">
+  <div class="modal">
+    <h2>📦 Install Skill from GitHub</h2>
+    <p>Enter the GitHub repository URL containing a Nova skill package.</p>
+    <input id="installUrl" type="text" placeholder="https://github.com/user/nova-skill-example">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeInstallModal()">Cancel</button>
+      <button class="btn btn-primary" id="installBtn" onclick="installSkill()">Install</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ─────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── Skill Data ──────────────────────────────────────────────────── */
+const BUILTIN_SKILLS = [
+  {
+    id: 'web-search',
+    name: 'Web Search',
+    icon: '🌐',
+    category: 'utility',
+    version: '1.0.0',
+    description: 'Search the web using DuckDuckGo or Google. Returns structured results with titles, URLs, and snippets.',
+    builtin: true,
+  },
+  {
+    id: 'file-ops',
+    name: 'File Operations',
+    icon: '📁',
+    category: 'system',
+    version: '1.0.0',
+    description: 'Read, write, copy, move, and delete files and directories. Supports glob patterns and recursive operations.',
+    builtin: true,
+  },
+  {
+    id: 'shell-exec',
+    name: 'Shell Execute',
+    icon: '⚙️',
+    category: 'system',
+    version: '1.0.0',
+    description: 'Run shell commands and scripts with timeout support. Captures stdout, stderr, and exit codes.',
+    builtin: true,
+  },
+  {
+    id: 'calculator',
+    name: 'Calculator',
+    icon: '🧮',
+    category: 'utility',
+    version: '1.0.0',
+    description: 'Evaluate mathematical expressions, unit conversions, and basic statistics. Safe sandboxed execution.',
+    builtin: true,
+  },
+  {
+    id: 'timer',
+    name: 'Timer',
+    icon: '⏱️',
+    category: 'automation',
+    version: '1.0.0',
+    description: 'Set timers, alarms, and reminders. Triggers desktop notifications when time is up.',
+    builtin: true,
+  },
+  {
+    id: 'weather',
+    name: 'Weather',
+    icon: '🌤️',
+    category: 'data',
+    version: '1.0.0',
+    description: 'Current weather and forecasts for any location. Uses wttr.in — no API key required.',
+    builtin: true,
+  },
+];
+
+let installedSkills = [];
+
+/* ─── Render ──────────────────────────────────────────────────────── */
+function renderSkillCard(skill) {
+  const catClass = `cat-${skill.category}`;
+  const iconClass = skill.builtin ? 'builtin' : 'installed';
+  const uninstallBtn = skill.builtin ? '' :
+    `<button class="btn btn-danger btn-sm" onclick="uninstallSkill('${skill.id}')">Uninstall</button>`;
+  return `
+    <div class="skill-card" data-id="${skill.id}">
+      <div class="skill-header">
+        <div class="skill-icon ${iconClass}">${skill.icon}</div>
+        <div class="skill-name">${skill.name}</div>
+        <span class="skill-version">v${skill.version}</span>
+      </div>
+      <div class="skill-desc">${skill.description}</div>
+      <div class="skill-footer">
+        <span class="category-badge ${catClass}">${skill.category}</span>
+        <span style="flex:1"></span>
+        ${uninstallBtn}
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  document.getElementById('builtinGrid').innerHTML = BUILTIN_SKILLS.map(renderSkillCard).join('');
+  document.getElementById('builtinCount').textContent = BUILTIN_SKILLS.length;
+
+  const ig = document.getElementById('installedGrid');
+  const empty = document.getElementById('emptyInstalled');
+  if (installedSkills.length === 0) {
+    ig.innerHTML = '';
+    empty.style.display = '';
+  } else {
+    ig.innerHTML = installedSkills.map(renderSkillCard).join('');
+    empty.style.display = 'none';
+  }
+  document.getElementById('installedCount').textContent = installedSkills.length;
+}
+
+function filterSkills() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const match = (s) =>
+    s.name.toLowerCase().includes(q) ||
+    s.description.toLowerCase().includes(q) ||
+    s.category.includes(q);
+
+  const fb = BUILTIN_SKILLS.filter(match);
+  const fi = installedSkills.filter(match);
+  document.getElementById('builtinGrid').innerHTML = fb.map(renderSkillCard).join('');
+  document.getElementById('builtinCount').textContent = fb.length;
+  document.getElementById('installedGrid').innerHTML = fi.map(renderSkillCard).join('');
+  document.getElementById('installedCount').textContent = fi.length;
+  document.getElementById('emptyInstalled').style.display = fi.length === 0 && installedSkills.length === 0 ? '' : 'none';
+}
+
+/* ─── Install / Uninstall ─────────────────────────────────────────── */
+function openInstallModal() {
+  document.getElementById('installUrl').value = '';
+  document.getElementById('installModal').classList.add('show');
+  document.getElementById('installUrl').focus();
+}
+function closeInstallModal() {
+  document.getElementById('installModal').classList.remove('show');
+}
+
+async function installSkill() {
+  const url = document.getElementById('installUrl').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('installBtn');
+  btn.textContent = 'Installing...';
+  btn.disabled = true;
+
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const result = await window.novaDesktop.skills.install(url);
+    if (result && result.ok) {
+      showToast('✅ Skill installed successfully', 'success');
+      await loadInstalled();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Install failed'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`, 'error');
+  } finally {
+    btn.textContent = 'Install';
+    btn.disabled = false;
+    closeInstallModal();
+  }
+}
+
+async function uninstallSkill(id) {
+  if (!confirm(`Uninstall skill "${id}"? This cannot be undone.`)) return;
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const result = await window.novaDesktop.skills.uninstall(id);
+    if (result && result.ok) {
+      showToast('✅ Skill uninstalled', 'success');
+      await loadInstalled();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Uninstall failed'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`, 'error');
+  }
+}
+
+/* ─── Load from Backend ───────────────────────────────────────────── */
+async function loadInstalled() {
+  try {
+    if (!window.novaDesktop) return;
+    const list = await window.novaDesktop.skills.list();
+    if (Array.isArray(list)) {
+      installedSkills = list.filter(s => !s.builtin);
+    }
+  } catch (_) {}
+  renderAll();
+}
+
+/* ─── Toast ───────────────────────────────────────────────────────── */
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.classList.remove('show'); }, 3000);
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────── */
+function goBack() {
+  if (window.novaDesktop) {
+    window.novaDesktop.app.switchMode(true);
+  } else {
+    window.location.href = '../offline.html';
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('installModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeInstallModal();
+});
+
+// Enter key in install input
+document.getElementById('installUrl').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') installSkill();
+});
+
+/* ─── Init ────────────────────────────────────────────────────────── */
+renderAll();
+loadInstalled();
+</script>
+</body>
+</html>

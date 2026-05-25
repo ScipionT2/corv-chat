@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — Memory</title>
+<style>
+/* ── Reset & Tokens ─────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050816;
+  --bg2:#0A0F24;
+  --surface:rgba(255,255,255,0.04);
+  --surface-hover:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);
+  --border-glow:rgba(139,92,246,0.25);
+  --text:#E8E6F0;
+  --dim:rgba(232,230,240,0.5);
+  --purple:#8B5CF6;
+  --purple-dim:rgba(139,92,246,0.15);
+  --cyan:#38BDF8;
+  --cyan-dim:rgba(56,189,248,0.12);
+  --green:#34D399;
+  --green-dim:rgba(52,211,153,0.12);
+  --amber:#FBBF24;
+  --amber-dim:rgba(251,191,36,0.12);
+  --red:#EF4444;
+  --red-dim:rgba(239,68,68,0.12);
+  --radius:14px;
+  --radius-sm:8px;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
+}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+
+/* ── Top Bar ─────────────────────────────────────────────────────── */
+.topbar{
+  height:56px;display:flex;align-items:center;gap:16px;
+  padding:0 24px;border-bottom:1px solid var(--border);
+  background:rgba(5,8,22,0.85);backdrop-filter:blur(20px);
+  -webkit-app-region:drag;flex-shrink:0;z-index:100;
+}
+.topbar *{-webkit-app-region:no-drag}
+.back{
+  color:var(--dim);text-decoration:none;font-size:13px;
+  display:flex;align-items:center;gap:4px;transition:color .2s;
+}
+.back:hover{color:var(--text)}
+.topbar h1{font-size:16px;font-weight:600;flex:1}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn{
+  padding:8px 16px;border-radius:var(--radius-sm);border:none;
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#7C4DDB;box-shadow:0 0 16px rgba(139,92,246,0.3)}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.btn-danger{background:var(--red-dim);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-cyan{background:var(--cyan-dim);color:var(--cyan)}
+.btn-cyan:hover{background:rgba(56,189,248,0.2)}
+
+/* ── Stats Bar ───────────────────────────────────────────────────── */
+.stats-bar{
+  display:flex;gap:16px;padding:16px 24px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  flex-wrap:wrap;
+}
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;min-width:160px;
+}
+.stat-icon{font-size:18px}
+.stat-value{font-size:18px;font-weight:700}
+.stat-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Content ─────────────────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+
+/* ── Search Bar ──────────────────────────────────────────────────── */
+.search-area{
+  display:flex;gap:10px;align-items:stretch;
+}
+.search-input{
+  flex:1;height:44px;border-radius:var(--radius);
+  background:var(--surface);border:1px solid var(--border);
+  padding:0 16px;color:var(--text);font-size:14px;outline:none;
+  transition:border-color .2s;
+}
+.search-input:focus{border-color:var(--border-glow)}
+.search-input::placeholder{color:var(--dim)}
+
+/* ── Action Buttons ──────────────────────────────────────────────── */
+.action-bar{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── Results ─────────────────────────────────────────────────────── */
+.results-info{
+  font-size:12px;color:var(--dim);padding:4px 0;
+}
+.memory-list{display:flex;flex-direction:column;gap:10px}
+
+.memory-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;
+  transition:transform .2s,border-color .3s;
+  animation:fadeIn .3s ease both;
+  position:relative;
+}
+.memory-item:hover{
+  border-color:rgba(139,92,246,0.15);
+  transform:translateY(-1px);
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.mem-content{
+  font-size:13px;line-height:1.6;color:var(--text);
+  margin-bottom:10px;
+  /* Clamp to 4 lines */
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.mem-meta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:11px;color:var(--dim);
+}
+.mem-source{
+  background:var(--cyan-dim);color:var(--cyan);
+  padding:2px 8px;border-radius:4px;font-weight:600;
+}
+.mem-score{
+  background:var(--green-dim);color:var(--green);
+  padding:2px 8px;border-radius:4px;font-weight:600;
+}
+.mem-actions{
+  position:absolute;top:14px;right:14px;
+  display:flex;gap:6px;opacity:0;transition:opacity .2s;
+}
+.memory-item:hover .mem-actions{opacity:1}
+
+/* ── Empty State ─────────────────────────────────────────────────── */
+.empty-state{
+  text-align:center;padding:48px 20px;color:var(--dim);
+}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{font-size:16px;color:var(--text);margin-bottom:6px;font-weight:600}
+.empty-state p{font-size:13px;max-width:400px;margin:0 auto;line-height:1.5}
+
+/* ── Remember Modal ──────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+  z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;width:480px;max-width:90vw;
+  animation:modalIn .3s ease;
+}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:16px;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--dim);margin-bottom:14px}
+.modal label{display:block;font-size:11px;color:var(--dim);margin:10px 0 4px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.modal input,.modal textarea{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-size:13px;font-family:inherit;outline:none;
+  transition:border-color .2s;
+}
+.modal input:focus,.modal textarea:focus{border-color:var(--border-glow)}
+.modal textarea{resize:vertical;min-height:80px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ── Confirm Dialog ──────────────────────────────────────────────── */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  display:flex;align-items:center;justify-content:center;
+  z-index:250;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.confirm-overlay.show{opacity:1;pointer-events:auto}
+.confirm-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;width:360px;max-width:90vw;
+  text-align:center;animation:modalIn .3s ease;
+}
+.confirm-box p{margin:12px 0 20px;font-size:14px;color:var(--dim)}
+.confirm-actions{display:flex;gap:8px;justify-content:center}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 20px;
+  font-size:13px;z-index:300;
+  transition:transform .3s ease,opacity .3s;opacity:0;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+@media(max-width:640px){
+  .stats-bar{flex-direction:column}
+  .stat{min-width:auto}
+  .search-area{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Top Bar ───────────────────────────────────────────────────── -->
+<div class="topbar">
+  <a class="back" href="#" onclick="goBack()" title="Back to Nova">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+    Back to Nova
+  </a>
+  <h1>🧠 Memory</h1>
+</div>
+
+<!-- ─── Stats Bar ─────────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-icon">📊</span>
+    <div>
+      <div class="stat-value" id="totalMemories">—</div>
+      <div class="stat-label">Total Memories</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon">💾</span>
+    <div>
+      <div class="stat-value" id="diskUsage">—</div>
+      <div class="stat-label">Disk Usage</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon">🕐</span>
+    <div>
+      <div class="stat-value" id="lastIndexed">—</div>
+      <div class="stat-label">Last Indexed</div>
+    </div>
+  </div>
+  <div class="stat" style="margin-left:auto">
+    <button class="btn btn-ghost btn-sm" onclick="refreshStats()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- ─── Content ───────────────────────────────────────────────────── -->
+<div class="content">
+
+  <!-- Search -->
+  <div class="search-area">
+    <input class="search-input" id="searchInput" type="text" placeholder="Semantic search your memories..." onkeydown="if(event.key==='Enter')searchMemories()">
+    <button class="btn btn-primary" onclick="searchMemories()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </button>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-bar">
+    <button class="btn btn-cyan btn-sm" onclick="indexDirectory()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      Index Directory
+    </button>
+    <button class="btn btn-cyan btn-sm" onclick="indexFile()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Index File
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="openRememberModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Remember Something
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="results-info" id="resultsInfo" style="display:none"></div>
+  <div class="memory-list" id="memoryList"></div>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🧠</div>
+    <h3>Your Memory Store</h3>
+    <p>Search through Nova's indexed memories, or add new ones. Index files and directories to build your knowledge base.</p>
+  </div>
+</div>
+
+<!-- ─── Remember Modal ────────────────────────────────────────────── -->
+<div class="modal-overlay" id="rememberModal">
+  <div class="modal">
+    <h2>💭 Remember Something</h2>
+    <p>Store a piece of knowledge in Nova's memory.</p>
+    <label>Content</label>
+    <textarea id="rememberText" rows="4" placeholder="What should Nova remember?"></textarea>
+    <label>Source (optional)</label>
+    <input id="rememberSource" type="text" placeholder="e.g. meeting-notes, manual-entry">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRememberModal()">Cancel</button>
+      <button class="btn btn-primary" id="rememberBtn" onclick="rememberIt()">Remember</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Confirm Dialog ────────────────────────────────────────────── -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div style="font-size:28px">🗑️</div>
+    <p>Are you sure you want to forget this memory? This cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="cancelForget()">Cancel</button>
+      <button class="btn btn-danger" id="confirmForgetBtn" onclick="confirmForget()">Forget</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ─────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── State ───────────────────────────────────────────────────────── */
+let forgetTarget = null;
+
+/* ─── Stats ───────────────────────────────────────────────────────── */
+async function refreshStats() {
+  try {
+    if (!window.novaDesktop) return setDemoStats();
+    const stats = await window.novaDesktop.memory.stats();
+    document.getElementById('totalMemories').textContent = (stats.totalMemories ?? 0).toLocaleString();
+    document.getElementById('diskUsage').textContent = stats.diskUsage || '0 B';
+    document.getElementById('lastIndexed').textContent = stats.lastIndexed
+      ? new Date(stats.lastIndexed).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+      : 'Never';
+  } catch (_) {
+    setDemoStats();
+  }
+}
+
+function setDemoStats() {
+  document.getElementById('totalMemories').textContent = '0';
+  document.getElementById('diskUsage').textContent = '0 B';
+  document.getElementById('lastIndexed').textContent = 'Never';
+}
+
+/* ─── Search ──────────────────────────────────────────────────────── */
+async function searchMemories() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+
+  const list = document.getElementById('memoryList');
+  const info = document.getElementById('resultsInfo');
+  const empty = document.getElementById('emptyState');
+  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim)">Searching...</div>';
+  info.style.display = '';
+  empty.style.display = 'none';
+
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const results = await window.novaDesktop.memory.search(query, 20);
+    if (!results || results.length === 0) {
+      list.innerHTML = '';
+      info.textContent = 'No results found.';
+      return;
+    }
+    info.textContent = `${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"`;
+    list.innerHTML = results.map((r, i) => renderMemoryItem(r, i)).join('');
+  } catch (err) {
+    list.innerHTML = '';
+    info.textContent = `⚠️ ${err.message}`;
+  }
+}
+
+function renderMemoryItem(mem, idx) {
+  const time = mem.timestamp
+    ? new Date(mem.timestamp).toLocaleString(undefined, { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' })
+    : 'Unknown date';
+  const score = mem.score != null ? (mem.score * 100).toFixed(1) + '%' : '';
+  const source = mem.source || 'unknown';
+  const preview = (mem.content || mem.text || '').slice(0, 500);
+  const id = mem.id || idx;
+
+  return `
+    <div class="memory-item" data-id="${id}" style="animation-delay:${idx * 0.04}s">
+      <div class="mem-actions">
+        <button class="btn btn-danger btn-sm" onclick="forgetMemory('${id}')" title="Forget this memory">🗑️</button>
+      </div>
+      <div class="mem-content">${escapeHtml(preview)}</div>
+      <div class="mem-meta">
+        <span class="mem-source">${escapeHtml(source)}</span>
+        ${score ? `<span class="mem-score">Relevance: ${score}</span>` : ''}
+        <span>📅 ${time}</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ─── Index ───────────────────────────────────────────────────────── */
+async function indexDirectory() {
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const dirPath = await window.novaDesktop.system.pickFolder();
+    if (!dirPath) return;
+    showToast('📁 Indexing directory...');
+    const result = await window.novaDesktop.memory.indexDir(dirPath);
+    if (result && result.ok) {
+      showToast(`✅ Indexed ${result.count ?? ''} files from directory`);
+      refreshStats();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Indexing failed'}`);
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`);
+  }
+}
+
+async function indexFile() {
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const filePath = await window.novaDesktop.system.pickFile();
+    if (!filePath) return;
+    showToast('📄 Indexing file...');
+    const result = await window.novaDesktop.memory.indexFile(filePath);
+    if (result && result.ok) {
+      showToast('✅ File indexed successfully');
+      refreshStats();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Indexing failed'}`);
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`);
+  }
+}
+
+/* ─── Remember ────────────────────────────────────────────────────── */
+function openRememberModal() {
+  document.getElementById('rememberText').value = '';
+  document.getElementById('rememberSource').value = '';
+  document.getElementById('rememberModal').classList.add('show');
+  document.getElementById('rememberText').focus();
+}
+function closeRememberModal() {
+  document.getElementById('rememberModal').classList.remove('show');
+}
+async function rememberIt() {
+  const text = document.getElementById('rememberText').value.trim();
+  if (!text) return;
+  const source = document.getElementById('rememberSource').value.trim() || 'manual';
+  const btn = document.getElementById('rememberBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const result = await window.novaDesktop.memory.remember(text, { source });
+    if (result && result.ok) {
+      showToast('✅ Memory saved');
+      refreshStats();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Save failed'}`);
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`);
+  } finally {
+    btn.textContent = 'Remember';
+    btn.disabled = false;
+    closeRememberModal();
+  }
+}
+
+/* ─── Forget ──────────────────────────────────────────────────────── */
+function forgetMemory(id) {
+  forgetTarget = id;
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+function cancelForget() {
+  forgetTarget = null;
+  document.getElementById('confirmOverlay').classList.remove('show');
+}
+async function confirmForget() {
+  if (forgetTarget == null) return;
+  const id = forgetTarget;
+  cancelForget();
+
+  try {
+    if (!window.novaDesktop) throw new Error('Desktop bridge not available');
+    const result = await window.novaDesktop.memory.forget(id);
+    if (result && result.ok) {
+      // Remove from DOM
+      const el = document.querySelector(`.memory-item[data-id="${id}"]`);
+      if (el) {
+        el.style.transition = 'opacity .3s, transform .3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-20px)';
+        setTimeout(() => el.remove(), 300);
+      }
+      showToast('✅ Memory forgotten');
+      refreshStats();
+    } else {
+      showToast(`⚠️ ${result?.error || 'Forget failed'}`);
+    }
+  } catch (err) {
+    showToast(`⚠️ ${err.message}`);
+  }
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────── */
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/\n/g, '<br>');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.classList.remove('show'); }, 3000);
+}
+
+function goBack() {
+  if (window.novaDesktop) {
+    window.novaDesktop.app.switchMode(true);
+  } else {
+    window.location.href = '../offline.html';
+  }
+}
+
+// Close modals on overlay click
+document.getElementById('rememberModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeRememberModal();
+});
+document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) cancelForget();
+});
+
+/* ─── Init ────────────────────────────────────────────────────────── */
+refreshStats();
+</script>
+</body>
+</html>
