@@ -638,6 +638,14 @@ body::after{
 }
 .panel-view h2{font-size:28px;font-weight:700;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px}
 .panel-view p{color:var(--text-mid);font-size:15px}
+.panel-back-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:8px;border:none;background:rgba(255,255,255,.06);
+  color:var(--text-mid);font-size:13px;cursor:pointer;margin-bottom:16px;
+  transition:all .2s;font-family:inherit;
+}
+.panel-back-btn:hover{background:rgba(255,255,255,.10);color:var(--text)}
+.panel-back-btn svg{width:14px;height:14px}
 
 /* Panel cards */
 .panel-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -4338,7 +4346,17 @@ function switchPanel(name) {
     cp.style.display = 'flex';
   } else {
     const target = document.getElementById('panel-' + name);
-    if (target) target.style.display = 'block';
+    if (target) {
+      target.style.display = 'block';
+      // Add back-to-chat button if not already present
+      if (!target.querySelector('.panel-back-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'panel-back-btn';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Chat';
+        btn.onclick = function() { switchPanel('chat'); };
+        target.insertBefore(btn, target.firstChild);
+      }
+    }
   }
 
   // Trigger panel-specific loading
@@ -5357,6 +5375,8 @@ async function loadChat(chatId) {
     });
     currentChatId = chatId;
     _saveToLocal();
+    // Exit empty state and show chat
+    document.getElementById('chatPanel').classList.remove('empty-state');
     switchPanel('chat');
     // Scroll to bottom
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -11253,24 +11273,35 @@ document.addEventListener('click', function(e) {
 });
 
 // ═══════════ SIDEBAR CHAT HISTORY ═══════════
-function populateSidebarHistory() {
+async function populateSidebarHistory() {
   const list = document.getElementById('sidebarHistoryList');
   if (!list) return;
-  // Try to get from recent conversations widget first
-  const recentItems = document.querySelectorAll('#recentConvList .recent-conv-item, #recentItemsList .recent-item');
-  if (recentItems.length > 0) {
+  try {
+    const res = await fetch('/api/chats');
+    if (!res.ok) { list.innerHTML = ''; return; }
+    const data = await res.json();
+    const chats = (data.chats || data || []).slice(0, 8);
     list.innerHTML = '';
-    recentItems.forEach((item, i) => {
-      if (i >= 5) return;
-      const title = item.textContent.trim().split('\n')[0].trim();
+    if (!chats.length) {
+      list.innerHTML = '<div class="sidebar-history-item" style="color:var(--text-dim);font-size:12px">No chats yet</div>';
+      return;
+    }
+    chats.forEach((c, i) => {
+      const title = c.title || 'Untitled';
       const div = document.createElement('div');
       div.className = 'sidebar-history-item' + (i === 0 ? ' active' : '');
-      div.textContent = title || 'Untitled';
-      div.onclick = function() { /* load chat */ };
+      div.textContent = title.length > 30 ? title.slice(0, 30) + '...' : title;
+      div.title = title;
+      div.onclick = function() {
+        loadChat(c.id);
+        // Update active state
+        list.querySelectorAll('.sidebar-history-item').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
+      };
       list.appendChild(div);
     });
-  } else {
-    list.innerHTML = '<div class="sidebar-history-item active">Hello, I\'m Nova.</div>';
+  } catch(_) {
+    list.innerHTML = '';
   }
 }
 
@@ -11335,27 +11366,36 @@ function closeSearchChats(e) {
   document.getElementById('searchChatsOverlay').classList.remove('show');
   document.getElementById('searchChatsInput').value = '';
 }
-function populateSearchChats() {
+async function populateSearchChats() {
   const todayEl = document.getElementById('searchChatsToday');
   const prev7El = document.getElementById('searchChatsPrev7');
-  // Pull from recent conversations if available
-  const recentItems = document.querySelectorAll('#recentConvList .recent-conv-item');
   todayEl.innerHTML = '';
   prev7El.innerHTML = '';
-  if (recentItems.length === 0) {
-    todayEl.innerHTML = '<div class="search-chats-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No chats yet</div>';
-    return;
-  }
-  recentItems.forEach((item, i) => {
-    const title = item.textContent.trim().split('\n')[0].trim();
-    const chatId = item.getAttribute('data-chat-id') || '';
-    const div = document.createElement('div');
-    div.className = 'search-chats-item' + (i === 0 ? ' active' : '');
-    div.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' + (title || 'Untitled');
-    div.onclick = function() { if(chatId) loadChat(chatId); closeSearchChats(); };
-    if (i < 3) todayEl.appendChild(div);
-    else prev7El.appendChild(div);
-  });
+  try {
+    const res = await fetch('/api/chats');
+    if (!res.ok) return;
+    const data = await res.json();
+    const chats = (data.chats || data || []);
+    if (!chats.length) {
+      todayEl.innerHTML = '<div class="search-chats-item" style="opacity:.5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No chats yet</div>';
+      return;
+    }
+    const now = Date.now();
+    const dayMs = 86400000;
+    chats.forEach((c, i) => {
+      const title = c.title || 'Untitled';
+      const chatAge = c.updated_at ? (now - c.updated_at * 1000) : 0;
+      const div = document.createElement('div');
+      div.className = 'search-chats-item';
+      div.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' + escapeHtml(title);
+      div.onclick = function() { loadChat(c.id); closeSearchChats(); };
+      if (chatAge < dayMs) todayEl.appendChild(div);
+      else prev7El.appendChild(div);
+    });
+    if (!todayEl.children.length) todayEl.innerHTML = '<div class="search-chats-item" style="opacity:.4">No chats today</div>';
+    if (!prev7El.children.length) prev7El.parentElement.style.display = 'none';
+    else prev7El.parentElement.style.display = '';
+  } catch(_) {}
 }
 function filterSearchChats(query) {
   const items = document.querySelectorAll('.search-chats-item');
