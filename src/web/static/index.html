@@ -3022,28 +3022,53 @@ body {
   padding:4px 0 0;letter-spacing:.3px;
 }
 
-/* ═══════════ TIER BADGE ═══════════ */
-.chat-tier-badge{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:6px 0;cursor:pointer;user-select:none;
+/* ═══════════ TIER SELECTOR ═══════════ */
+.tier-selector{
+  position:relative;display:flex;justify-content:center;padding:6px 0;
 }
-.tier-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:#34D399;box-shadow:0 0 6px rgba(52,211,153,.5);
+.tier-selector-btn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;
+  background:none;border:none;cursor:pointer;color:var(--text-dim);
+  font-size:14px;font-weight:500;font-family:'Inter',sans-serif;
+  transition:color .2s;
 }
-.tier-dot.plus{
-  background:linear-gradient(135deg,#7B61FF,#5EEBFF);
-  box-shadow:0 0 8px rgba(123,97,255,.5);
+.tier-selector-btn:hover{color:var(--text)}
+.tier-selector-arrow{transition:transform .2s;opacity:.5}
+.tier-selector.open .tier-selector-arrow{transform:rotate(180deg)}
+.tier-dropdown{
+  display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  min-width:280px;background:rgba(45,45,52,.98);
+  border:1px solid rgba(255,255,255,.12);border-radius:14px;
+  padding:6px;z-index:150;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
-.tier-label{
-  font-size:13px;font-weight:500;color:var(--text-dim);
-  font-family:'Inter',sans-serif;letter-spacing:.2px;
+.tier-selector.open .tier-dropdown{display:block}
+.tier-dropdown-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:10px;cursor:pointer;transition:background .2s;
 }
-.tier-label.plus{
-  background:linear-gradient(135deg,#7B61FF,#5EEBFF);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;font-weight:600;
+.tier-dropdown-item:hover{background:rgba(255,255,255,.06)}
+.tier-dropdown-icon{
+  font-size:20px;width:28px;text-align:center;flex-shrink:0;
 }
+.plus-icon{color:#fff}
+.free-icon{color:var(--text-dim)}
+.tier-dropdown-info{flex:1;min-width:0}
+.tier-dropdown-name{font-size:14px;font-weight:600;color:var(--text)}
+.tier-dropdown-desc{font-size:12px;color:var(--text-dim);margin-top:1px}
+.tier-dropdown-action{
+  font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.20);
+  color:var(--text);cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.tier-dropdown-action:hover{background:rgba(255,255,255,.18)}
+.tier-dropdown-action.subscribed{display:none}
+.tier-dropdown-check{
+  font-size:18px;color:var(--text);opacity:0;transition:opacity .2s;
+}
+.tier-dropdown-item.active .tier-dropdown-check{opacity:1}
+.tier-dropdown-item.active .tier-dropdown-action{display:none}
 
 /* ═══════════ UPGRADE MODAL ═══════════ */
 .upgrade-overlay{
@@ -3591,9 +3616,29 @@ body {
       </select>
       <button class="img-gen-btn" id="imgGenBtn" onclick="generateImage()">Generate</button>
     </div>
-    <div class="chat-tier-badge" id="chatTierBadge" onclick="showUpgradeModal()">
-      <span class="tier-dot" id="tierDot"></span>
-      <span class="tier-label" id="tierLabel">Nova</span>
+    <div class="tier-selector" id="tierSelector">
+      <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
+        <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
+        <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="tier-dropdown" id="tierDropdown">
+        <div class="tier-dropdown-item" id="tierOptPlus" onclick="selectTier('plus')">
+          <div class="tier-dropdown-icon plus-icon">✦</div>
+          <div class="tier-dropdown-info">
+            <div class="tier-dropdown-name">Nova Plus</div>
+            <div class="tier-dropdown-desc">Our smartest models & more</div>
+          </div>
+          <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
+        </div>
+        <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
+          <div class="tier-dropdown-icon free-icon">⚛</div>
+          <div class="tier-dropdown-info">
+            <div class="tier-dropdown-name">Nova</div>
+            <div class="tier-dropdown-desc">Great for everyday tasks</div>
+          </div>
+          <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -11439,17 +11484,22 @@ function setUserTier(tier) {
 }
 function updateTierUI() {
   const tier = getUserTier();
-  const dot = document.getElementById('tierDot');
-  const label = document.getElementById('tierLabel');
-  if (dot && label) {
+  const label = document.getElementById('tierSelectorLabel');
+  const plusOpt = document.getElementById('tierOptPlus');
+  const freeOpt = document.getElementById('tierOptFree');
+  const plusAction = document.getElementById('tierPlusAction');
+  if (label) {
+    label.textContent = tier === 'plus' ? 'Nova Plus' : 'Nova';
+  }
+  if (plusOpt && freeOpt) {
     if (tier === 'plus') {
-      dot.classList.add('plus');
-      label.textContent = 'Nova Plus';
-      label.classList.add('plus');
+      plusOpt.classList.add('active');
+      freeOpt.classList.remove('active');
+      if (plusAction) { plusAction.style.display = 'none'; }
     } else {
-      dot.classList.remove('plus');
-      label.textContent = 'Nova';
-      label.classList.remove('plus');
+      plusOpt.classList.remove('active');
+      freeOpt.classList.add('active');
+      if (plusAction) { plusAction.style.display = ''; }
     }
   }
   // Lock/unlock model cards
@@ -11465,8 +11515,29 @@ function updateTierUI() {
   });
 }
 
+function toggleTierDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('tierSelector').classList.toggle('open');
+}
+function closeTierDropdown() {
+  const el = document.getElementById('tierSelector');
+  if (el) el.classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tier-selector')) closeTierDropdown();
+});
+
+function selectTier(tier) {
+  if (tier === 'plus' && getUserTier() !== 'plus') {
+    closeTierDropdown();
+    showUpgradeModal();
+    return;
+  }
+  setUserTier(tier);
+  closeTierDropdown();
+}
+
 function showUpgradeModal() {
-  if (getUserTier() === 'plus') return; // Already subscribed
   document.getElementById('upgradeOverlay').classList.add('show');
 }
 function closeUpgradeModal(e) {
