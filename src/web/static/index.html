@@ -235,9 +235,8 @@ body::after{
 }
 .chat-panel.empty-state .quick-card-icon{
   width:auto !important;height:auto !important;background:none !important;margin:0 !important;
-  border-radius:0 !important;padding:0 !important;color:var(--text-mid) !important;
+  border-radius:0 !important;padding:0 !important;font-size:16px !important;
 }
-.chat-panel.empty-state .quick-card-icon svg{width:16px !important;height:16px !important}
 .chat-panel.empty-state .quick-card-title{font-size:13px !important;margin:0 !important;font-weight:400 !important;color:var(--text-mid) !important}
 .chat-panel.empty-state .quick-card-desc{display:none !important}
 .chat-panel.empty-state .chat-footer-text{display:none !important}
@@ -3022,50 +3021,54 @@ body {
   padding:4px 0 0;letter-spacing:.3px;
 }
 
-/* ═══════════ TIER SELECTOR ═══════════ */
+/* ═══════════ TIER SELECTOR (inline in input bar) ═══════════ */
 .tier-selector{
-  position:relative;display:flex;justify-content:center;padding:6px 0;
+  position:relative;display:flex;align-items:center;
 }
 .tier-selector-btn{
-  display:flex;align-items:center;gap:6px;padding:6px 12px;
-  background:none;border:none;cursor:pointer;color:var(--text-dim);
-  font-size:14px;font-weight:500;font-family:'Inter',sans-serif;
-  transition:color .2s;
+  display:flex;align-items:center;gap:4px;padding:4px 10px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;cursor:pointer;color:var(--text);
+  font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
+  transition:all .2s;white-space:nowrap;
 }
-.tier-selector-btn:hover{color:var(--text)}
-.tier-selector-arrow{transition:transform .2s;opacity:.5}
+.tier-selector-btn:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.20)}
+.tier-selector-arrow{transition:transform .2s;opacity:.6}
 .tier-selector.open .tier-selector-arrow{transform:rotate(180deg)}
 .tier-dropdown{
-  display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  min-width:280px;background:rgba(45,45,52,.98);
-  border:1px solid rgba(255,255,255,.12);border-radius:14px;
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  min-width:260px;background:rgba(45,45,52,.98);
+  border:1px solid rgba(255,255,255,.12);border-radius:12px;
   padding:6px;z-index:150;
   box-shadow:0 12px 40px rgba(0,0,0,.5);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
 .tier-selector.open .tier-dropdown{display:block}
 .tier-dropdown-item{
-  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
   border-radius:10px;cursor:pointer;transition:background .2s;
 }
 .tier-dropdown-item:hover{background:rgba(255,255,255,.06)}
-.tier-dropdown-icon{
-  font-size:20px;width:28px;text-align:center;flex-shrink:0;
+.tier-dropdown-item.plus-item{
+  background:rgba(123,97,255,.04);border:1px solid rgba(123,97,255,.15);
+  margin-top:4px;
 }
-.plus-icon{color:#fff}
-.free-icon{color:var(--text-dim)}
+.tier-dropdown-item.plus-item:hover{background:rgba(123,97,255,.08)}
+.tier-dropdown-icon{
+  font-size:16px;flex-shrink:0;
+}
+.plus-icon{color:#c4b5fd}
 .tier-dropdown-info{flex:1;min-width:0}
 .tier-dropdown-name{font-size:14px;font-weight:600;color:var(--text)}
-.tier-dropdown-desc{font-size:12px;color:var(--text-dim);margin-top:1px}
+.tier-dropdown-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
 .tier-dropdown-action{
-  font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
   background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.20);
   color:var(--text);cursor:pointer;white-space:nowrap;transition:all .2s;
 }
 .tier-dropdown-action:hover{background:rgba(255,255,255,.18)}
-.tier-dropdown-action.subscribed{display:none}
 .tier-dropdown-check{
-  font-size:18px;color:var(--text);opacity:0;transition:opacity .2s;
+  font-size:16px;color:var(--green);opacity:0;transition:opacity .2s;
 }
 .tier-dropdown-item.active .tier-dropdown-check{opacity:1}
 .tier-dropdown-item.active .tier-dropdown-action{display:none}
@@ -3512,7 +3515,7 @@ body {
   <div class="chat-panel empty-state" id="chatPanel">
     <!-- Welcome (shown in empty state) -->
     <div class="welcome-screen" id="welcomeScreen">
-      <h1 style="font-family:'Inter',sans-serif;font-size:28px;letter-spacing:0;font-weight:500;color:var(--text)">Ready when you are.</h1>
+      <h1 style="font-family:'Orbitron','Inter',sans-serif;font-size:36px;letter-spacing:1px;font-weight:600;color:var(--text)">Hello, I'm <span style="color:var(--purple)">Nova.</span></h1>
     </div>
     <div id="chatMessages">
       <!-- Welcome message -->
@@ -3571,7 +3574,28 @@ body {
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
         <textarea id="chatInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
         <div class="input-right">
-          <span class="chat-model-badge" id="chatModelBadge" onclick="switchPanel('models')" title="Click to change model">Nova Auto</span>
+          <div class="tier-selector" id="tierSelector">
+            <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
+              <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
+              <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="tier-dropdown" id="tierDropdown">
+              <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
+                <div class="tier-dropdown-info">
+                  <div class="tier-dropdown-name">Nova</div>
+                </div>
+                <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
+              </div>
+              <div class="tier-dropdown-item plus-item" id="tierOptPlus" onclick="selectTier('plus')">
+                <div class="tier-dropdown-icon plus-icon">✨</div>
+                <div class="tier-dropdown-info">
+                  <div class="tier-dropdown-name">Nova Plus</div>
+                  <div class="tier-dropdown-desc">Unlock more power and advanced features.</div>
+                </div>
+                <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
+              </div>
+            </div>
+          </div>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
@@ -3586,23 +3610,21 @@ body {
     </div>
     <!-- Quick actions (below input) -->
     <div class="quick-actions" id="quickActions">
-      <div class="quick-card" onclick="prefillChat('Create an image of')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        <div class="quick-card-title">Create an image</div>
+      <div class="quick-card" onclick="prefillChat('Explain ')">
+        <div class="quick-card-icon">💡</div>
+        <div class="quick-card-title">Explain</div>
       </div>
-      <div class="quick-card" onclick="prefillChat('Write or edit: ')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        </div>
-        <div class="quick-card-title">Write or edit</div>
+      <div class="quick-card" onclick="prefillChat('Help me write ')">
+        <div class="quick-card-icon">✍️</div>
+        <div class="quick-card-title">Help me write</div>
       </div>
-      <div class="quick-card" onclick="prefillChat('Look up ')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </div>
-        <div class="quick-card-title">Look something up</div>
+      <div class="quick-card" onclick="prefillChat('Summarize ')">
+        <div class="quick-card-icon">📄</div>
+        <div class="quick-card-title">Summarize</div>
+      </div>
+      <div class="quick-card" onclick="prefillChat('Create ')">
+        <div class="quick-card-icon">🎨</div>
+        <div class="quick-card-title">Create</div>
       </div>
     </div>
     <div class="img-gen-bar" id="imgGenBar">
@@ -3615,30 +3637,6 @@ body {
         <option value="turbo">Turbo (Fast)</option>
       </select>
       <button class="img-gen-btn" id="imgGenBtn" onclick="generateImage()">Generate</button>
-    </div>
-    <div class="tier-selector" id="tierSelector">
-      <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
-        <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
-        <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="tier-dropdown" id="tierDropdown">
-        <div class="tier-dropdown-item" id="tierOptPlus" onclick="selectTier('plus')">
-          <div class="tier-dropdown-icon plus-icon">✦</div>
-          <div class="tier-dropdown-info">
-            <div class="tier-dropdown-name">Nova Plus</div>
-            <div class="tier-dropdown-desc">Our smartest models & more</div>
-          </div>
-          <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
-        </div>
-        <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
-          <div class="tier-dropdown-icon free-icon">⚛</div>
-          <div class="tier-dropdown-info">
-            <div class="tier-dropdown-name">Nova</div>
-            <div class="tier-dropdown-desc">Great for everyday tasks</div>
-          </div>
-          <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
-        </div>
-      </div>
     </div>
   </div>
 
