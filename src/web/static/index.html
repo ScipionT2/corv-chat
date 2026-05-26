@@ -2948,6 +2948,41 @@ body {
 .quick-actions .quick-card:nth-child(3) { animation-delay: 0.15s; }
 .quick-actions .quick-card:nth-child(4) { animation-delay: 0.2s; }
 
+/* ═══════════ SIDEBAR RECENT CHATS ═══════════ */
+.recent-chats-sidebar{padding:0 4px;margin:4px 0 8px;max-height:180px;overflow-y:auto}
+.recent-chats-sidebar::-webkit-scrollbar{width:3px}
+.recent-chats-sidebar::-webkit-scrollbar-thumb{background:rgba(139,92,246,.2);border-radius:3px}
+.recent-header{display:flex;align-items:center;justify-content:space-between;padding:4px 10px}
+.recent-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(232,230,240,.35);font-weight:600}
+.recent-items{display:flex;flex-direction:column;gap:1px}
+.recent-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--dim);transition:all .2s;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.recent-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.recent-item.active{background:rgba(139,92,246,.1);color:var(--text)}
+.recent-item svg{flex-shrink:0;opacity:.4;width:14px;height:14px}
+.recent-item:hover svg{opacity:.7}
+.recent-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ═══════════ MESSAGE ACTIONS ═══════════ */
+.msg-actions{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .2s}
+.message:hover .msg-actions{opacity:1}
+.msg-action-btn{background:none;border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--dim);font-size:11px;display:flex;align-items:center;gap:4px;transition:all .2s}
+.msg-action-btn:hover{background:rgba(255,255,255,.06);color:var(--text);border-color:rgba(255,255,255,.15)}
+.msg-action-btn svg{width:12px;height:12px}
+
+/* ═══════════ STREAMING CURSOR + FADE ═══════════ */
+.streaming-cursor::after{content:'▋';animation:blink-cursor .8s steps(2) infinite;color:var(--purple);font-weight:300}
+@keyframes blink-cursor{0%{opacity:1}100%{opacity:0}}
+.msg-bubble{transition:opacity .15s ease-in}
+.message.fade-in{animation:msgFadeIn .3s ease-out}
+@keyframes msgFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ MOBILE RESPONSIVE ═══════════ */
+@media(max-width:768px){
+  .msg-actions{opacity:1}
+  .recent-chats-sidebar{max-height:120px}
+  .panel-cards{grid-template-columns:1fr !important}
+}
+
 
 </style>
 </head>
@@ -2964,6 +2999,14 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Chat
     </button>
+    <div class="recent-chats-sidebar" id="recentChatsSidebar">
+      <div class="recent-header">
+        <span class="recent-title">Recent</span>
+      </div>
+      <div class="recent-items" id="recentItemsList">
+        <!-- Populated by JS -->
+      </div>
+    </div>
     <button class="nav-item active" onclick="switchPanel('chat')" data-panel="chat">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Chat
@@ -3762,7 +3805,7 @@ function formatMessage(text) {
 
 function appendChat(role, content, opts = {}) {
   const div = document.createElement('div');
-  div.className = 'message ' + role;
+  div.className = 'message ' + role + ' fade-in';
   const isUser = role === 'user';
   const thinkingText = opts.thinking || '';
   const model = opts.model || currentModel;
@@ -3790,6 +3833,23 @@ function appendChat(role, content, opts = {}) {
         ${!isUser ? `<span class="msg-model-tag">${model}</span>` : ''}
       </div>
     </div>`;
+  // Add message action buttons for assistant messages
+  if (role === 'assistant' && content) {
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `
+      <button class="msg-action-btn" onclick="copyMessageText(this)" title="Copy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+      <button class="msg-action-btn" onclick="regenerateMessage(this)" title="Regenerate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Retry
+      </button>
+    `;
+    const innerWrapper = div.querySelector('div:last-child') || div;
+    innerWrapper.appendChild(actions);
+  }
   chatMessages.insertBefore(div, thinkingBubble);
   chatMessages.scrollTop = chatMessages.scrollHeight;
   if (quickActions.style.display !== 'none') quickActions.style.display = 'none';
@@ -3797,6 +3857,35 @@ function appendChat(role, content, opts = {}) {
   // Add copy buttons to code blocks
   _addCopyButtons(div);
   return div;
+}
+
+function copyMessageText(btn) {
+  const bubble = btn.closest('.message').querySelector('.msg-bubble');
+  if (bubble) {
+    navigator.clipboard.writeText(bubble.textContent).then(() => {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+      }, 2000);
+    });
+  }
+}
+
+function regenerateMessage(btn) {
+  const msgEl = btn.closest('.message');
+  let prev = msgEl.previousElementSibling;
+  while (prev && !prev.classList.contains('user')) prev = prev.previousElementSibling;
+  if (prev) {
+    const userText = prev.querySelector('.msg-bubble')?.textContent;
+    if (userText) {
+      msgEl.remove();
+      if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'assistant') {
+        chatHistory.pop();
+      }
+      chatInput.value = userText;
+      sendChat();
+    }
+  }
 }
 
 function _addCopyButtons(container) {
@@ -8669,6 +8758,20 @@ try {
 
         if (viewAll) {
           viewAll.onclick = (e) => { e.preventDefault(); switchPanel('memory'); };
+        }
+
+        // Also populate sidebar recent chats
+        const sidebarList = document.getElementById('recentItemsList');
+        if (sidebarList && chats) {
+          const allChats = (data.chats || data || []);
+          sidebarList.innerHTML = allChats.slice(0, 8).map(c => {
+            const title = c.title || c.preview || 'New Chat';
+            const shortTitle = title.length > 28 ? title.substring(0, 28) + '\u2026' : title;
+            return `<div class="recent-item" onclick="loadChat(${c.id})" title="${title.replace(/"/g, '&quot;')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span>${shortTitle}</span>
+            </div>`;
+          }).join('');
         }
       } catch (_) {}
     };
