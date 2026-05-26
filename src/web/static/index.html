@@ -3022,6 +3022,79 @@ body {
   padding:4px 0 0;letter-spacing:.3px;
 }
 
+/* ═══════════ TIER BADGE ═══════════ */
+.chat-tier-badge{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:6px 0;cursor:pointer;user-select:none;
+}
+.tier-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#34D399;box-shadow:0 0 6px rgba(52,211,153,.5);
+}
+.tier-dot.plus{
+  background:linear-gradient(135deg,#7B61FF,#5EEBFF);
+  box-shadow:0 0 8px rgba(123,97,255,.5);
+}
+.tier-label{
+  font-size:13px;font-weight:500;color:var(--text-dim);
+  font-family:'Inter',sans-serif;letter-spacing:.2px;
+}
+.tier-label.plus{
+  background:linear-gradient(135deg,#7B61FF,#5EEBFF);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;font-weight:600;
+}
+
+/* ═══════════ UPGRADE MODAL ═══════════ */
+.upgrade-overlay{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+  justify-content:center;align-items:center;
+}
+.upgrade-overlay.show{display:flex}
+.upgrade-modal{
+  width:90%;max-width:480px;background:rgba(20,22,40,.98);
+  border:1px solid rgba(255,255,255,.10);border-radius:20px;
+  padding:32px;text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+.upgrade-modal h2{font-size:24px;font-weight:600;margin-bottom:8px}
+.upgrade-modal .upgrade-subtitle{font-size:14px;color:var(--text-dim);margin-bottom:24px}
+.upgrade-plans{display:flex;gap:16px;margin-bottom:24px}
+.upgrade-plan{
+  flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;padding:20px;text-align:left;cursor:pointer;transition:all .2s;
+}
+.upgrade-plan:hover{border-color:rgba(123,97,255,.3)}
+.upgrade-plan.selected{border-color:var(--purple);background:rgba(123,97,255,.06)}
+.upgrade-plan-name{font-size:16px;font-weight:600;margin-bottom:4px}
+.upgrade-plan-price{font-size:24px;font-weight:700;margin-bottom:8px}
+.upgrade-plan-price span{font-size:13px;font-weight:400;color:var(--text-dim)}
+.upgrade-plan-features{list-style:none;padding:0}
+.upgrade-plan-features li{font-size:12px;color:var(--text-mid);padding:3px 0;display:flex;align-items:center;gap:6px}
+.upgrade-plan-features li::before{content:'✓';color:var(--green);font-size:11px}
+.upgrade-btn{
+  width:100%;padding:14px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#6B51EF,#8B6BFF);
+  color:#fff;font-size:15px;font-weight:600;cursor:pointer;
+  transition:transform .15s,box-shadow .2s;
+}
+.upgrade-btn:hover{transform:scale(1.02);box-shadow:0 0 30px rgba(123,97,255,.4)}
+.upgrade-close{
+  position:absolute;top:16px;right:16px;background:none;border:none;
+  color:var(--text-dim);cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;
+}
+.upgrade-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+
+/* Model card lock overlay for pro models */
+.model-card.locked{opacity:.5;position:relative;pointer-events:none}
+.model-card.locked::after{
+  content:'PRO';position:absolute;top:6px;right:6px;
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;
+  background:linear-gradient(135deg,#6B51EF,#5EEBFF);color:#fff;
+  letter-spacing:.5px;
+}
+
 /* ═══════════ MESSAGE ACTIONS ═══════════ */
 .msg-actions{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .2s}
 .message:hover .msg-actions{opacity:1}
@@ -3518,7 +3591,10 @@ body {
       </select>
       <button class="img-gen-btn" id="imgGenBtn" onclick="generateImage()">Generate</button>
     </div>
-    <div class="chat-footer-text">Nova AI • 3K focus • Always ready to help</div>
+    <div class="chat-tier-badge" id="chatTierBadge" onclick="showUpgradeModal()">
+      <span class="tier-dot" id="tierDot"></span>
+      <span class="tier-label" id="tierLabel">Nova</span>
+    </div>
   </div>
 
   <!-- ═══════ FUNCTIONAL PANELS ═══════ -->
@@ -11349,6 +11425,95 @@ switchPanel = function(name) {
 };
 // Also render on first load if apps panel is visible
 setTimeout(function(){ if(document.getElementById('panel-apps')?.style.display !== 'none') renderApps('featured'); }, 500);
+
+// ═══════════ TIER SYSTEM ═══════════
+const NOVA_FREE_MODELS = ['nova-auto', 'deepseek-v4-flash', 'llama-3.3-70b', 'gemma-4-31b', 'nemotron-3-nano'];
+const NOVA_PLUS_MODELS = ['gpt-oss-120b', 'qwen3-coder', 'qwen3-next-80b', 'nemotron-3-super', 'minimax-m2.5', 'hermes-3-405b', 'trinity-thinking', 'glm-4.5-air', 'laguna-m1', 'gpt-5.5-pro', 'gpt-5.5', 'gpt-4.1', 'gpt-4o', 'o3-mini', 'claude-opus-4.7', 'claude-sonnet-4', 'claude-haiku'];
+
+function getUserTier() {
+  return localStorage.getItem('nova_tier') || 'free';
+}
+function setUserTier(tier) {
+  localStorage.setItem('nova_tier', tier);
+  updateTierUI();
+}
+function updateTierUI() {
+  const tier = getUserTier();
+  const dot = document.getElementById('tierDot');
+  const label = document.getElementById('tierLabel');
+  if (dot && label) {
+    if (tier === 'plus') {
+      dot.classList.add('plus');
+      label.textContent = 'Nova Plus';
+      label.classList.add('plus');
+    } else {
+      dot.classList.remove('plus');
+      label.textContent = 'Nova';
+      label.classList.remove('plus');
+    }
+  }
+  // Lock/unlock model cards
+  document.querySelectorAll('.model-card').forEach(card => {
+    const val = card.getAttribute('data-value');
+    if (tier === 'plus') {
+      card.classList.remove('locked');
+    } else if (NOVA_PLUS_MODELS.includes(val)) {
+      card.classList.add('locked');
+    } else {
+      card.classList.remove('locked');
+    }
+  });
+}
+
+function showUpgradeModal() {
+  if (getUserTier() === 'plus') return; // Already subscribed
+  document.getElementById('upgradeOverlay').classList.add('show');
+}
+function closeUpgradeModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('upgradeOverlay').classList.remove('show');
+}
+let selectedPlan = 'monthly';
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.upgrade-plan').forEach(p => p.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  const btn = document.getElementById('upgradeBtn');
+  if (plan === 'yearly') {
+    btn.textContent = 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)';
+  } else {
+    btn.textContent = 'Upgrade to Nova Plus \u2014 $20/mo';
+  }
+}
+function handleUpgrade() {
+  // For now, simulate upgrade (will connect to payment later)
+  setUserTier('plus');
+  closeUpgradeModal();
+  alert('\uD83C\uDF89 Welcome to Nova Plus! All premium models are now unlocked.');
+}
+
+// Override selectModelCard to check tier
+const _origSelectModelCard = typeof selectModelCard === 'function' ? selectModelCard : null;
+function selectModelCardWithTier(el) {
+  const val = el.getAttribute('data-value');
+  if (getUserTier() !== 'plus' && NOVA_PLUS_MODELS.includes(val)) {
+    showUpgradeModal();
+    return;
+  }
+  if (_origSelectModelCard) _origSelectModelCard(el);
+  else {
+    // fallback
+    document.querySelectorAll('.model-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+}
+// Replace onclick on model cards
+document.querySelectorAll('.model-card').forEach(card => {
+  card.setAttribute('onclick', 'selectModelCardWithTier(this)');
+});
+
+// Init tier on load
+setTimeout(updateTierUI, 200);
 </script>
 
 
@@ -11375,6 +11540,41 @@ setTimeout(function(){ if(document.getElementById('panel-apps')?.style.display !
         <div id="searchChatsPrev7"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════ UPGRADE MODAL ═══════════ -->
+<div class="upgrade-overlay" id="upgradeOverlay" onclick="closeUpgradeModal(event)">
+  <div class="upgrade-modal" onclick="event.stopPropagation()" style="position:relative">
+    <button class="upgrade-close" onclick="closeUpgradeModal()">&times;</button>
+    <h2>Upgrade to <span style="background:linear-gradient(135deg,#7B61FF,#5EEBFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Nova Plus</span></h2>
+    <p class="upgrade-subtitle">Unlock premium models, faster responses, and more.</p>
+    <div class="upgrade-plans">
+      <div class="upgrade-plan selected" onclick="selectPlan('monthly')">
+        <div class="upgrade-plan-name">Monthly</div>
+        <div class="upgrade-plan-price">$20<span>/month</span></div>
+        <ul class="upgrade-plan-features">
+          <li>All premium models (GPT-5.5, Claude Opus, etc.)</li>
+          <li>Unlimited messages</li>
+          <li>Image generation</li>
+          <li>Deep research mode</li>
+          <li>Priority speed</li>
+        </ul>
+      </div>
+      <div class="upgrade-plan" onclick="selectPlan('yearly')">
+        <div class="upgrade-plan-name">Yearly</div>
+        <div class="upgrade-plan-price">$16<span>/month</span></div>
+        <ul class="upgrade-plan-features">
+          <li>Everything in Monthly</li>
+          <li>Save 20% ($192/year)</li>
+          <li>Early access to new models</li>
+          <li>Custom agents</li>
+          <li>Team collaboration</li>
+        </ul>
+      </div>
+    </div>
+    <button class="upgrade-btn" id="upgradeBtn" onclick="handleUpgrade()">Upgrade to Nova Plus — $20/mo</button>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:12px">Cancel anytime. No commitment.</p>
   </div>
 </div>
 
