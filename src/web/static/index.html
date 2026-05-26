@@ -4771,9 +4771,13 @@ async function sendChat() {
           }
           // Capture chat_id from done event
           if (data.chat_id) currentChatId = data.chat_id;
-          const token = data.token || data.content || data.text || '';
-          if (token) {
-            rawReply += token;
+          // Skip done/finish events that carry the full response
+          if (data.done || data.finish_reason || data.type === 'done' || evtType === 'done') continue;
+          const token = data.token || data.delta || '';
+          if (!token && data.content && data.content.length > 50 && rawReply.length > 0) continue;
+          const actualToken = token || data.content || data.text || '';
+          if (actualToken) {
+            rawReply += actualToken;
             // Detect <think> blocks (DeepSeek, QwQ, etc.)
             if (rawReply.includes('<think>') && !rawReply.includes('</think>')) {
               inThink = true;
@@ -10753,10 +10757,17 @@ try {
                 return;
               }
               if (data.chat_id) currentChatId = data.chat_id;
-              const token = data.token || data.content || data.text || '';
-              if (token) {
+              // Skip done/finish events that carry the full response
+              if (data.done || data.finish_reason || data.type === 'done' || evtType === 'done') continue;
+              const token = data.token || data.delta || '';
+              if (!token && data.content && data.content.length > 50 && rawReply.length > 0) {
+                // This is likely a full-content echo, not a streaming token — skip
+                continue;
+              }
+              const actualToken = token || data.content || data.text || '';
+              if (actualToken) {
                 tokenCount++;
-                rawReply += token;
+                rawReply += actualToken;
 
                 // Detect <think> blocks
                 if (rawReply.includes('<think>') && !rawReply.includes('</think>')) {
