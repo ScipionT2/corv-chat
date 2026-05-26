@@ -3054,16 +3054,27 @@ body {
 }
 
 /* ═══════════ MORE NAV SECTION ═══════════ */
-.nav-more-section{margin-top:2px}
+/* ═══════════ MORE FLYOUT ═══════════ */
+.nav-more-section{position:relative;margin-top:2px}
 .nav-more-toggle{position:relative}
-.nav-more-chevron{margin-left:auto;transition:transform .2s;opacity:.5}
-.nav-more-section.expanded .nav-more-chevron{transform:rotate(180deg)}
-.nav-more-items{
-  display:none;flex-direction:column;gap:2px;
-  padding-left:0;margin-top:2px;
-  overflow:hidden;transition:max-height .3s ease;
+.nav-more-flyout{
+  display:none;position:absolute;left:calc(100% + 8px);top:0;
+  min-width:200px;background:rgba(40,40,48,.97);
+  border:1px solid rgba(255,255,255,.10);border-radius:14px;
+  padding:6px;z-index:120;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
-.nav-more-section.expanded .nav-more-items{display:flex}
+.nav-more-flyout.show{display:block}
+.nav-more-flyout-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:10px;cursor:pointer;font-size:14px;color:var(--text-mid);
+  transition:background .2s;border:none;background:none;width:100%;
+  font-family:inherit;
+}
+.nav-more-flyout-item:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.nav-more-flyout-item svg{flex-shrink:0;opacity:.7}
+.nav-more-flyout-item:hover svg{opacity:1}
 
 /* ═══════════ SEARCH CHATS MODAL ═══════════ */
 .search-chats-overlay{
@@ -3319,41 +3330,40 @@ body {
       Apps
     </button>
 
-    <!-- More section -->
-    <div class="nav-more-section">
-      <button class="nav-item nav-more-toggle" onclick="toggleMoreNav()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    <!-- More flyout -->
+    <div class="nav-more-section" id="navMoreSection">
+      <button class="nav-item nav-more-toggle" onclick="toggleMoreFlyout(event)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
         More
-        <svg class="nav-more-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div class="nav-more-items" id="navMoreItems">
-        <button class="nav-item active" onclick="switchPanel('chat')" data-panel="chat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Chat
-        </button>
-        <button class="nav-item" onclick="switchPanel('explore')" data-panel="explore">
+      <div class="nav-more-flyout" id="navMoreFlyout">
+        <button class="nav-more-flyout-item" onclick="switchPanel('explore');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
           Explore
         </button>
-        <button class="nav-item" onclick="switchPanel('memory')" data-panel="memory">
+        <button class="nav-more-flyout-item" onclick="switchPanel('memory');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2a6.5 6.5 0 0 1 5 10.65V17a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-4.35A6.5 6.5 0 0 1 9.5 2z"/><path d="M6.5 17v1a3 3 0 0 0 6 0v-1"/></svg>
           Memory
         </button>
-        <button class="nav-item" onclick="switchPanel('tasks')" data-panel="tasks">
+        <button class="nav-more-flyout-item" onclick="switchPanel('tasks');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Tasks
         </button>
-        <button class="nav-item" onclick="switchPanel('models')" data-panel="models">
+        <button class="nav-more-flyout-item" onclick="switchPanel('models');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           Models
         </button>
-        <button class="nav-item" onclick="switchPanel('agents')" data-panel="agents">
+        <button class="nav-more-flyout-item" onclick="switchPanel('agents');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Agents
         </button>
-        <button class="nav-item" onclick="switchPanel('spaces')" data-panel="spaces">
+        <button class="nav-more-flyout-item" onclick="switchPanel('spaces');closeMoreFlyout()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Spaces
+        </button>
+        <button class="nav-more-flyout-item" onclick="switchPanel('settings');closeMoreFlyout()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.46.26.98.4 1.51 1.01H21a2 2 0 0 1 0 4h-.09"/></svg>
+          Settings
         </button>
       </div>
     </div>
@@ -11180,6 +11190,16 @@ if (_origUpdateProfile) {
 setTimeout(populateSidebarHistory, 2000);
 
 // ═══════════ MORE NAV TOGGLE ═══════════
+function toggleMoreFlyout(e) {
+  e.stopPropagation();
+  document.getElementById('navMoreFlyout').classList.toggle('show');
+}
+function closeMoreFlyout() {
+  document.getElementById('navMoreFlyout').classList.remove('show');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.nav-more-section')) closeMoreFlyout();
+});
 function toggleMoreNav() {
   const section = document.querySelector('.nav-more-section');
   if (section) section.classList.toggle('expanded');
