@@ -854,6 +854,22 @@ body::after{
 }
 .models-active-label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
 .models-active-name{font-size:15px;font-weight:600;color:var(--purple)}
+/* Models upgrade banner */
+.models-upgrade-banner{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:rgba(123,97,255,.06);border:1px solid rgba(123,97,255,.15);
+  border-radius:12px;margin-bottom:20px;font-size:13px;color:var(--text-mid);
+}
+.models-upgrade-banner span:first-child{font-size:18px}
+.models-upgrade-banner button{
+  margin-left:auto;padding:6px 14px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,#6B51EF,#8B6BFF);color:#fff;
+  font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:transform .15s;
+}
+.models-upgrade-banner button:hover{transform:scale(1.05)}
+.models-upgrade-banner.hidden{display:none}
+
 .models-section{margin-bottom:28px}
 .models-section-title{
   font-size:11px;letter-spacing:2px;text-transform:uppercase;
@@ -3425,6 +3441,10 @@ body {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
       Apps
     </button>
+    <button class="nav-item" onclick="switchPanel('models')" data-panel="models">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
+      Models
+    </button>
 
     <!-- More flyout -->
     <div class="nav-more-section" id="navMoreSection">
@@ -3722,7 +3742,12 @@ body {
   <!-- MODELS -->
   <div class="panel-view" id="panel-models">
     <h2>Models</h2>
-    <p style="margin-bottom:24px">Choose a model for your conversation. All free models work instantly — no API key needed.</p>
+    <p style="margin-bottom:16px">Choose a model for your conversation.</p>
+    <div class="models-upgrade-banner" id="modelsUpgradeBanner">
+      <span>✨</span>
+      <span>Upgrade to <strong>Nova Plus</strong> to unlock all premium models</span>
+      <button onclick="showUpgradeModal()">Upgrade</button>
+    </div>
 
     <!-- Currently Active -->
     <div class="models-active-bar" id="modelsActiveBar">
@@ -3732,7 +3757,7 @@ body {
 
     <!-- Free Models -->
     <div class="models-section">
-      <div class="models-section-title"><span class="dot green"></span> FREE — NO KEY NEEDED</div>
+      <div class="models-section-title"><span class="dot green"></span> NOVA — FREE MODELS</div>
       <div class="models-grid">
         <div class="model-card" data-value="nova-auto" data-icon="nova" onclick="selectModelCard(this)">
           <img src="/static/img/nova-icon.png" alt="" class="model-card-icon" onerror="this.style.display='none'">
@@ -3809,7 +3834,7 @@ body {
 
     <!-- BYOK: OpenAI -->
     <div class="models-section">
-      <div class="models-section-title"><span class="dot key"></span> OPENAI <span class="models-key-tag">Your Key</span></div>
+      <div class="models-section-title"><span class="dot key"></span> NOVA PLUS — OPENAI <span class="models-key-tag">Plus</span></div>
       <div class="models-grid">
         <div class="model-card" data-value="gpt-5.5-pro" data-icon="openai" onclick="selectModelCard(this)">
           <img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/openai.svg" alt="" class="model-card-icon invert">
@@ -3841,7 +3866,7 @@ body {
 
     <!-- BYOK: Anthropic -->
     <div class="models-section">
-      <div class="models-section-title"><span class="dot key"></span> ANTHROPIC <span class="models-key-tag">Your Key</span></div>
+      <div class="models-section-title"><span class="dot key"></span> NOVA PLUS — ANTHROPIC <span class="models-key-tag">Plus</span></div>
       <div class="models-grid">
         <div class="model-card" data-value="claude-opus-4.7" data-icon="claude" onclick="selectModelCard(this)">
           <img src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/claude-color.svg" alt="" class="model-card-icon">
@@ -11521,6 +11546,9 @@ function updateTierUI() {
       card.classList.remove('locked');
     }
   });
+  // Show/hide upgrade banner in models panel
+  const banner = document.getElementById('modelsUpgradeBanner');
+  if (banner) banner.classList.toggle('hidden', tier === 'plus');
 }
 
 function toggleTierDropdown(e) {
