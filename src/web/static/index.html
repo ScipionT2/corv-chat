@@ -3033,10 +3033,10 @@ body {
 .tier-selector-btn{
   display:flex;align-items:center;gap:5px;padding:0;
   background:none;border:none;cursor:pointer;color:var(--text);
-  font-size:16px;font-weight:600;font-family:'Inter',sans-serif;
-  transition:color .2s;white-space:nowrap;
+  font-size:18px;font-weight:700;font-family:'Orbitron',sans-serif;
+  letter-spacing:1px;transition:color .2s;white-space:nowrap;
 }
-.tier-selector-btn:hover{color:var(--text-mid)}
+.tier-selector-btn:hover{color:var(--purple)}
 .tier-selector-arrow{transition:transform .2s;opacity:.5}
 .tier-selector.open .tier-selector-arrow{transform:rotate(180deg)}
 .tier-dropdown{
@@ -3062,6 +3062,7 @@ body {
   font-size:16px;flex-shrink:0;
 }
 .plus-icon{color:#c4b5fd}
+.free-icon{color:var(--green);font-size:18px}
 .tier-dropdown-info{flex:1;min-width:0}
 .tier-dropdown-name{font-size:14px;font-weight:600;color:var(--text)}
 .tier-dropdown-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
@@ -3524,8 +3525,10 @@ body {
       </button>
       <div class="tier-dropdown" id="tierDropdown">
         <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
+          <div class="tier-dropdown-icon free-icon">⚛</div>
           <div class="tier-dropdown-info">
             <div class="tier-dropdown-name">Nova</div>
+            <div class="tier-dropdown-desc">Great for everyday tasks</div>
           </div>
           <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
         </div>
