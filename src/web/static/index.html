@@ -70,14 +70,17 @@ body::after{
 #sidebar::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:4px}
 #sidebar::-webkit-scrollbar-thumb:hover{background:rgba(139,92,246,.5)}
 .sidebar-logo{
-  display:flex;align-items:center;justify-content:center;
-  padding:8px 4px 24px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:8px 14px 20px;
 }
 .sidebar-logo img{
-  height:128px;width:auto;max-width:200px;object-fit:contain;flex-shrink:0;
+  height:40px;width:40px;object-fit:contain;flex-shrink:0;
   filter:brightness(3) drop-shadow(0 0 20px rgba(123,97,255,.35));
 }
-.sidebar-logo span{display:none}
+.sidebar-logo span{
+  display:inline-block;font-family:'Orbitron',sans-serif;font-size:20px;
+  font-weight:700;letter-spacing:2px;color:var(--text);
+}
 .sidebar-nav{display:flex;flex-direction:column;gap:6px;flex:1}
 .nav-item{
   display:flex;align-items:center;gap:10px;
@@ -154,13 +157,13 @@ body::after{
 .chat-model-badge{
   display:inline-flex;align-items:center;
   padding:4px 10px;border-radius:8px;
-  background:rgba(123,97,255,.08);border:1px solid rgba(123,97,255,.15);
-  font-size:11px;font-weight:500;color:var(--purple);
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);
+  font-size:11px;font-weight:500;color:var(--green);
   cursor:pointer;transition:all .2s;white-space:nowrap;
   font-family:'Inter',sans-serif;letter-spacing:.2px;
 }
 .chat-model-badge:hover{
-  background:rgba(123,97,255,.15);border-color:rgba(123,97,255,.3);
+  background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.35);
 }
 
 /* ═══════════════ MAIN CONTENT ═══════════════ */
@@ -171,6 +174,7 @@ body::after{
 .welcome-screen{text-align:center;padding:40px 0 24px}
 .welcome-screen h1{font-size:42px;font-weight:700;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px}
 .welcome-screen h1 .purple{color:var(--purple)}
+.welcome-screen h1 .green{color:var(--green)}
 .welcome-screen p{font-size:18px;color:var(--text-mid)}
 
 /* ─── Chat Panel ─── */
@@ -200,13 +204,13 @@ body::after{
 .msg-avatar img{
   width:100%;height:100%;object-fit:cover;border-radius:50%;
 }
-.message.user .msg-avatar{background:linear-gradient(135deg,#34D399,#5EEBFF)}
+.message.user .msg-avatar{background:var(--green);color:#050816;font-weight:700}
 .msg-bubble{
   background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
   border-radius:16px;padding:14px 18px;max-width:72%;
   font-size:15px;line-height:1.6;color:var(--text);
 }
-.message.user .msg-bubble{background:rgba(123,97,255,.1);border-color:rgba(123,97,255,.15)}
+.message.user .msg-bubble{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}
 .msg-time{font-size:11px;color:var(--text-dim);margin-top:6px}
 .msg-bubble pre{
   background:rgba(0,0,0,.4);border-radius:8px;padding:12px;
@@ -548,10 +552,10 @@ body::after{
 .recent-title{font-size:13px;color:var(--text);font-weight:500}
 .recent-time{font-size:11px;color:var(--text-dim)}
 .view-all{
-  display:block;text-align:right;font-size:12px;color:var(--purple);
+  display:block;text-align:right;font-size:12px;color:var(--green);
   margin-top:8px;cursor:pointer;text-decoration:none;
 }
-.view-all:hover{text-decoration:underline}
+.view-all:hover{text-decoration:underline;color:var(--green)}
 
 /* Weather widget */
 .weather-row{display:flex;justify-content:space-between;align-items:center}
@@ -1414,26 +1418,26 @@ body::after {
 }
 
 /* ----------------------------------------------------------
-   5. .message.assistant .msg-bubble — Glass with purple tint
+   5. .message.assistant .msg-bubble — Purple/violet gradient
    ---------------------------------------------------------- */
 
 .message.assistant .msg-bubble {
-  background: rgba(10, 15, 35, .72) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
+  background: linear-gradient(135deg, rgba(91, 65, 223, 0.25), rgba(123, 97, 255, 0.15)) !important;
+  border: 1px solid rgba(123, 97, 255, 0.18) !important;
   box-shadow:
-    0 0 30px rgba(123, 97, 255, .03),
-    0 4px 20px rgba(0, 0, 0, .30),
-    inset 0 1px 0 rgba(255, 255, 255, .03) !important;
+    0 4px 22px rgba(123, 97, 255, .08),
+    0 0 25px rgba(123, 97, 255, .04),
+    inset 0 1px 0 rgba(255, 255, 255, .04) !important;
 }
 
 /* ----------------------------------------------------------
-   6. .message.user .msg-bubble — Purple-tinted glass
+   6. .message.user .msg-bubble — Dark semi-transparent glass
    ---------------------------------------------------------- */
 
 .message.user .msg-bubble {
-  background: rgba(123,97,255,.12) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  box-shadow: 0 0 25px rgba(123, 97, 255, .04) !important;
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .15) !important;
 }
 
 /* ----------------------------------------------------------
@@ -1860,12 +1864,12 @@ body::after {
 .new-chat-btn{
   display:flex;align-items:center;justify-content:center;gap:6px;
   width:100%;padding:10px;margin-bottom:12px;
-  background:rgba(123,97,255,.08);border:1px solid rgba(123,97,255,.12);
+  background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25);
   border-radius:12px;cursor:pointer;
   font-size:13px;font-family:'Orbitron',sans-serif;letter-spacing:.5px;
-  color:var(--purple);transition:all .25s;
+  color:var(--green);transition:all .25s;
 }
-.new-chat-btn:hover{background:rgba(123,97,255,.14);border-color:rgba(123,97,255,.2)}
+.new-chat-btn:hover{background:rgba(52,211,153,.22);border-color:rgba(52,211,153,.35)}
 .new-chat-btn svg{width:16px;height:16px}
 
 /* ─── Timestamp improvements ─── */
@@ -2625,29 +2629,28 @@ a, button, input, textarea, select,
   scroll-behavior: smooth !important;
 }
 
-/* User messages — purple gradient */
+/* User messages — dark semi-transparent, right-aligned */
 .message.user .msg-bubble {
-  background: linear-gradient(135deg, rgba(123, 97, 255, 0.18), rgba(91, 65, 223, 0.12)) !important;
-  border: 1px solid rgba(123, 97, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   padding: 16px 20px !important;
   border-radius: 18px 18px 4px 18px !important;
   box-shadow:
-    0 4px 20px rgba(123, 97, 255, 0.08),
-    0 0 30px rgba(123, 97, 255, 0.04),
+    0 4px 20px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Assistant messages — dark glass with border glow */
+/* Assistant messages — purple/violet gradient glass */
 .message.assistant .msg-bubble {
-  background: rgba(10, 15, 35, 0.75) !important;
-  border: 1px solid rgba(123, 97, 255, 0.08) !important;
+  background: linear-gradient(135deg, rgba(91, 65, 223, 0.25), rgba(123, 97, 255, 0.15)) !important;
+  border: 1px solid rgba(123, 97, 255, 0.18) !important;
   padding: 16px 20px !important;
   border-radius: 18px 18px 18px 4px !important;
   box-shadow:
-    0 4px 22px rgba(0, 0, 0, 0.3),
-    0 0 25px rgba(123, 97, 255, 0.03),
+    0 4px 22px rgba(123, 97, 255, 0.08),
+    0 0 25px rgba(123, 97, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 20px rgba(123, 97, 255, 0.02) !important;
+    inset 0 0 20px rgba(123, 97, 255, 0.03) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
 }
@@ -2897,22 +2900,23 @@ body {
 
 /* New chat button glow on hover */
 .new-chat-btn:hover {
-  background: rgba(123, 97, 255, 0.16) !important;
-  border-color: rgba(123, 97, 255, 0.25) !important;
-  box-shadow: 0 0 20px rgba(123, 97, 255, 0.1) !important;
+  background: rgba(52, 211, 153, 0.22) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15) !important;
   transform: translateY(-1px) !important;
 }
 
 /* Sidebar logo subtle breathe */
 .sidebar-logo img {
   animation: logoBreathe 5s ease-in-out infinite alternate !important;
+  height: 40px !important; width: 40px !important;
 }
 @keyframes logoBreathe {
   0% {
-    filter: brightness(3) drop-shadow(0 0 20px rgba(123, 97, 255, 0.35));
+    filter: brightness(3) drop-shadow(0 0 12px rgba(123, 97, 255, 0.35));
   }
   100% {
-    filter: brightness(3.2) drop-shadow(0 0 30px rgba(123, 97, 255, 0.5));
+    filter: brightness(3.2) drop-shadow(0 0 20px rgba(123, 97, 255, 0.5));
   }
 }
 
@@ -2948,6 +2952,15 @@ body {
 .quick-actions .quick-card:nth-child(3) { animation-delay: 0.15s; }
 .quick-actions .quick-card:nth-child(4) { animation-delay: 0.2s; }
 
+/* ═══════════ SIDEBAR SECTION HEADERS ═══════════ */
+.nav-section-header{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-dim);opacity:.5;padding:12px 14px 4px;
+  font-weight:600;font-family:'Inter',sans-serif;
+  user-select:none;
+}
+.nav-section-header:first-child{padding-top:4px}
+
 /* ═══════════ SIDEBAR RECENT CHATS ═══════════ */
 .recent-chats-sidebar{padding:0 4px;margin:4px 0 8px;max-height:180px;overflow-y:auto}
 .recent-chats-sidebar::-webkit-scrollbar{width:3px}
@@ -2961,6 +2974,35 @@ body {
 .recent-item svg{flex-shrink:0;opacity:.4;width:14px;height:14px}
 .recent-item:hover svg{opacity:.7}
 .recent-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ═══════════ USER MESSAGE RIGHT-ALIGN ═══════════ */
+.message.user{justify-content:flex-end}
+.message.user .msg-bubble{
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  border-radius:16px 16px 4px 16px;
+}
+.message.user .msg-avatar{
+  background:var(--green) !important;
+  width:32px;height:32px;font-size:13px;font-weight:700;
+  color:#050816;
+}
+.message.assistant .msg-bubble{
+  border-radius:16px 16px 16px 4px;
+}
+
+/* Token stats line */
+.msg-token-stats{
+  display:flex;align-items:center;gap:8px;
+  font-size:10px;color:var(--text-dim);margin-top:4px;opacity:.6;
+}
+.msg-token-stats span{display:inline-flex;align-items:center;gap:3px}
+
+/* Chat footer text */
+.chat-footer-text{
+  text-align:center;font-size:11px;color:var(--text-dim);opacity:.5;
+  padding:4px 0 0;letter-spacing:.3px;
+}
 
 /* ═══════════ MESSAGE ACTIONS ═══════════ */
 .msg-actions{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .2s}
@@ -2991,7 +3033,8 @@ body {
 <!-- ═══════════ LEFT SIDEBAR ═══════════ -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <img src="/static/img/nova-logo.png" alt="Nova" />
+    <img src="/static/img/nova-icon.png" alt="Nova" />
+    <span>NOVA</span>
   </div>
 
   <div class="sidebar-nav">
@@ -2999,29 +3042,40 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Chat
     </button>
-    <div class="recent-chats-sidebar" id="recentChatsSidebar">
-      <div class="recent-header">
-        <span class="recent-title">Recent</span>
-      </div>
-      <div class="recent-items" id="recentItemsList">
-        <!-- Populated by JS -->
-      </div>
+
+    <!-- Hidden container for JS recent items population -->
+    <div id="recentChatsSidebar" style="display:none">
+      <div class="recent-items" id="recentItemsList"></div>
     </div>
+
+    <!-- CHAT section -->
+    <div class="nav-section-header">Chat</div>
     <button class="nav-item active" onclick="switchPanel('chat')" data-panel="chat">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Chat
+      Recent
     </button>
     <button class="nav-item" onclick="switchPanel('explore')" data-panel="explore">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       Explore
     </button>
+
+    <!-- TOOLS section -->
+    <div class="nav-section-header">Tools</div>
     <button class="nav-item" onclick="switchPanel('memory')" data-panel="memory">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2a6.5 6.5 0 0 1 5 10.65V17a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-4.35A6.5 6.5 0 0 1 9.5 2z"/><path d="M6.5 17v1a3 3 0 0 0 6 0v-1"/></svg>
       Memory
     </button>
     <button class="nav-item" onclick="switchPanel('tasks')" data-panel="tasks">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       Tasks
+    </button>
+    <button class="nav-item" onclick="switchPanel('knowledge')" data-panel="knowledge">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Knowledge
+    </button>
+    <button class="nav-item" onclick="switchPanel('skills')" data-panel="skills">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11h20V9c0-1.1-.9-2-2-2zM9 4h6v3H9V4z"/></svg>
+      Skills
     </button>
     <button class="nav-item" onclick="switchPanel('models')" data-panel="models">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -3035,18 +3089,9 @@ body {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Spaces
     </button>
-    <button class="nav-item" onclick="switchPanel('knowledge')" data-panel="knowledge">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Knowledge
-    </button>
-    <button class="nav-item" onclick="switchPanel('skills')" data-panel="skills">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      Skills
-    </button>
-    <button class="nav-item" onclick="switchPanel('schedule')" data-panel="schedule">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Schedule
-    </button>
+
+    <!-- SETTINGS section -->
+    <div class="nav-section-header">Settings</div>
     <button class="nav-item" onclick="switchPanel('settings')" data-panel="settings">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
@@ -3054,14 +3099,6 @@ body {
   </div>
 
   <div class=sidebar-site-links>
-    <a href=/site/>
-      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><path d=M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z/><polyline points=9 22 9 12 15 12 15 22/></svg>
-      Home
-    </a>
-    <a href=/site/features.html>
-      <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><polygon points=12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2/></svg>
-      Features
-    </a>
     <a href=/site/pricing.html>
       <svg viewBox=0 0 24 24 fill=none stroke=currentColor stroke-width=1.5><line x1=12 y1=1 x2=12 y2=23/><path d=M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6/></svg>
       Pricing
@@ -3099,8 +3136,8 @@ body {
 <main id="mainContent">
   <!-- Hero welcome (outside chat panel) -->
   <div class="welcome-screen" id="welcomeScreen">
-    <h1>Hello, I'm <span class="purple">Nova.</span></h1>
-    <p>How can I help you today?</p>
+    <h1>Hello, I'm <span class="green">Nova.</span></h1>
+    <p>Your primary AI companion</p>
   </div>
 
   <!-- Chat panel -->
@@ -3109,9 +3146,9 @@ body {
       <!-- Welcome message -->
       <div class="message assistant">
         <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
-          <div class="msg-time">9:41 AM</div>
+          <div class="msg-meta"><span id="welcomeMsgTime">9:41 AM • Nova</span></div>
         </div>
       </div>
       <!-- Thinking bubble (hidden) -->
@@ -3218,7 +3255,7 @@ body {
       </select>
       <button class="img-gen-btn" id="imgGenBtn" onclick="generateImage()">Generate</button>
     </div>
-    <div class="shortcut-hint">⌘K focus · ⌘⇧N new chat · /image to generate · Enter send</div>
+    <div class="chat-footer-text">Nova AI • 3K focus • Always ready to help</div>
   </div>
 
   <!-- ═══════ FUNCTIONAL PANELS ═══════ -->
@@ -3823,15 +3860,18 @@ function appendChat(role, content, opts = {}) {
         <div class="thinking-content" id="${id}">${formatMessage(thinkingText)}</div>
       </div>`;
   }
+  // Get user initial for avatar
+  const userInitial = (window._userName || 'Y').charAt(0).toUpperCase();
   div.innerHTML = `
-    <div class="msg-avatar">${isUser ? 'Y' : '<img src="/static/img/nova-icon.png" alt="N">'}</div>
+    <div class="msg-avatar">${isUser ? userInitial : '<img src="/static/img/nova-icon.png" alt="N">'}</div>
     <div style="flex:1;min-width:0">
       ${thinkingHtml}
       <div class="msg-bubble${streaming ? ' streaming-cursor' : ''}">${formatMessage(content)}</div>
       <div class="msg-meta">
-        <span>${time}</span>
+        <span>${time}${!isUser ? ' \u2022 Nova' : ''}</span>
         ${!isUser ? `<span class="msg-model-tag">${model}</span>` : ''}
       </div>
+      ${!isUser && !streaming ? '<div class="msg-token-stats" data-tokens></div>' : ''}
     </div>`;
   // Add message action buttons for assistant messages
   if (role === 'assistant' && content) {
@@ -4143,6 +4183,7 @@ async function sendChat() {
       reqBody.model = localStorage.getItem('nova_ollama_model') || '';
     }
     const chatEndpoint = isOffline ? '/api/v2/chat/offline' : '/api/v2/chat';
+    const _streamStart = performance.now();
 
     const res = await fetch(chatEndpoint, {
       method: 'POST',
@@ -4255,6 +4296,16 @@ async function sendChat() {
       chatHistory.push({ role: 'assistant', content: finalVisible });
       _saveToLocal();
     } else if (!msgDiv) appendChat('assistant', '(No response)');
+    // Add token stats to assistant message
+    if (msgDiv) {
+      const statsEl = msgDiv.querySelector('.msg-token-stats');
+      if (statsEl) {
+        const elapsed = ((performance.now() - _streamStart) / 1000).toFixed(1);
+        const tokenCount = (finalVisible || '').split(/\s+/).length;
+        const tokPerSec = elapsed > 0 ? (tokenCount / parseFloat(elapsed)).toFixed(1) : '0';
+        statsEl.innerHTML = `<span>⚡ ${tokenCount} tokens</span><span>✏️ ${tokPerSec} tok/s</span><span>⏱ ${elapsed}s</span>`;
+      }
+    }
     // Capture chat_id from done event for follow-up messages
     // (already parsed in the token loop — extract from last done event)
     loadRecentConversations();
@@ -4439,6 +4490,11 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 30000);
+// Set welcome message timestamp
+(function(){
+  const wt = document.getElementById('welcomeMsgTime');
+  if (wt) wt.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' \u2022 Nova';
+})();
 
 /* ═══════════════════════════════════════════════════
    FUNCTIONAL FEATURES
@@ -8899,9 +8955,9 @@ try {
         welcomeDiv.className = 'message assistant';
         welcomeDiv.innerHTML = `
           <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
-            <div class="msg-time">${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+            <div class="msg-meta"><span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Nova</span></div>
           </div>`;
         chatMsgs.insertBefore(welcomeDiv, thinkBubble);
       }
@@ -10479,10 +10535,10 @@ try {
       welcomeDiv.className = 'message assistant';
       welcomeDiv.innerHTML = `
         <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
           <div class="msg-meta">
-            <span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+            <span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Nova</span>
           </div>
         </div>`;
       chatMessages.insertBefore(welcomeDiv, thinkingBubble);
