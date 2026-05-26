@@ -3058,10 +3058,10 @@ body {
 .nav-more-section{position:relative;margin-top:2px}
 .nav-more-toggle{position:relative}
 .nav-more-flyout{
-  display:none;position:absolute;left:calc(100% + 8px);top:0;
+  display:none;position:fixed;
   min-width:200px;background:rgba(40,40,48,.97);
   border:1px solid rgba(255,255,255,.10);border-radius:14px;
-  padding:6px;z-index:120;
+  padding:6px;z-index:200;
   box-shadow:0 12px 40px rgba(0,0,0,.5);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
@@ -11172,7 +11172,12 @@ setTimeout(populateSidebarHistory, 2000);
 // ═══════════ MORE NAV TOGGLE ═══════════
 function toggleMoreFlyout(e) {
   e.stopPropagation();
-  document.getElementById('navMoreFlyout').classList.toggle('show');
+  const flyout = document.getElementById('navMoreFlyout');
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  flyout.style.left = (rect.right + 8) + 'px';
+  flyout.style.top = rect.top + 'px';
+  flyout.classList.toggle('show');
 }
 function closeMoreFlyout() {
   document.getElementById('navMoreFlyout').classList.remove('show');
