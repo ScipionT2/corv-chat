@@ -197,11 +197,39 @@ body::after{
   flex:1;min-width:0;display:flex;flex-direction:column;z-index:2;
   gap:0;
 }
-.welcome-screen{text-align:center;padding:40px 0 24px}
+.welcome-screen{text-align:center;padding:0;display:none}
 .welcome-screen h1{font-size:42px;font-weight:700;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px}
 .welcome-screen h1 .purple{color:var(--purple)}
 .welcome-screen h1 .green{color:var(--green)}
 .welcome-screen p{font-size:18px;color:var(--text-mid)}
+
+/* Centered chat layout (ChatGPT-style) when no messages */
+.chat-panel.empty-state{
+  justify-content:center;align-items:center;
+}
+.chat-panel.empty-state #chatMessages{display:none}
+.chat-panel.empty-state .welcome-screen{display:block;margin-bottom:24px}
+.chat-panel.empty-state #chatInputContainer{width:100%;max-width:680px}
+.chat-panel.empty-state .quick-actions{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px;
+  grid-template-columns:none;padding:0;
+}
+.chat-panel.empty-state .quick-card{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+}
+.chat-panel.empty-state .quick-card:hover{
+  background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.2);transform:none;
+}
+.chat-panel.empty-state .quick-card-icon{
+  width:auto;height:auto;background:none;margin:0;font-size:16px;
+  border-radius:0;padding:0;
+}
+.chat-panel.empty-state .quick-card-title{font-size:13px;margin:0}
+.chat-panel.empty-state .quick-card-desc{display:none}
+.chat-panel.empty-state .chat-footer-text{display:none}
+.chat-panel.empty-state .img-gen-bar{display:none}
 
 /* ─── Chat Panel ─── */
 .chat-panel{
@@ -3420,14 +3448,12 @@ body {
 
 <!-- ═══════════ CENTER MAIN ═══════════ -->
 <main id="mainContent">
-  <!-- Hero welcome (outside chat panel) -->
-  <div class="welcome-screen" id="welcomeScreen">
-    <h1>Hello, I'm <span class="green">Nova.</span></h1>
-    <p>Your primary AI companion</p>
-  </div>
-
   <!-- Chat panel -->
-  <div class="chat-panel" id="chatPanel">
+  <div class="chat-panel empty-state" id="chatPanel">
+    <!-- Welcome (shown in empty state) -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <h1 style="font-family:'Inter',sans-serif;font-size:28px;letter-spacing:0;font-weight:500;color:var(--text)">Ready when you are.</h1>
+    </div>
     <div id="chatMessages">
       <!-- Welcome message -->
       <div class="message assistant">
@@ -3446,33 +3472,23 @@ body {
 
     <!-- Quick actions -->
     <div class="quick-actions" id="quickActions">
-      <div class="quick-card" onclick="prefillChat('Explain AI topics')">
+      <div class="quick-card" onclick="prefillChat('Create an image of')">
         <div class="quick-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </div>
-        <div class="quick-card-title">Explain</div>
-        <div class="quick-card-desc">AI topics</div>
+        <div class="quick-card-title">Create an image</div>
       </div>
-      <div class="quick-card" onclick="prefillChat('Help me write something')">
+      <div class="quick-card" onclick="prefillChat('Write or edit: ')">
         <div class="quick-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         </div>
-        <div class="quick-card-title">Help me write</div>
-        <div class="quick-card-desc">Something</div>
+        <div class="quick-card-title">Write or edit</div>
       </div>
-      <div class="quick-card" onclick="prefillChat('Summarize this document')">
+      <div class="quick-card" onclick="prefillChat('Look up ')">
         <div class="quick-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
-        <div class="quick-card-title">Summarize</div>
-        <div class="quick-card-desc">This document</div>
-      </div>
-      <div class="quick-card" onclick="prefillChat('Create an image')">
-        <div class="quick-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        <div class="quick-card-title">Create</div>
-        <div class="quick-card-desc">An image</div>
+        <div class="quick-card-title">Look something up</div>
       </div>
     </div>
 
@@ -3515,7 +3531,7 @@ body {
         </div>
         <!-- Attachment preview -->
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
-        <textarea id="chatInput" rows="1" placeholder="What's on your mind..." autocomplete="off"></textarea>
+        <textarea id="chatInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
         <div class="input-right">
           <span class="chat-model-badge" id="chatModelBadge" onclick="switchPanel('models')" title="Click to change model">Nova Auto</span>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
@@ -4200,12 +4216,10 @@ function switchPanel(name) {
   });
 
   // Hide everything first
-  ws.style.display = 'none';
   cp.style.display = 'none';
   panels.forEach(p => p.style.display = 'none');
 
   if (name === 'chat') {
-    ws.style.display = 'block';
     cp.style.display = 'flex';
   } else {
     const target = document.getElementById('panel-' + name);
@@ -4298,6 +4312,9 @@ function appendChat(role, content, opts = {}) {
   chatMessages.insertBefore(div, thinkingBubble);
   chatMessages.scrollTop = chatMessages.scrollHeight;
   if (quickActions.style.display !== 'none') quickActions.style.display = 'none';
+  // Exit empty state when messages appear
+  const chatPanelEl = document.getElementById('chatPanel');
+  if (chatPanelEl.classList.contains('empty-state')) chatPanelEl.classList.remove('empty-state');
   document.getElementById('voiceBtn').style.display = (role === 'assistant') ? '' : 'none';
   // Add copy buttons to code blocks
   _addCopyButtons(div);
@@ -4771,7 +4788,7 @@ function startNewChat() {
   const msgs = chatMessages.querySelectorAll('.message:not(#thinkingBubble)');
   msgs.forEach(el => { if (!el.id) el.remove(); });
   quickActions.style.display = '';
-  document.getElementById('welcomeScreen').style.display = 'block';
+  document.getElementById('chatPanel').classList.add('empty-state');
   document.getElementById('chatPanel').style.display = 'flex';
   document.querySelectorAll('.panel-view').forEach(p => p.style.display = 'none');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.panel === 'chat'));
