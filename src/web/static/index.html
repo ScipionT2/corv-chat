@@ -215,22 +215,24 @@ body::after{
 }
 .chat-panel.empty-state .version-indicator{display:none !important}
 .chat-panel.empty-state .quick-actions{
-  display:flex !important;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px;
+  display:flex !important;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px;
   grid-template-columns:none !important;padding:0 !important;
 }
 .chat-panel.empty-state .quick-card{
-  display:inline-flex !important;align-items:center;gap:8px;
-  padding:10px 18px !important;border-radius:999px !important;
-  background:rgba(255,255,255,.06) !important;border:1px solid rgba(255,255,255,.12) !important;
+  display:inline-flex !important;align-items:center;gap:10px;
+  padding:12px 24px !important;border-radius:999px !important;
+  background:transparent !important;border:1px solid rgba(255,255,255,.20) !important;
+  transition:border-color .2s,background .2s !important;
 }
 .chat-panel.empty-state .quick-card:hover{
-  background:rgba(255,255,255,.10) !important;border-color:rgba(255,255,255,.2) !important;transform:none !important;
+  background:rgba(255,255,255,.05) !important;border-color:rgba(255,255,255,.35) !important;transform:none !important;
 }
 .chat-panel.empty-state .quick-card-icon{
-  width:auto !important;height:auto !important;background:none !important;margin:0 !important;font-size:16px;
-  border-radius:0 !important;padding:0 !important;
+  width:auto !important;height:auto !important;background:none !important;margin:0 !important;
+  border-radius:0 !important;padding:0 !important;color:var(--text) !important;
 }
-.chat-panel.empty-state .quick-card-title{font-size:13px !important;margin:0 !important}
+.chat-panel.empty-state .quick-card-icon svg{width:20px !important;height:20px !important}
+.chat-panel.empty-state .quick-card-title{font-size:15px !important;margin:0 !important;font-weight:400 !important;color:var(--text) !important}
 .chat-panel.empty-state .quick-card-desc{display:none !important}
 .chat-panel.empty-state .chat-footer-text{display:none !important}
 .chat-panel.empty-state .img-gen-bar{display:none !important}
@@ -3426,29 +3428,7 @@ body {
       </div>
     </div>
 
-    <!-- Quick actions -->
-    <div class="quick-actions" id="quickActions">
-      <div class="quick-card" onclick="prefillChat('Create an image of')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        <div class="quick-card-title">Create an image</div>
-      </div>
-      <div class="quick-card" onclick="prefillChat('Write or edit: ')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        </div>
-        <div class="quick-card-title">Write or edit</div>
-      </div>
-      <div class="quick-card" onclick="prefillChat('Look up ')">
-        <div class="quick-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </div>
-        <div class="quick-card-title">Look something up</div>
-      </div>
-    </div>
-
-    <div id="chatInputContainer">
+        <div id="chatInputContainer">
       <div class="version-indicator" id="versionIndicator" onclick="toggleVersionMenu()">
         <span class="version-dot" id="versionDot"></span>
         <span class="version-label" id="versionLabel">Flash</span>
@@ -3500,6 +3480,27 @@ body {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
+      </div>
+    </div>
+    <!-- Quick actions (below input) -->
+    <div class="quick-actions" id="quickActions">
+      <div class="quick-card" onclick="prefillChat('Create an image of')">
+        <div class="quick-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="quick-card-title">Create an image</div>
+      </div>
+      <div class="quick-card" onclick="prefillChat('Write or edit: ')">
+        <div class="quick-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="quick-card-title">Write or edit</div>
+      </div>
+      <div class="quick-card" onclick="prefillChat('Look up ')">
+        <div class="quick-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div class="quick-card-title">Look something up</div>
       </div>
     </div>
     <div class="img-gen-bar" id="imgGenBar">
