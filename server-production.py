@@ -1013,11 +1013,12 @@ V2_MODELS = {
     # ── FREE: each model has fallbacks across providers ─────────────
     # provider = primary provider, fallbacks = list of (provider, model_id, api_key_env)
     "nova-auto": {
-        "provider": "openrouter-free", "name": "Nova Auto (Best Available)",
-        "model_id": "openrouter/free", "free": True,
+        "provider": "groq", "name": "Nova Auto (Best Available)",
+        "model_id": "llama-3.3-70b-versatile", "free": True,
         "fallbacks": [
-            ("groq", "llama-3.3-70b-versatile", "GROQ_API_KEY"),
             ("sambanova", "DeepSeek-V3.1", "SAMBANOVA_API_KEY"),
+            ("openrouter-free", "openrouter/free", "OPENROUTER_API_KEY"),
+            ("openrouter-free", "deepseek/deepseek-v4-flash:free", "OPENROUTER_API_KEY"),
         ],
     },
     "deepseek-v4-flash": {

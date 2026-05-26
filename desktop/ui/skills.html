@@ -442,7 +442,7 @@ function showToast(msg, type) {
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 function goBack() {
   if (window.novaDesktop) {
-    window.novaDesktop.app.switchMode(true);
+    window.novaDesktop.navigate.home();
   } else {
     window.location.href = '../offline.html';
   }
