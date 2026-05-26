@@ -3021,22 +3021,26 @@ body {
   padding:4px 0 0;letter-spacing:.3px;
 }
 
-/* ═══════════ TIER SELECTOR (inline in input bar) ═══════════ */
+/* ═══════════ MAIN TOP BAR ═══════════ */
+.main-top-bar{
+  display:flex;align-items:center;padding:10px 20px;flex-shrink:0;
+}
+
+/* ═══════════ TIER SELECTOR (top left) ═══════════ */
 .tier-selector{
   position:relative;display:flex;align-items:center;
 }
 .tier-selector-btn{
-  display:flex;align-items:center;gap:4px;padding:4px 10px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;cursor:pointer;color:var(--text);
-  font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
-  transition:all .2s;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;padding:0;
+  background:none;border:none;cursor:pointer;color:var(--text);
+  font-size:16px;font-weight:600;font-family:'Inter',sans-serif;
+  transition:color .2s;white-space:nowrap;
 }
-.tier-selector-btn:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.20)}
-.tier-selector-arrow{transition:transform .2s;opacity:.6}
+.tier-selector-btn:hover{color:var(--text-mid)}
+.tier-selector-arrow{transition:transform .2s;opacity:.5}
 .tier-selector.open .tier-selector-arrow{transform:rotate(180deg)}
 .tier-dropdown{
-  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  display:none;position:absolute;top:calc(100% + 8px);left:0;
   min-width:260px;background:rgba(45,45,52,.98);
   border:1px solid rgba(255,255,255,.12);border-radius:12px;
   padding:6px;z-index:150;
@@ -3511,6 +3515,31 @@ body {
 
 <!-- ═══════════ CENTER MAIN ═══════════ -->
 <main id="mainContent">
+  <!-- Top bar with tier selector -->
+  <div class="main-top-bar">
+    <div class="tier-selector" id="tierSelector">
+      <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
+        <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
+        <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="tier-dropdown" id="tierDropdown">
+        <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
+          <div class="tier-dropdown-info">
+            <div class="tier-dropdown-name">Nova</div>
+          </div>
+          <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
+        </div>
+        <div class="tier-dropdown-item plus-item" id="tierOptPlus" onclick="selectTier('plus')">
+          <div class="tier-dropdown-icon plus-icon">✨</div>
+          <div class="tier-dropdown-info">
+            <div class="tier-dropdown-name">Nova Plus</div>
+            <div class="tier-dropdown-desc">Unlock more power and advanced features.</div>
+          </div>
+          <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- Chat panel -->
   <div class="chat-panel empty-state" id="chatPanel">
     <!-- Welcome (shown in empty state) -->
@@ -3574,28 +3603,6 @@ body {
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
         <textarea id="chatInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
         <div class="input-right">
-          <div class="tier-selector" id="tierSelector">
-            <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
-              <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
-              <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="tier-dropdown" id="tierDropdown">
-              <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
-                <div class="tier-dropdown-info">
-                  <div class="tier-dropdown-name">Nova</div>
-                </div>
-                <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
-              </div>
-              <div class="tier-dropdown-item plus-item" id="tierOptPlus" onclick="selectTier('plus')">
-                <div class="tier-dropdown-icon plus-icon">✨</div>
-                <div class="tier-dropdown-info">
-                  <div class="tier-dropdown-name">Nova Plus</div>
-                  <div class="tier-dropdown-desc">Unlock more power and advanced features.</div>
-                </div>
-                <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
-              </div>
-            </div>
-          </div>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
