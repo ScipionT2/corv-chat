@@ -3193,6 +3193,89 @@ body {
 }
 .library-file-name{display:flex;align-items:center;gap:10px}
 
+/* ═══════════ APPS PANEL ═══════════ */
+.apps-header{display:flex;align-items:flex-start;justify-content:space-between;padding:0 0 20px}
+.apps-title{font-size:28px;font-weight:600;margin-bottom:4px}
+.apps-subtitle{font-size:14px;color:var(--text-dim)}
+.apps-search-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;padding:8px 14px;
+}
+.apps-search-wrap svg{color:var(--text-dim);flex-shrink:0}
+.apps-search{
+  background:none;border:none;outline:none;color:var(--text);
+  font-size:13px;font-family:inherit;width:160px;
+}
+.apps-search::placeholder{color:var(--text-dim)}
+
+/* Featured hero */
+.apps-featured{margin-bottom:20px}
+.apps-featured-card{
+  display:flex;border-radius:20px;overflow:hidden;min-height:200px;
+  background:linear-gradient(135deg,rgba(123,97,255,.3) 0%,rgba(94,235,255,.15) 50%,rgba(52,211,153,.2) 100%);
+  border:1px solid rgba(255,255,255,.08);
+}
+.apps-featured-left{flex:1;padding:28px 32px;display:flex;flex-direction:column;justify-content:center}
+.apps-featured-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:rgba(123,97,255,.4);display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+}
+.apps-featured-title{font-size:20px;font-weight:600;margin-bottom:8px}
+.apps-featured-desc{font-size:14px;color:var(--text-mid);margin-bottom:16px}
+.apps-featured-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  color:var(--text);padding:8px 20px;border-radius:10px;cursor:pointer;
+  font-size:13px;font-weight:600;transition:all .2s;width:fit-content;
+}
+.apps-featured-btn:hover{background:rgba(255,255,255,.2)}
+.apps-featured-right{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:20px;position:relative;overflow:hidden;
+}
+.apps-featured-preview{text-align:center}
+.apps-featured-bubble{
+  background:rgba(255,255,255,.12);border-radius:12px;padding:8px 16px;
+  font-size:13px;color:var(--text);display:inline-block;margin-bottom:12px;
+}
+.apps-featured-preview-img{font-size:64px;opacity:.6}
+
+/* Category tabs */
+.apps-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.apps-tab{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+  color:var(--text-mid);padding:8px 18px;border-radius:20px;
+  cursor:pointer;font-size:13px;transition:all .2s;
+}
+.apps-tab:hover{background:rgba(255,255,255,.10);color:var(--text)}
+.apps-tab.active{background:rgba(255,255,255,.12);color:var(--text);border-color:rgba(255,255,255,.15)}
+
+/* Apps grid — 2 columns */
+.apps-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+}
+.app-card{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border-radius:14px;cursor:pointer;transition:background .2s;
+}
+.app-card:hover{background:rgba(255,255,255,.06)}
+.app-card-icon{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;color:#fff;
+}
+.app-card-info{flex:1;min-width:0}
+.app-card-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+.app-card-desc{font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-card-chevron{color:var(--text-dim);opacity:.4;flex-shrink:0;font-size:16px}
+.app-card:hover .app-card-chevron{opacity:.7}
+
+@media(max-width:768px){
+  .apps-grid{grid-template-columns:1fr}
+  .apps-featured-card{flex-direction:column}
+  .apps-featured-right{min-height:120px}
+}
 
 </style>
 </head>
@@ -3230,6 +3313,10 @@ body {
     <button class="nav-item" onclick="switchPanel('library')" data-panel="library">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       Library
+    </button>
+    <button class="nav-item" onclick="switchPanel('apps')" data-panel="apps">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+      Apps
     </button>
 
     <!-- More section -->
@@ -4023,6 +4110,53 @@ body {
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- APPS -->
+  <div class="panel-view" id="panel-apps" style="display:none">
+    <div class="apps-header">
+      <div>
+        <h2 class="apps-title">Apps</h2>
+        <p class="apps-subtitle">Chat with your favorite apps in Nova</p>
+      </div>
+      <div class="apps-search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="apps-search" id="appsSearch" placeholder="Search apps" oninput="filterApps(this.value)">
+      </div>
+    </div>
+
+    <!-- Featured hero -->
+    <div class="apps-featured" id="appsFeatured">
+      <div class="apps-featured-card">
+        <div class="apps-featured-left">
+          <div class="apps-featured-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3 class="apps-featured-title">Search the web with Nova</h3>
+          <p class="apps-featured-desc">Find anything — news, research, answers</p>
+          <button class="apps-featured-btn" onclick="switchPanel('chat');prefillChat('@Web search for...')">View</button>
+        </div>
+        <div class="apps-featured-right">
+          <div class="apps-featured-preview">
+            <div class="apps-featured-bubble">@Web find the latest AI news</div>
+            <div class="apps-featured-preview-img">🌐</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="apps-tabs">
+      <button class="apps-tab active" onclick="setAppsTab('featured',this)">Featured</button>
+      <button class="apps-tab" onclick="setAppsTab('lifestyle',this)">Lifestyle</button>
+      <button class="apps-tab" onclick="setAppsTab('productivity',this)">Productivity</button>
+      <button class="apps-tab" onclick="setAppsTab('developer',this)">Developer</button>
+      <button class="apps-tab" onclick="setAppsTab('education',this)">Education</button>
+    </div>
+
+    <!-- Apps grid -->
+    <div class="apps-grid" id="appsGrid">
     </div>
   </div>
 
@@ -11161,6 +11295,87 @@ function renderLibrary(tab) {
     return '<tr><td><input type="checkbox" class="library-checkbox"></td><td><div class="library-file-name">' + thumb + '<span>' + f.name + '</span></div></td><td>' + dateStr + '</td><td>' + sizeStr + '</td></tr>';
   }).join('');
 }
+
+// ═══════════ APPS ═══════════
+const NOVA_APPS = [
+  // Featured
+  { name: 'GitHub', desc: 'Access repositories, issues, and pull requests', icon: '🐙', color: '#24292e', category: ['featured','developer'] },
+  { name: 'Spotify', desc: 'Music and podcasts for you', icon: '🎵', color: '#1DB954', category: ['featured','lifestyle'] },
+  { name: 'Canva', desc: 'Search, create, edit designs', icon: '🎨', color: '#7B2FBE', category: ['featured','productivity'] },
+  { name: 'Figma', desc: 'Make diagrams and slides', icon: 'F', color: '#F24E1E', category: ['featured','productivity'] },
+  { name: 'Replit', desc: 'Turn your ideas into real apps', icon: '⚡', color: '#F26207', category: ['featured','developer'] },
+  { name: 'Notion', desc: 'Organize notes and projects', icon: 'N', color: '#000000', category: ['featured','productivity'] },
+  // Lifestyle
+  { name: 'AllTrails', desc: 'Discover your next hike', icon: '🏔️', color: '#2E7D32', category: ['lifestyle'] },
+  { name: 'Booking.com', desc: 'Find stays and rental cars', icon: 'B.', color: '#003580', category: ['lifestyle'] },
+  { name: 'Expedia', desc: 'Plan trips, flights and hotels', icon: '✈️', color: '#FFCC00', category: ['lifestyle'] },
+  { name: 'Instacart', desc: 'Groceries and more delivered', icon: '🥕', color: '#43B02A', category: ['lifestyle'] },
+  { name: 'Target', desc: 'Style, decor, beauty, and more', icon: '🎯', color: '#CC0000', category: ['lifestyle'] },
+  { name: 'Tripadvisor', desc: 'Book top-rated hotels', icon: '🦉', color: '#00AF87', category: ['lifestyle'] },
+  { name: 'Zillow', desc: 'Buy, rent, and sell homes', icon: 'Z', color: '#006AFF', category: ['lifestyle'] },
+  // Productivity
+  { name: 'Adobe Photoshop', desc: 'Edit & transform your images', icon: 'Ps', color: '#31A8FF', category: ['productivity'] },
+  { name: 'Adobe Acrobat', desc: 'Edit and organize PDFs easily', icon: 'Ac', color: '#EC1C24', category: ['productivity'] },
+  { name: 'Airtable', desc: 'Add structured data to Nova', icon: '📊', color: '#4C6EF5', category: ['productivity'] },
+  { name: 'Outlook Email', desc: 'Search and reference your email', icon: '📧', color: '#0078D4', category: ['productivity'] },
+  { name: 'SharePoint', desc: 'Search and pull from shared sites', icon: 'S', color: '#038387', category: ['productivity'] },
+  { name: 'Teams', desc: 'Look up chats and messages', icon: '💬', color: '#6264A7', category: ['productivity'] },
+  // Developer
+  { name: 'Lovable', desc: 'Build apps and websites', icon: '🧡', color: '#FF6B6B', category: ['developer'] },
+  { name: 'Ace Knowledge Graph', desc: 'Turn Docs & Topics to Graphs', icon: '🕸️', color: '#6C5CE7', category: ['developer'] },
+  { name: 'Adalo', desc: 'Build and manage no-code apps', icon: '📱', color: '#6C5CE7', category: ['developer'] },
+  // Education
+  { name: 'Ace Quiz Maker', desc: 'Turn PDFs & Notes to Quizzes', icon: '✅', color: '#00B894', category: ['education'] },
+  { name: 'Bible', desc: 'Find and read Bible verses', icon: '📖', color: '#8B4513', category: ['education'] },
+  { name: 'Khan Academy', desc: 'Learn anything for free', icon: '🎓', color: '#14BF96', category: ['education'] },
+  { name: 'Wolfram Alpha', desc: 'Compute expert-level answers', icon: 'W', color: '#DD1100', category: ['education'] },
+  { name: 'Wikipedia', desc: 'Search the free encyclopedia', icon: 'W', color: '#636466', category: ['education'] },
+  { name: 'Duolingo', desc: 'Learn languages with AI', icon: '🦉', color: '#58CC02', category: ['education'] },
+];
+
+function renderApps(category) {
+  const grid = document.getElementById('appsGrid');
+  if (!grid) return;
+  const apps = category === 'featured' ? NOVA_APPS.filter(a => a.category.includes('featured')) :
+    NOVA_APPS.filter(a => a.category.includes(category));
+  grid.innerHTML = apps.map(a => {
+    const isEmoji = a.icon.length <= 2 && /[\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{1F300}-\u{1F9FF}]/u.test(a.icon);
+    const iconContent = isEmoji ?
+      '<span style="font-size:22px">' + a.icon + '</span>' :
+      '<span style="font-size:16px;font-weight:700">' + a.icon + '</span>';
+    return '<div class="app-card" onclick="openApp(\'' + a.name.replace(/'/g,"\\'") + '\')">' +
+      '<div class="app-card-icon" style="background:' + a.color + '">' + iconContent + '</div>' +
+      '<div class="app-card-info"><div class="app-card-name">' + a.name + '</div>' +
+      '<div class="app-card-desc">' + a.desc + '</div></div>' +
+      '<span class="app-card-chevron">›</span></div>';
+  }).join('');
+}
+function setAppsTab(tab, btn) {
+  document.querySelectorAll('.apps-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderApps(tab);
+}
+function filterApps(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.app-card').forEach(card => {
+    const name = card.querySelector('.app-card-name')?.textContent?.toLowerCase() || '';
+    const desc = card.querySelector('.app-card-desc')?.textContent?.toLowerCase() || '';
+    card.style.display = (name.includes(q) || desc.includes(q)) ? '' : 'none';
+  });
+}
+function openApp(name) {
+  switchPanel('chat');
+  const input = document.getElementById('chatInput');
+  if (input) { input.value = '@' + name + ' '; input.focus(); }
+}
+// Init apps on panel open
+const _origSwitchPanel = switchPanel;
+switchPanel = function(name) {
+  _origSwitchPanel(name);
+  if (name === 'apps') renderApps('featured');
+};
+// Also render on first load if apps panel is visible
+setTimeout(function(){ if(document.getElementById('panel-apps')?.style.display !== 'none') renderApps('featured'); }, 500);
 </script>
 
 
