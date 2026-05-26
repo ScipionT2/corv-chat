@@ -70,7 +70,7 @@ body::after{
 #sidebar::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:4px}
 #sidebar::-webkit-scrollbar-thumb:hover{background:rgba(139,92,246,.5)}
 .sidebar-logo{
-  display:flex;align-items:center;justify-content:center;gap:10px;
+  display:flex;align-items:center;gap:10px;
   padding:8px 14px 20px;
 }
 .sidebar-logo img{
@@ -81,6 +81,12 @@ body::after{
   display:inline-block;font-family:'Orbitron',sans-serif;font-size:20px;
   font-weight:700;letter-spacing:2px;color:var(--text);
 }
+.sidebar-logo-action{
+  margin-left:auto;background:none;border:none;cursor:pointer;
+  color:var(--text-dim);padding:4px;border-radius:6px;transition:background .2s,color .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.sidebar-logo-action:hover{background:rgba(255,255,255,.06);color:var(--text)}
 .sidebar-nav{display:flex;flex-direction:column;gap:6px;flex:1}
 .nav-item{
   display:flex;align-items:center;gap:10px;
@@ -126,20 +132,40 @@ body::after{
   filter:drop-shadow(0 0 6px rgba(94,235,255,.35));
 }
 .sidebar-profile{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 14px;margin-top:auto;
-  border-top:1px solid rgba(255,255,255,0.10);
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border-top:1px solid rgba(123,97,255,.08);margin-top:auto;
   cursor:pointer;border-radius:12px;transition:background .2s;
 }
 .sidebar-profile:hover{background:rgba(255,255,255,.04)}
-.profile-avatar{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,#6B51EF,#8B6BFF,#5EEBFF);
+.sidebar-profile-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
 }
-.profile-info{flex:1;min-width:0}
-.profile-name{font-size:14px;font-weight:600;color:var(--text)}
-.profile-role{font-size:11px;color:var(--text-dim)}
-.profile-arrow{color:var(--text-dim);font-size:18px}
+.sidebar-profile-info{flex:1;min-width:0}
+.sidebar-profile-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-profile-plan{font-size:11px;color:var(--text-dim)}
+.sidebar-profile-arrow{color:var(--text-dim);font-size:16px}
+
+.profile-popup{
+  display:none;position:fixed;bottom:80px;left:16px;
+  width:260px;background:rgba(15,18,35,.97);
+  border:1px solid var(--glass-border);border-radius:16px;
+  padding:8px;z-index:100;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.profile-popup.show{display:block}
+.profile-popup-header{display:flex;align-items:center;gap:10px;padding:12px 10px}
+.profile-popup-divider{height:1px;background:rgba(255,255,255,.06);margin:4px 0}
+.profile-popup-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;font-size:13px;color:var(--text-mid);
+  cursor:pointer;transition:background .2s;
+}
+.profile-popup-item:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.profile-popup-item svg{opacity:.7;flex-shrink:0}
 .sidebar-sign-in{
   padding:12px 14px;margin-top:auto;
   border-top:1px solid rgba(255,255,255,0.10);
@@ -2952,14 +2978,16 @@ body {
 .quick-actions .quick-card:nth-child(3) { animation-delay: 0.15s; }
 .quick-actions .quick-card:nth-child(4) { animation-delay: 0.2s; }
 
-/* ═══════════ SIDEBAR SECTION HEADERS ═══════════ */
-.nav-section-header{
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--text-dim);opacity:.5;padding:12px 14px 4px;
-  font-weight:600;font-family:'Inter',sans-serif;
-  user-select:none;
+/* ═══════════ SIDEBAR CHAT HISTORY (Today) ═══════════ */
+.sidebar-history{padding:8px 4px;margin-top:8px;border-top:1px solid rgba(123,97,255,.08)}
+.sidebar-history-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);padding:4px 14px 8px;font-weight:600}
+.sidebar-history-item{
+  display:block;padding:8px 14px;border-radius:8px;font-size:13px;color:var(--text-mid);
+  cursor:pointer;transition:background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:3px solid transparent;
 }
-.nav-section-header:first-child{padding-top:4px}
+.sidebar-history-item:hover{background:rgba(255,255,255,.04)}
+.sidebar-history-item.active{border-left-color:var(--purple);color:var(--text);background:rgba(123,97,255,.06)}
 
 /* ═══════════ SIDEBAR RECENT CHATS ═══════════ */
 .recent-chats-sidebar{padding:0 4px;margin:4px 0 8px;max-height:180px;overflow-y:auto}
@@ -3035,6 +3063,9 @@ body {
   <div class="sidebar-logo">
     <img src="/static/img/nova-icon.png" alt="Nova" />
     <span>NOVA</span>
+    <button class="sidebar-logo-action" onclick="startNewChat()" title="New chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+    </button>
   </div>
 
   <div class="sidebar-nav">
@@ -3048,19 +3079,14 @@ body {
       <div class="recent-items" id="recentItemsList"></div>
     </div>
 
-    <!-- CHAT section -->
-    <div class="nav-section-header">Chat</div>
     <button class="nav-item active" onclick="switchPanel('chat')" data-panel="chat">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Recent
+      Chat
     </button>
     <button class="nav-item" onclick="switchPanel('explore')" data-panel="explore">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       Explore
     </button>
-
-    <!-- TOOLS section -->
-    <div class="nav-section-header">Tools</div>
     <button class="nav-item" onclick="switchPanel('memory')" data-panel="memory">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2a6.5 6.5 0 0 1 5 10.65V17a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-4.35A6.5 6.5 0 0 1 9.5 2z"/><path d="M6.5 17v1a3 3 0 0 0 6 0v-1"/></svg>
       Memory
@@ -3068,14 +3094,6 @@ body {
     <button class="nav-item" onclick="switchPanel('tasks')" data-panel="tasks">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       Tasks
-    </button>
-    <button class="nav-item" onclick="switchPanel('knowledge')" data-panel="knowledge">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Knowledge
-    </button>
-    <button class="nav-item" onclick="switchPanel('skills')" data-panel="skills">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11h20V9c0-1.1-.9-2-2-2zM9 4h6v3H9V4z"/></svg>
-      Skills
     </button>
     <button class="nav-item" onclick="switchPanel('models')" data-panel="models">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -3089,13 +3107,13 @@ body {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Spaces
     </button>
+  </div>
 
-    <!-- SETTINGS section -->
-    <div class="nav-section-header">Settings</div>
-    <button class="nav-item" onclick="switchPanel('settings')" data-panel="settings">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </button>
+  <div class="sidebar-history">
+    <div class="sidebar-history-label">Today</div>
+    <div class="sidebar-history-list" id="sidebarHistoryList">
+      <!-- populated by JS -->
+    </div>
   </div>
 
   <div class=sidebar-site-links>
@@ -3122,13 +3140,51 @@ body {
   </div>
 
   <!-- Profile (shown for signed-in users) -->
-  <div class="sidebar-profile" id="sidebarProfile">
-    <div class="profile-avatar"></div>
-    <div class="profile-info">
-      <div class="profile-name">Guest</div>
-      <div class="profile-role">Sign in to save chats</div>
+  <div class="sidebar-profile" id="sidebarProfile" onclick="toggleProfileMenu(event)">
+    <div class="sidebar-profile-avatar" id="sidebarProfileAvatar">EP</div>
+    <div class="sidebar-profile-info">
+      <div class="sidebar-profile-name" id="sidebarProfileName">Guest</div>
+      <div class="sidebar-profile-plan">Free</div>
     </div>
-    <span class="profile-arrow">›</span>
+    <span class="sidebar-profile-arrow">›</span>
+  </div>
+
+  <!-- Profile popup menu -->
+  <div class="profile-popup" id="profilePopup">
+    <div class="profile-popup-header">
+      <div class="sidebar-profile-avatar" style="width:36px;height:36px;font-size:13px">EP</div>
+      <div>
+        <div class="sidebar-profile-name" style="font-size:14px">Guest</div>
+        <div class="sidebar-profile-plan">Free</div>
+      </div>
+      <span class="sidebar-profile-arrow">›</span>
+    </div>
+    <div class="profile-popup-divider"></div>
+    <div class="profile-popup-item" onclick="switchPanel('settings');closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Upgrade plan
+    </div>
+    <div class="profile-popup-item" onclick="switchPanel('settings');closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.46.26.98.4 1.51 1.01H21a2 2 0 0 1 0 4h-.09"/></svg>
+      Personalization
+    </div>
+    <div class="profile-popup-item" onclick="switchPanel('settings');closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </div>
+    <div class="profile-popup-item" onclick="switchPanel('settings');closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83"/></svg>
+      Settings
+    </div>
+    <div class="profile-popup-item" onclick="closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Help <span style="margin-left:auto;color:var(--text-dim)">›</span>
+    </div>
+    <div class="profile-popup-divider"></div>
+    <div class="profile-popup-item" onclick="handleLogout();closeProfileMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Log out
+    </div>
   </div>
 </nav>
 
@@ -4526,26 +4582,30 @@ async function checkAuth() {
 }
 
 function updateProfileUI(user) {
-  const name = document.querySelector('.profile-name');
-  const role = document.querySelector('.profile-role');
-  const avatar = document.querySelector('.sidebar-profile .profile-avatar');
+  const name = document.querySelector('.sidebar-profile-name');
+  const plan = document.querySelector('.sidebar-profile-plan');
+  const avatar = document.querySelector('.sidebar-profile .sidebar-profile-avatar');
   const signInBtn = document.getElementById('sidebarSignIn');
   const profileEl = document.getElementById('sidebarProfile');
   if (user) {
-    name.textContent = user.name || 'User';
-    role.textContent = user.email || 'Signed in';
-    if (user.avatar) {
-      avatar.style.background = 'none';
-      avatar.innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+    if (name) name.textContent = user.name || 'User';
+    if (plan) plan.textContent = user.email || 'Free';
+    if (avatar) {
+      if (user.avatar) {
+        avatar.style.background = 'none';
+        avatar.innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      } else {
+        const initials = (user.name || user.email || 'U').substring(0,2).toUpperCase();
+        avatar.textContent = initials;
+      }
     }
     // Show profile, hide sign-in button
     if (signInBtn) signInBtn.style.display = 'none';
     if (profileEl) profileEl.style.display = 'flex';
   } else {
-    name.textContent = 'Guest';
-    role.textContent = 'Sign in to save chats';
-    avatar.style.background = '';
-    avatar.innerHTML = '';
+    if (name) name.textContent = 'Guest';
+    if (plan) plan.textContent = 'Free';
+    if (avatar) { avatar.style.background = ''; avatar.textContent = 'EP'; }
     // Show sign-in button, hide profile
     if (signInBtn) signInBtn.style.display = 'block';
     if (profileEl) profileEl.style.display = 'none';
@@ -10683,6 +10743,72 @@ try {
     console.log('[Phase5] ✓ Conversation Engine fully initialized');
   }
 })();
+</script>
+
+<script>
+// ═══════════ PROFILE POPUP MENU ═══════════
+function toggleProfileMenu(e) {
+  e.stopPropagation();
+  document.getElementById('profilePopup').classList.toggle('show');
+}
+function closeProfileMenu() {
+  document.getElementById('profilePopup').classList.remove('show');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.profile-popup') && !e.target.closest('.sidebar-profile')) {
+    closeProfileMenu();
+  }
+});
+
+// ═══════════ SIDEBAR CHAT HISTORY ═══════════
+function populateSidebarHistory() {
+  const list = document.getElementById('sidebarHistoryList');
+  if (!list) return;
+  // Try to get from recent conversations widget first
+  const recentItems = document.querySelectorAll('#recentConvList .recent-conv-item, #recentItemsList .recent-item');
+  if (recentItems.length > 0) {
+    list.innerHTML = '';
+    recentItems.forEach((item, i) => {
+      if (i >= 5) return;
+      const title = item.textContent.trim().split('\n')[0].trim();
+      const div = document.createElement('div');
+      div.className = 'sidebar-history-item' + (i === 0 ? ' active' : '');
+      div.textContent = title || 'Untitled';
+      div.onclick = function() { /* load chat */ };
+      list.appendChild(div);
+    });
+  } else {
+    list.innerHTML = '<div class="sidebar-history-item active">Hello, I\'m Nova.</div>';
+  }
+}
+
+// Update profile display when user signs in
+const _origUpdateProfile = typeof updateProfileUI === 'function' ? updateProfileUI : null;
+if (_origUpdateProfile) {
+  updateProfileUI = function() {
+    _origUpdateProfile.apply(this, arguments);
+    // Update sidebar profile
+    const nameEl = document.getElementById('sidebarProfileName');
+    const avatarEl = document.getElementById('sidebarProfileAvatar');
+    if (currentUser && nameEl) {
+      nameEl.textContent = currentUser.name || currentUser.email || 'User';
+      if (avatarEl) {
+        const initials = (currentUser.name || currentUser.email || 'U').substring(0,2).toUpperCase();
+        avatarEl.textContent = initials;
+      }
+    }
+    // Also update popup header
+    const popupNames = document.querySelectorAll('#profilePopup .sidebar-profile-name');
+    const popupAvatars = document.querySelectorAll('#profilePopup .sidebar-profile-avatar');
+    if (currentUser) {
+      popupNames.forEach(el => el.textContent = currentUser.name || currentUser.email || 'User');
+      popupAvatars.forEach(el => el.textContent = (currentUser.name || currentUser.email || 'U').substring(0,2).toUpperCase());
+    }
+  };
+}
+
+// Init sidebar history on load
+setTimeout(populateSidebarHistory, 2000);
 </script>
 
 
