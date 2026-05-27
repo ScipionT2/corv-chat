@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from src.pipeline import NovaPipeline
+from src.tts import StreamingTTS, SentenceBuffer
 
 
 @pytest.fixture
@@ -31,6 +32,52 @@ def pipeline() -> NovaPipeline:
     return p
 
 
+def _make_mock_streaming_session(tts_mock):
+    """Configure a mock TTS to return a real-ish StreamingTTS on create_streaming_session.
+
+    Instead of returning a MagicMock, we create a thin wrapper that records
+    tokens and calls tts_mock.speak() for each flushed sentence, matching
+    the real StreamingTTS contract.
+    """
+    class FakeStreamingTTS:
+        def __init__(self):
+            self._full_text = ""
+            self._interrupted = False
+            self._buffer = SentenceBuffer(max_chars=200)
+
+        def add_token(self, token):
+            self._full_text += token
+            if self._interrupted:
+                return
+            sentences = self._buffer.feed(token)
+            for s in sentences:
+                tts_mock.speak(s)
+
+        def finish(self):
+            if not self._interrupted:
+                rem = self._buffer.flush()
+                if rem:
+                    tts_mock.speak(rem)
+
+        def stop(self):
+            self._interrupted = True
+            tts_mock.stop()
+
+        def shutdown(self):
+            pass
+
+        @property
+        def full_text(self):
+            return self._full_text
+
+        @property
+        def was_interrupted(self):
+            return self._interrupted
+
+    tts_mock.create_streaming_session = MagicMock(side_effect=lambda: FakeStreamingTTS())
+    return tts_mock
+
+
 @pytest.fixture
 def streaming_pipeline() -> NovaPipeline:
     """Return a pipeline whose LLM supports chat_stream()."""
@@ -47,6 +94,7 @@ def streaming_pipeline() -> NovaPipeline:
     p.tts = MagicMock()
     p.tts.speak = MagicMock()
     p.tts._interrupted = False
+    _make_mock_streaming_session(p.tts)
     return p
 
 
@@ -216,6 +264,44 @@ class TestSpeakStreamedInterruptible:
         completed, full_text = streaming_pipeline._speak_streamed_interruptible(iter([]))
         assert completed is True
         assert full_text == ""
+
+
+class TestSentenceBuffer:
+    """Tests for the SentenceBuffer utility."""
+
+    def test_basic_sentences(self):
+        buf = SentenceBuffer(max_chars=200)
+        results = []
+        for t in ["Hello", ", ", "how", " are", " you", "? ", "I ", "am", " fine", ". ", "Great"]:
+            results.extend(buf.feed(t))
+        rem = buf.flush()
+        if rem:
+            results.append(rem)
+        assert len(results) >= 2
+        assert results[0] == "Hello, how are you?"
+
+    def test_newline_separator(self):
+        buf = SentenceBuffer(max_chars=200)
+        results = []
+        for t in ["First line", "\n", "Second line"]:
+            results.extend(buf.feed(t))
+        rem = buf.flush()
+        if rem:
+            results.append(rem)
+        assert "First line" in results
+        assert all(r.strip() for r in results)
+
+    def test_force_flush_long_buffer(self):
+        buf = SentenceBuffer(max_chars=50)
+        results = []
+        for t in list("a" * 60):
+            results.extend(buf.feed(t))
+        assert len(results) >= 1
+
+    def test_empty_tokens_ignored(self):
+        buf = SentenceBuffer(max_chars=200)
+        assert buf.feed("") == []
+        assert buf.feed("") == []
 
 
 class TestPipelineLifecycle:

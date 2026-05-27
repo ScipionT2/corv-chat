@@ -71,11 +71,33 @@ WAKE_WORD: str = _get_env("NOVA_WAKE_WORD", "nova", "EP_WAKE_WORD", "JARVIS_WAKE
 WAKE_WORD_CONFIDENCE: float = _get_env_float("NOVA_WAKE_CONFIDENCE", 0.5, "EP_WAKE_CONFIDENCE", "JARVIS_WAKE_CONFIDENCE")
 
 WAKE_WORD_BACKEND: str = _get_env("NOVA_WAKE_BACKEND", "auto")
-"""Wake word backend: 'auto', 'keyword', or 'openwakeword'.
-'auto' uses keyword detection for 'nova' and openwakeword for built-in words like 'jarvis'.
-'keyword' forces faster-whisper keyword spotting.
+"""Wake word backend: 'auto', 'vosk', 'porcupine', 'keyword', or 'openwakeword'.
+'auto' picks the best available:
+  1. porcupine — if NOVA_PORCUPINE_ACCESS_KEY is set
+  2. vosk      — lightweight keyword spotting (default for 'nova')
+  3. keyword   — Whisper-based fallback
+  4. openwakeword — for words with trained .onnx models
+'vosk' forces Vosk grammar-constrained keyword spotting (low CPU).
+'porcupine' forces Picovoice Porcupine (requires access key).
+'keyword' forces faster-whisper keyword spotting (legacy, higher CPU).
 'openwakeword' forces the OpenWakeWord model."""
 
+# -- Vosk keyword detector --
+VOSK_MODEL: str = _get_env("NOVA_VOSK_MODEL", "vosk-model-small-en-us-0.15")
+"""Vosk model name (auto-downloaded) or path to local model directory."""
+
+# -- Porcupine detector --
+PORCUPINE_ACCESS_KEY: str = _get_env("NOVA_PORCUPINE_ACCESS_KEY", "")
+"""Picovoice access key from https://console.picovoice.ai (free tier: 3 custom keywords)."""
+
+PORCUPINE_MODEL_PATH: str = _get_env("NOVA_PORCUPINE_MODEL_PATH", "")
+"""Path to a custom .ppn keyword model file trained at console.picovoice.ai.
+   Leave empty to use built-in keywords (jarvis, computer, alexa, etc.)."""
+
+PORCUPINE_SENSITIVITY: float = _get_env_float("NOVA_PORCUPINE_SENSITIVITY", 0.5)
+"""Porcupine detection sensitivity 0.0–1.0. Higher = more sensitive, more false positives."""
+
+# -- Legacy Whisper keyword detector --
 WAKE_KEYWORD_BUFFER_SEC: float = _get_env_float("NOVA_WAKE_KEYWORD_BUFFER", 1.5)
 """Seconds of audio to buffer before running keyword STT detection."""
 

@@ -52,6 +52,21 @@ DB_PATH: str = os.getenv("NOVA_DB_PATH", "nova.db")
 BOOT_TIME: float = time.time()
 
 # ---------------------------------------------------------------------------
+# Stripe
+# ---------------------------------------------------------------------------
+
+try:
+    import stripe
+    stripe.api_key = os.getenv('STRIPE_SECRET_KEY', '')
+except ImportError:
+    stripe = None  # type: ignore[assignment]
+
+STRIPE_PRICES = {
+    'monthly': os.getenv('STRIPE_PRICE_MONTHLY', ''),
+    'yearly': os.getenv('STRIPE_PRICE_YEARLY', ''),
+}
+
+# ---------------------------------------------------------------------------
 # Signing / cookies
 # ---------------------------------------------------------------------------
 
@@ -436,7 +451,7 @@ async def user_middleware(request: Request, call_next):
     """Ensure a user exists (authenticated or anonymous) for API routes."""
     # Skip for auth routes and static files
     path = request.url.path
-    if path.startswith("/auth/") or path.startswith("/static/") or path == "/":
+    if path.startswith("/auth/") or path.startswith("/static/") or path == "/" or path.startswith("/payment/") or path == "/api/webhook/stripe":
         return await call_next(request)
 
     uid = await _get_user_id(request)
@@ -869,6 +884,130 @@ async def clear_chat(request: Request, body: dict | None = None):
             await db.execute("DELETE FROM messages WHERE chat_id=?", (cr["id"],))
         await db.commit()
         return {"cleared": True, "all": True}
+
+
+# ---------------------------------------------------------------------------
+# Stripe Payment
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/create-checkout-session")
+async def create_checkout_session(request: Request):
+    try:
+        body = await request.json()
+        plan = body.get('plan', 'monthly')
+        price_id = STRIPE_PRICES.get(plan)
+
+        if not price_id or stripe is None or not stripe.api_key:
+            return JSONResponse({"error": "Payment not configured yet. Coming soon!"}, 400)
+
+        # Get user email from DB if signed in
+        uid = await _get_user_id(request)
+        user_email = None
+        if uid and not uid.startswith('anon_'):
+            db = await get_db()
+            rows = await db.execute_fetchall("SELECT email FROM users WHERE id=?", (uid,))
+            if rows:
+                user_email = rows[0]['email']
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price': price_id,
+                'quantity': 1,
+            }],
+            mode='subscription',
+            success_url='https://nov-assistant.com/payment/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://nov-assistant.com/payment/cancel',
+            customer_email=user_email,
+            metadata={
+                'plan': plan,
+            }
+        )
+        return {"checkout_url": checkout_session.url, "session_id": checkout_session.id}
+    except Exception as e:
+        return JSONResponse({"error": str(e)[:200]}, 500)
+
+
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get('stripe-signature', '')
+    webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+
+    try:
+        if webhook_secret and stripe is not None:
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        elif stripe is not None:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        else:
+            return JSONResponse({"error": "Stripe not installed"}, 500)
+    except Exception as e:
+        return JSONResponse({"error": "Webhook verification failed"}, 400)
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        customer_email = session.get('customer_email', '')
+        # Mark user as Plus in database
+        plus_file = '/opt/nova-web/plus_users.json'
+        try:
+            with open(plus_file, 'r') as f:
+                users = json.load(f)
+        except Exception:
+            users = []
+        if customer_email and customer_email not in users:
+            users.append(customer_email)
+            with open(plus_file, 'w') as f:
+                json.dump(users, f)
+
+    return {"status": "ok"}
+
+
+@app.get("/api/user/tier")
+async def get_user_tier(request: Request):
+    uid = await _get_user_id(request)
+    if not uid or uid.startswith('anon_'):
+        return {"tier": "free"}
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT email FROM users WHERE id=?", (uid,))
+    if not rows:
+        return {"tier": "free"}
+    user_email = rows[0]['email']
+    plus_file = '/opt/nova-web/plus_users.json'
+    try:
+        with open(plus_file, 'r') as f:
+            users = json.load(f)
+        if user_email in users:
+            return {"tier": "plus"}
+    except Exception:
+        pass
+    return {"tier": "free"}
+
+
+@app.get("/payment/success")
+async def payment_success(request: Request):
+    return HTMLResponse("""
+    <html><head><meta http-equiv="refresh" content="3;url=/"></head>
+    <body style="background:#050816;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:Inter,sans-serif">
+    <div style="text-align:center">
+        <h1>\U0001f389 Welcome to Nova Plus!</h1>
+        <p>Your subscription is active. Redirecting...</p>
+    </div></body></html>
+    """)
+
+
+@app.get("/payment/cancel")
+async def payment_cancel(request: Request):
+    return HTMLResponse("""
+    <html><head><meta http-equiv="refresh" content="3;url=/"></head>
+    <body style="background:#050816;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:Inter,sans-serif">
+    <div style="text-align:center">
+        <h1>Payment Cancelled</h1>
+        <p>No worries! You can upgrade anytime. Redirecting...</p>
+    </div></body></html>
+    """)
 
 
 # ---------------------------------------------------------------------------

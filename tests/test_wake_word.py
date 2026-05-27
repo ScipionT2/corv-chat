@@ -1,8 +1,13 @@
-"""Tests for the wake-word detection module (multi-backend)."""
+"""Tests for the wake-word detection module (multi-backend).
+
+Updated 2026-05-26: Added tests for VoskKeywordDetector and PorcupineDetector.
+Backend selection now defaults to 'vosk' for 'nova' (lighter than Whisper).
+"""
 
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import re
 import threading
@@ -16,11 +21,14 @@ import config
 from src.wake_word import (
     KeywordDetector,
     OpenWakeWordDetector,
+    PorcupineDetector,
+    VoskKeywordDetector,
     WakeWordDetector,
     resolve_wake_word,
     _select_backend,
     _OPENWAKEWORD_ALIASES,
     _KEYWORD_WAKE_WORDS,
+    _PORCUPINE_BUILTIN,
 )
 
 
@@ -41,7 +49,6 @@ class TestResolveWakeWord:
     def test_nova_does_not_resolve_to_jarvis(self):
         """'nova' should NOT map to an OpenWakeWord model — it uses keyword detection."""
         result = resolve_wake_word("nova")
-        # Should return the original name since there's no OWW model for nova
         assert result == "nova"
 
     def test_unknown_word_passes_through(self):
@@ -60,11 +67,12 @@ class TestResolveWakeWord:
 # =========================================================================
 
 class TestSelectBackend:
-    def test_auto_nova_uses_keyword(self):
-        assert _select_backend("nova", "auto") == "keyword"
+    def test_auto_nova_uses_vosk(self):
+        """'nova' in auto mode should use the lightweight Vosk backend."""
+        assert _select_backend("nova", "auto") == "vosk"
 
-    def test_auto_hey_nova_uses_keyword(self):
-        assert _select_backend("hey nova", "auto") == "keyword"
+    def test_auto_hey_nova_uses_vosk(self):
+        assert _select_backend("hey nova", "auto") == "vosk"
 
     def test_auto_jarvis_uses_openwakeword(self):
         assert _select_backend("jarvis", "auto") == "openwakeword"
@@ -78,22 +86,333 @@ class TestSelectBackend:
     def test_forced_openwakeword(self):
         assert _select_backend("nova", "openwakeword") == "openwakeword"
 
-    def test_unknown_word_auto_falls_to_keyword(self):
-        assert _select_backend("alexa", "auto") == "keyword"
+    def test_forced_vosk(self):
+        assert _select_backend("nova", "vosk") == "vosk"
+
+    def test_forced_porcupine(self):
+        assert _select_backend("nova", "porcupine") == "porcupine"
+
+    def test_unknown_word_auto_falls_to_vosk(self):
+        """Unknown words without OWW models should fall back to Vosk."""
+        assert _select_backend("alexa", "auto") == "vosk"
 
     def test_case_insensitive(self):
-        assert _select_backend("Nova", "auto") == "keyword"
+        assert _select_backend("Nova", "auto") == "vosk"
         assert _select_backend("JARVIS", "auto") == "openwakeword"
 
-    def test_ep_uses_keyword(self):
-        assert _select_backend("ep", "auto") == "keyword"
+    def test_ep_uses_vosk(self):
+        assert _select_backend("ep", "auto") == "vosk"
 
-    def test_hey_ep_uses_keyword(self):
-        assert _select_backend("hey ep", "auto") == "keyword"
+    def test_hey_ep_uses_vosk(self):
+        assert _select_backend("hey ep", "auto") == "vosk"
+
+    def test_porcupine_auto_with_key_and_builtin(self):
+        """With a Porcupine key set, built-in words should route to Porcupine."""
+        with patch.object(config, "PORCUPINE_ACCESS_KEY", "test-key"):
+            assert _select_backend("jarvis", "auto") == "porcupine"
+            assert _select_backend("computer", "auto") == "porcupine"
+
+    def test_porcupine_auto_with_key_and_ppn(self):
+        """With a Porcupine key + custom .ppn, 'nova' should route to Porcupine."""
+        with patch.object(config, "PORCUPINE_ACCESS_KEY", "test-key"), \
+             patch.object(config, "PORCUPINE_MODEL_PATH", "/path/to/nova.ppn"):
+            assert _select_backend("nova", "auto") == "porcupine"
 
 
 # =========================================================================
-# KeywordDetector
+# VoskKeywordDetector
+# =========================================================================
+
+class TestVoskKeywordDetectorMatchLogic:
+    """Unit-test the Vosk keyword matching logic."""
+
+    def _make_detector(self, keyword: str = "nova") -> VoskKeywordDetector:
+        det = VoskKeywordDetector.__new__(VoskKeywordDetector)
+        det.keyword = keyword.lower().strip()
+        det._match_tokens = VoskKeywordDetector._build_match_tokens(det.keyword)
+        return det
+
+    def test_exact_match(self):
+        det = self._make_detector("nova")
+        assert det._matches("nova")
+
+    def test_hey_prefix_match(self):
+        det = self._make_detector("nova")
+        assert det._matches("hey nova")
+
+    def test_embedded_match(self):
+        det = self._make_detector("nova")
+        assert det._matches("nova please help")
+
+    def test_case_insensitive(self):
+        det = self._make_detector("nova")
+        assert det._matches("NOVA")
+        assert det._matches("Hey Nova")
+
+    def test_no_match_on_random_speech(self):
+        det = self._make_detector("nova")
+        assert not det._matches("the weather is nice")
+        assert not det._matches("hello world")
+
+    def test_no_match_on_unk(self):
+        det = self._make_detector("nova")
+        assert not det._matches("[unk]")
+
+    def test_no_match_on_empty(self):
+        det = self._make_detector("nova")
+        assert not det._matches("")
+
+    def test_match_tokens_single_word(self):
+        det = self._make_detector("nova")
+        assert det._match_tokens == ["nova", "hey nova"]
+
+    def test_match_tokens_phrase(self):
+        det = self._make_detector("hey nova")
+        # Phrases don't get the "hey <word>" variant added
+        assert det._match_tokens == ["hey nova"]
+
+
+class TestVoskKeywordDetectorLifecycle:
+    """Test start/stop with mocked Vosk model and audio."""
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("src.wake_word.VoskKeywordDetector._load_model")
+    def test_start_opens_stream(self, mock_load, mock_stream):
+        mock_s = MagicMock()
+        mock_stream.return_value = mock_s
+        cb = MagicMock()
+        det = VoskKeywordDetector(keyword="nova", on_wake=cb)
+        det.start()
+        mock_load.assert_called_once()
+        mock_stream.assert_called_once()
+        mock_s.start.assert_called_once()
+        assert det._running is True
+        det.stop()
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("src.wake_word.VoskKeywordDetector._load_model")
+    def test_stop_cleans_up(self, mock_load, mock_stream):
+        mock_s = MagicMock()
+        mock_stream.return_value = mock_s
+        cb = MagicMock()
+        det = VoskKeywordDetector(keyword="nova", on_wake=cb)
+        det.start()
+        det.stop()
+        assert det._running is False
+        mock_s.stop.assert_called_once()
+        mock_s.close.assert_called_once()
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("src.wake_word.VoskKeywordDetector._load_model")
+    def test_pause_resume(self, mock_load, mock_stream):
+        mock_stream.return_value = MagicMock()
+        cb = MagicMock()
+        det = VoskKeywordDetector(keyword="nova", on_wake=cb)
+        det.start()
+        det.pause()
+        assert det._paused is True
+        det.resume()
+        assert det._paused is False
+        det.stop()
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("src.wake_word.VoskKeywordDetector._load_model")
+    def test_start_fails_without_stream(self, mock_load, mock_stream):
+        mock_stream.return_value = None
+        cb = MagicMock()
+        det = VoskKeywordDetector(keyword="nova", on_wake=cb)
+        with pytest.raises(RuntimeError, match="Cannot open microphone"):
+            det.start()
+
+
+class TestVoskKeywordDetectorAudioCallback:
+    """Test the Vosk audio callback with a mocked recognizer."""
+
+    def _make_detector_with_recognizer(self, keyword="nova"):
+        det = VoskKeywordDetector.__new__(VoskKeywordDetector)
+        det.keyword = keyword.lower().strip()
+        det._match_tokens = VoskKeywordDetector._build_match_tokens(det.keyword)
+        det.on_wake = MagicMock()
+        det._running = True
+        det._paused = False
+        det._stream = MagicMock()
+        det._recognizer = MagicMock()
+        det._lock = threading.Lock()
+        det._last_detection_time = 0.0
+        return det
+
+    def test_callback_skips_when_paused(self):
+        det = self._make_detector_with_recognizer()
+        det._paused = True
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+        det._recognizer.AcceptWaveform.assert_not_called()
+
+    def test_callback_skips_when_not_running(self):
+        det = self._make_detector_with_recognizer()
+        det._running = False
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+        det._recognizer.AcceptWaveform.assert_not_called()
+
+    @patch("src.wake_word.threading.Thread")
+    def test_full_result_triggers_wake(self, mock_thread_cls):
+        """Full Vosk result containing 'nova' should trigger wake."""
+        det = self._make_detector_with_recognizer()
+        mock_thread = MagicMock()
+        mock_thread_cls.return_value = mock_thread
+
+        # Mock recognizer returning a full result with "nova"
+        det._recognizer.AcceptWaveform.return_value = True
+        det._recognizer.Result.return_value = json.dumps({"text": "nova"})
+
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+
+        # Should have spawned a wake thread
+        mock_thread_cls.assert_called_once()
+        mock_thread.start.assert_called_once()
+        assert det._paused is True
+
+    @patch("src.wake_word.threading.Thread")
+    def test_partial_result_triggers_wake(self, mock_thread_cls):
+        """Partial Vosk result containing 'nova' should trigger wake (faster response)."""
+        det = self._make_detector_with_recognizer()
+        mock_thread = MagicMock()
+        mock_thread_cls.return_value = mock_thread
+
+        # No full result, but partial contains "nova"
+        det._recognizer.AcceptWaveform.return_value = False
+        det._recognizer.PartialResult.return_value = json.dumps({"partial": "nova"})
+
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+
+        mock_thread_cls.assert_called_once()
+        mock_thread.start.assert_called_once()
+        assert det._paused is True
+
+    def test_no_match_no_wake(self):
+        """Non-matching Vosk output should not trigger wake."""
+        det = self._make_detector_with_recognizer()
+
+        det._recognizer.AcceptWaveform.return_value = True
+        det._recognizer.Result.return_value = json.dumps({"text": ""})
+
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+
+        # on_wake should not have been called
+        det.on_wake.assert_not_called()
+
+    def test_unk_result_no_wake(self):
+        """[unk] results from Vosk should not trigger wake."""
+        det = self._make_detector_with_recognizer()
+
+        det._recognizer.AcceptWaveform.return_value = True
+        det._recognizer.Result.return_value = json.dumps({"text": "[unk]"})
+
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+
+        det.on_wake.assert_not_called()
+
+    def test_cooldown_prevents_retrigger(self):
+        """Rapid detections should be suppressed by cooldown."""
+        det = self._make_detector_with_recognizer()
+        det._last_detection_time = time.monotonic()  # just triggered
+
+        det._recognizer.AcceptWaveform.return_value = True
+        det._recognizer.Result.return_value = json.dumps({"text": "nova"})
+
+        indata = np.random.randn(1280, 1).astype(np.float32)
+        det._audio_callback(indata, 1280, None, None)
+
+        # Should NOT have triggered due to cooldown
+        assert det._paused is False
+
+
+# =========================================================================
+# PorcupineDetector
+# =========================================================================
+
+class TestPorcupineDetector:
+    """Tests for the Porcupine backend."""
+
+    def test_start_without_key_raises(self):
+        """Starting without an access key should raise RuntimeError."""
+        cb = MagicMock()
+        det = PorcupineDetector(on_wake=cb, wake_word="computer", access_key="")
+        with pytest.raises(RuntimeError, match="access key"):
+            det.start()
+
+    def test_start_custom_word_without_ppn_raises(self):
+        """Custom word without .ppn model should raise RuntimeError."""
+        cb = MagicMock()
+        det = PorcupineDetector(
+            on_wake=cb, wake_word="nova", access_key="test-key", model_path=""
+        )
+        with pytest.raises(RuntimeError, match="not a Porcupine built-in"):
+            det.start()
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("pvporcupine.create")
+    def test_start_with_builtin_keyword(self, mock_create, mock_stream):
+        """Should start successfully with a built-in keyword."""
+        mock_porc = MagicMock()
+        mock_porc.frame_length = 512
+        mock_create.return_value = mock_porc
+        mock_s = MagicMock()
+        mock_stream.return_value = mock_s
+
+        cb = MagicMock()
+        det = PorcupineDetector(
+            on_wake=cb, wake_word="computer", access_key="test-key"
+        )
+        det.start()
+
+        mock_create.assert_called_once_with(
+            access_key="test-key",
+            keywords=["computer"],
+            sensitivities=[0.5],
+        )
+        mock_s.start.assert_called_once()
+        assert det._running is True
+
+        det.stop()
+        mock_porc.delete.assert_called_once()
+
+    @patch("src.wake_word.open_input_stream")
+    @patch("pvporcupine.create")
+    def test_start_with_custom_ppn(self, mock_create, mock_stream):
+        """Should start successfully with a custom .ppn model file."""
+        mock_porc = MagicMock()
+        mock_porc.frame_length = 512
+        mock_create.return_value = mock_porc
+        mock_stream.return_value = MagicMock()
+
+        cb = MagicMock()
+        det = PorcupineDetector(
+            on_wake=cb, wake_word="nova",
+            access_key="test-key", model_path="/path/to/nova.ppn",
+        )
+        det.start()
+
+        mock_create.assert_called_once_with(
+            access_key="test-key",
+            keyword_paths=["/path/to/nova.ppn"],
+            sensitivities=[0.5],
+        )
+        det.stop()
+
+    def test_stop_before_start_is_safe(self):
+        cb = MagicMock()
+        det = PorcupineDetector(on_wake=cb, wake_word="computer", access_key="")
+        det.stop()  # should not raise
+
+
+# =========================================================================
+# KeywordDetector (legacy Whisper-based)
 # =========================================================================
 
 class TestKeywordDetectorMatchLogic:
@@ -135,13 +454,11 @@ class TestKeywordDetectorMatchLogic:
         assert not det._matches("casanova was charming")
 
     def test_hey_nova_keyword_matches_direct(self):
-        """If keyword is 'hey nova', it matches 'hey nova' directly."""
         det = self._make_detector("hey nova")
         assert det._matches("hey nova")
         assert det._matches("Hey Nova, what's up")
 
     def test_no_match_on_supernova(self):
-        """'nova' should NOT match inside 'supernova' — word boundaries required."""
         det = self._make_detector("nova")
         assert not det._matches("supernova")
         assert not det._matches("supernova explosion")
@@ -204,7 +521,6 @@ class TestKeywordDetectorAudioCallback:
     """Test the audio callback with a mocked Whisper model."""
 
     def _make_detector_with_model(self, keyword="nova"):
-        """Create a KeywordDetector with a mock model (no real Whisper)."""
         det = KeywordDetector.__new__(KeywordDetector)
         det.keyword = keyword.lower().strip()
         det._match_tokens = KeywordDetector._build_match_tokens(det.keyword)
@@ -243,80 +559,57 @@ class TestKeywordDetectorAudioCallback:
         det._model.transcribe.assert_not_called()
 
     def test_callback_accumulates_before_threshold(self):
-        """Callback should not run STT until buffer is full."""
         det = self._make_detector_with_model()
-        # Send a small chunk (not enough to fill buffer)
         indata = np.random.randn(1280, 1).astype(np.float32) * 0.5
         det._audio_callback(indata, 1280, None, None)
         assert det._samples_since_last == 1280
-        # Should not have triggered STT yet
         det._model.transcribe.assert_not_called()
 
     def test_energy_gate_skips_silent_buffer(self):
-        """Silent audio should not trigger STT even with full buffer."""
         det = self._make_detector_with_model()
-        # Fill buffer with near-silence
         silent = np.zeros((det._buf_size, 1), dtype=np.float32)
         det._audio_callback(silent, det._buf_size, None, None)
         det._model.transcribe.assert_not_called()
 
     @patch("src.wake_word.threading.Thread")
     def test_loud_full_buffer_triggers_stt_thread(self, mock_thread_cls):
-        """Loud audio filling the buffer should spawn an STT thread."""
         det = self._make_detector_with_model()
         mock_thread = MagicMock()
         mock_thread_cls.return_value = mock_thread
-
-        # Fill buffer with loud audio
         loud = np.random.randn(det._buf_size, 1).astype(np.float32) * 0.5
         det._audio_callback(loud, det._buf_size, None, None)
-
         mock_thread_cls.assert_called_once()
         mock_thread.start.assert_called_once()
 
     def test_run_stt_fires_callback_on_match(self):
-        """_run_stt should call on_wake when keyword is in transcription."""
         det = self._make_detector_with_model()
-
-        # Mock Whisper to return "hey nova"
         mock_segment = MagicMock()
         mock_segment.text = "hey nova"
         det._model.transcribe.return_value = ([mock_segment], MagicMock())
-
         audio = np.random.randn(det._buf_size).astype(np.float32)
         det._run_stt(audio, time.monotonic())
-
         det.on_wake.assert_called_once()
 
     def test_run_stt_no_callback_on_no_match(self):
-        """_run_stt should NOT call on_wake when keyword is absent."""
         det = self._make_detector_with_model()
-
         mock_segment = MagicMock()
         mock_segment.text = "what is the weather"
         det._model.transcribe.return_value = ([mock_segment], MagicMock())
-
         audio = np.random.randn(det._buf_size).astype(np.float32)
         det._run_stt(audio, time.monotonic())
-
         det.on_wake.assert_not_called()
 
     def test_run_stt_cooldown_prevents_retrigger(self):
-        """Rapid detections should be suppressed by cooldown."""
         det = self._make_detector_with_model()
-
         mock_segment = MagicMock()
         mock_segment.text = "nova"
         det._model.transcribe.return_value = ([mock_segment], MagicMock())
-
         audio = np.random.randn(det._buf_size).astype(np.float32)
         det._run_stt(audio, time.monotonic())
         det.on_wake.assert_called_once()
-
-        # Second call within cooldown should be suppressed
-        det._paused = False  # reset pause from first detection
+        det._paused = False
         det._run_stt(audio, time.monotonic())
-        assert det.on_wake.call_count == 1  # still just once
+        assert det.on_wake.call_count == 1
 
 
 # =========================================================================
@@ -324,8 +617,6 @@ class TestKeywordDetectorAudioCallback:
 # =========================================================================
 
 class TestOpenWakeWordDetector:
-    """Basic tests for the OWW backend (model loading is mocked)."""
-
     @patch("src.wake_word.open_input_stream")
     def test_start_loads_model_and_opens_stream(self, mock_stream):
         mock_s = MagicMock()
@@ -337,9 +628,7 @@ class TestOpenWakeWordDetector:
             MockModel.return_value = mock_model
 
             det = OpenWakeWordDetector(
-                on_wake=cb,
-                wake_word="jarvis",
-                confidence_threshold=0.5,
+                on_wake=cb, wake_word="jarvis", confidence_threshold=0.5,
             )
             det.start()
 
@@ -349,13 +638,12 @@ class TestOpenWakeWordDetector:
             )
             mock_s.start.assert_called_once()
             assert det._running is True
-
             det.stop()
 
     def test_stop_without_start_is_safe(self):
         cb = MagicMock()
         det = OpenWakeWordDetector(on_wake=cb, wake_word="jarvis")
-        det.stop()  # should not raise
+        det.stop()
 
 
 # =========================================================================
@@ -365,18 +653,47 @@ class TestOpenWakeWordDetector:
 class TestWakeWordDetectorFacade:
     """Test that the facade routes to the correct backend."""
 
+    @patch("src.wake_word.VoskKeywordDetector")
+    def test_nova_routes_to_vosk(self, MockVosk):
+        """'nova' in auto mode should route to VoskKeywordDetector."""
+        mock_vosk = MagicMock()
+        MockVosk.return_value = mock_vosk
+        cb = MagicMock()
+
+        det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
+        assert det.backend_name == "vosk"
+
+        det.start()
+        MockVosk.assert_called_once_with(keyword="nova", on_wake=cb)
+        mock_vosk.start.assert_called_once()
+
     @patch("src.wake_word.KeywordDetector")
-    def test_nova_routes_to_keyword(self, MockKW):
+    def test_nova_forced_keyword_routes_to_whisper(self, MockKW):
+        """Forcing 'keyword' backend should use the Whisper-based detector."""
         mock_kw = MagicMock()
         MockKW.return_value = mock_kw
         cb = MagicMock()
 
-        det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
+        det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="keyword")
         assert det.backend_name == "keyword"
 
         det.start()
         MockKW.assert_called_once_with(keyword="nova", on_wake=cb)
         mock_kw.start.assert_called_once()
+
+    @patch("src.wake_word.PorcupineDetector")
+    def test_porcupine_backend(self, MockPorc):
+        """Forcing 'porcupine' backend should use PorcupineDetector."""
+        mock_porc = MagicMock()
+        MockPorc.return_value = mock_porc
+        cb = MagicMock()
+
+        det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="porcupine")
+        assert det.backend_name == "porcupine"
+
+        det.start()
+        MockPorc.assert_called_once_with(on_wake=cb, wake_word="nova")
+        mock_porc.start.assert_called_once()
 
     @patch("src.wake_word.OpenWakeWordDetector")
     def test_jarvis_routes_to_openwakeword(self, MockOWW):
@@ -384,9 +701,7 @@ class TestWakeWordDetectorFacade:
         MockOWW.return_value = mock_oww
         cb = MagicMock()
 
-        det = WakeWordDetector(
-            on_wake=cb, wake_word="jarvis", backend="auto"
-        )
+        det = WakeWordDetector(on_wake=cb, wake_word="jarvis", backend="auto")
         assert det.backend_name == "openwakeword"
 
         det.start()
@@ -395,63 +710,48 @@ class TestWakeWordDetectorFacade:
         )
         mock_oww.start.assert_called_once()
 
-    @patch("src.wake_word.KeywordDetector")
-    def test_forced_keyword_for_jarvis(self, MockKW):
-        mock_kw = MagicMock()
-        MockKW.return_value = mock_kw
-        cb = MagicMock()
-
-        det = WakeWordDetector(
-            on_wake=cb, wake_word="jarvis", backend="keyword"
-        )
-        assert det.backend_name == "keyword"
-        det.start()
-        MockKW.assert_called_once()
-
     @patch("src.wake_word.OpenWakeWordDetector")
     def test_forced_openwakeword_for_nova(self, MockOWW):
         mock_oww = MagicMock()
         MockOWW.return_value = mock_oww
         cb = MagicMock()
 
-        det = WakeWordDetector(
-            on_wake=cb, wake_word="nova", backend="openwakeword"
-        )
+        det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="openwakeword")
         assert det.backend_name == "openwakeword"
         det.start()
         MockOWW.assert_called_once()
 
-    @patch("src.wake_word.KeywordDetector")
-    def test_stop_delegates(self, MockKW):
-        mock_kw = MagicMock()
-        MockKW.return_value = mock_kw
+    @patch("src.wake_word.VoskKeywordDetector")
+    def test_stop_delegates(self, MockVosk):
+        mock_vosk = MagicMock()
+        MockVosk.return_value = mock_vosk
         cb = MagicMock()
         det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
         det.start()
         det.stop()
-        mock_kw.stop.assert_called_once()
+        mock_vosk.stop.assert_called_once()
 
-    @patch("src.wake_word.KeywordDetector")
-    def test_pause_resume_delegates(self, MockKW):
-        mock_kw = MagicMock()
-        MockKW.return_value = mock_kw
+    @patch("src.wake_word.VoskKeywordDetector")
+    def test_pause_resume_delegates(self, MockVosk):
+        mock_vosk = MagicMock()
+        MockVosk.return_value = mock_vosk
         cb = MagicMock()
         det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
         det.start()
         det.pause()
-        mock_kw.pause.assert_called_once()
+        mock_vosk.pause.assert_called_once()
         det.resume()
-        mock_kw.resume.assert_called_once()
+        mock_vosk.resume.assert_called_once()
 
     def test_stop_before_start_is_safe(self):
         cb = MagicMock()
         det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
-        det.stop()  # should not raise
+        det.stop()
 
     def test_pause_before_start_is_safe(self):
         cb = MagicMock()
         det = WakeWordDetector(on_wake=cb, wake_word="nova", backend="auto")
-        det.pause()  # should not raise
+        det.pause()
         det.resume()
 
 
@@ -464,12 +764,11 @@ class TestConfigWakeBackend:
         assert config.WAKE_WORD_BACKEND == "auto" or "NOVA_WAKE_BACKEND" in os.environ
 
     def test_env_override_backend(self, monkeypatch):
-        monkeypatch.setenv("NOVA_WAKE_BACKEND", "keyword")
+        monkeypatch.setenv("NOVA_WAKE_BACKEND", "vosk")
         importlib.reload(config)
-        assert config.WAKE_WORD_BACKEND == "keyword"
+        assert config.WAKE_WORD_BACKEND == "vosk"
 
     def test_keyword_buffer_default(self):
-        # Should be 1.5 unless overridden
         expected = float(os.environ.get("NOVA_WAKE_KEYWORD_BUFFER", "1.5"))
         assert config.WAKE_KEYWORD_BUFFER_SEC == expected
 
@@ -480,3 +779,15 @@ class TestConfigWakeBackend:
     def test_keyword_whisper_model_default(self):
         expected = os.environ.get("NOVA_WAKE_KEYWORD_WHISPER", "tiny.en")
         assert config.WAKE_KEYWORD_WHISPER_MODEL == expected
+
+    def test_vosk_model_default(self):
+        expected = os.environ.get("NOVA_VOSK_MODEL", "vosk-model-small-en-us-0.15")
+        assert config.VOSK_MODEL == expected
+
+    def test_porcupine_key_default_empty(self):
+        if "NOVA_PORCUPINE_ACCESS_KEY" not in os.environ:
+            assert config.PORCUPINE_ACCESS_KEY == ""
+
+    def test_porcupine_sensitivity_default(self):
+        expected = float(os.environ.get("NOVA_PORCUPINE_SENSITIVITY", "0.5"))
+        assert config.PORCUPINE_SENSITIVITY == expected

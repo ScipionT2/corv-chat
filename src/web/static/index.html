@@ -3535,7 +3535,7 @@ body {
       Help <span style="margin-left:auto;color:var(--text-dim)">›</span>
     </div>
     <div class="profile-popup-divider"></div>
-    <div class="profile-popup-item" onclick="handleLogout();closeProfileMenu()">
+    <div class="profile-popup-item" onclick="signOut();closeProfileMenu()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Log out
     </div>
@@ -11643,11 +11643,29 @@ function selectPlan(plan) {
     btn.textContent = 'Upgrade to Nova Plus \u2014 $20/mo';
   }
 }
-function handleUpgrade() {
-  // For now, simulate upgrade (will connect to payment later)
-  setUserTier('plus');
-  closeUpgradeModal();
-  alert('\uD83C\uDF89 Welcome to Nova Plus! All premium models are now unlocked.');
+async function handleUpgrade() {
+  const btn = document.getElementById('upgradeBtn');
+  btn.textContent = 'Redirecting to checkout...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: selectedPlan })
+    });
+    const data = await res.json();
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      alert(data.error || 'Payment setup coming soon!');
+      btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)' : 'Upgrade to Nova Plus \u2014 $20/mo';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert('Payment setup coming soon!');
+    btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)' : 'Upgrade to Nova Plus \u2014 $20/mo';
+    btn.disabled = false;
+  }
 }
 
 // Override selectModelCard to check tier
@@ -11670,8 +11688,22 @@ document.querySelectorAll('.model-card').forEach(card => {
   card.setAttribute('onclick', 'selectModelCardWithTier(this)');
 });
 
+// Check server-side tier on load
+async function checkServerTier() {
+  try {
+    const res = await fetch('/api/user/tier');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.tier === 'plus') {
+        setUserTier('plus');
+      }
+    }
+  } catch(_) {}
+}
+
 // Init tier on load
 setTimeout(updateTierUI, 200);
+setTimeout(checkServerTier, 1000);
 </script>
 
 

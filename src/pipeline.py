@@ -240,9 +240,10 @@ class NovaPipeline:
     def _speak_streamed_interruptible(self, token_generator) -> tuple[bool, str]:
         """Speak streamed tokens while keeping wake word detection active.
 
-        Buffers tokens from *token_generator* into sentences and speaks
-        each sentence as it becomes ready, overlapping LLM inference with
-        TTS playback.
+        Uses a concurrent :class:`StreamingTTS` session so that TTS
+        playback of one sentence overlaps with LLM generation of the
+        next.  This significantly reduces perceived latency compared to
+        the previous synchronous approach.
 
         Parameters
         ----------
@@ -256,11 +257,10 @@ class NovaPipeline:
             speech finished without interruption; *full_text* is the
             accumulated reply for transcript/history purposes.
         """
-        import re as _re
-
-        _SENTENCE_END = _re.compile(r'[.!?]\s|\n')
-
         self._interrupted.clear()
+
+        # Create a concurrent streaming TTS session
+        stream = self.tts.create_streaming_session()
 
         # Re-enable wake word detection during speech, with interrupt callback
         if self.detector is not None:
@@ -268,41 +268,35 @@ class NovaPipeline:
             self.detector.on_wake = self._on_interrupt
             self.detector._paused = False
 
-        buffer = ""
-        full_text = ""
         completed = True
 
         try:
             for token in token_generator:
-                full_text += token
-
                 if self._interrupted.is_set():
                     # Stop speaking but keep draining tokens so the
                     # generator can finalise history in the LLM client.
+                    stream.stop()
                     completed = False
+                    # Still accumulate full text for history
+                    stream._full_text += token
                     continue
 
-                buffer += token
+                stream.add_token(token)
 
-                # Flush on sentence boundary or long buffer
-                if _SENTENCE_END.search(buffer) or len(buffer) > 200:
-                    chunk = buffer.strip()
-                    buffer = ""
-                    if chunk:
-                        self.tts.speak(chunk)
-                    if self._interrupted.is_set():
-                        completed = False
-                        continue
-
-            # Flush remaining buffer
-            if buffer.strip() and not self._interrupted.is_set():
-                self.tts.speak(buffer.strip())
+            # Flush remaining buffer and wait for all speech to finish
+            if not self._interrupted.is_set():
+                stream.finish()
                 if self._interrupted.is_set():
                     completed = False
+            else:
+                completed = False
         except Exception as exc:  # noqa: BLE001
             logger.error("Streamed speech error: %s", exc)
             completed = False
+            stream.stop()
         finally:
+            # Ensure worker thread is cleaned up
+            stream.shutdown()
             # Restore original callback and pause state
             if self.detector is not None:
                 self.detector._paused = True
@@ -311,7 +305,7 @@ class NovaPipeline:
         if not completed:
             logger.info("Streamed speech was interrupted by wake word")
 
-        return completed, full_text
+        return completed, stream.full_text
 
     def on_wake(self) -> None:
         """Handle a single wake-word activation (crash-safe wrapper)."""
