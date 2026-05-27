@@ -1038,6 +1038,19 @@ async def payment_cancel(request: Request):
 #  Website Pages — served from /static/site/
 # ===================================================================
 
+@app.get("/privacy", response_class=HTMLResponse)
+@app.get("/terms", response_class=HTMLResponse)
+async def serve_shortcut_page(request: Request):
+    """Shortcut routes for /privacy and /terms."""
+    import os
+    page = request.url.path.lstrip("/")
+    safe_page = os.path.basename(page) + ".html"
+    path = _static_dir / "site" / safe_page
+    if not path.exists():
+        return HTMLResponse("<h1>Page not found</h1>", status_code=404)
+    return HTMLResponse(path.read_text())
+
+
 @app.get("/site/{page}", response_class=HTMLResponse)
 async def serve_site_page(page: str):
     """Serve marketing site pages."""

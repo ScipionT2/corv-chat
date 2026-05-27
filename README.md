@@ -10,16 +10,16 @@
 
 <p align="center">
   <a href="https://nov-assistant.com">Website</a> •
-  <a href="https://nov-assistant.com/site/download.html">Download</a> •
+  <a href="https://github.com/ScipionT2/Nova/releases/latest">Download</a> •
   <a href="https://nov-assistant.com/site/features.html">Features</a> •
   <a href="https://nov-assistant.com/site/pricing.html">Pricing</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-purple" alt="Version">
+  <img src="https://img.shields.io/badge/version-2.0.1-purple" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS-blue" alt="Platform">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-  <img src="https://img.shields.io/badge/models-21%20free-orange" alt="Models">
+  <img src="https://img.shields.io/badge/models-23%20free-orange" alt="Models">
 </p>
 
 ---
@@ -29,7 +29,7 @@ Nova is a personal AI operating system that runs locally on your machine. It com
 ## ✨ Features
 
 ### Web App ([nov-assistant.com](https://nov-assistant.com))
-- **21 free AI models** — Llama, Gemma, Qwen, DeepSeek, Mistral & more
+- **23+ free AI models** — Llama, Gemma, Qwen, DeepSeek, Nemotron & more
 - **Multi-provider fallback** — Groq, OpenRouter, SambaNova
 - **Streaming chat** with markdown, code highlighting, and copy buttons
 - **Image generation** — create visuals with AI
