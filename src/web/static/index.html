@@ -547,6 +547,22 @@ body::after{
   padding:6px 0;
 }
 #chatInput::placeholder{color:var(--text-dim)}
+/* Model badge in input bar */
+.model-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(123,97,255,.1);border:1px solid rgba(123,97,255,.18);
+  font-size:11px;font-weight:500;color:var(--purple);
+  white-space:nowrap;cursor:default;user-select:none;
+  letter-spacing:.2px;transition:background .2s,border-color .2s;
+  font-family:'Inter',sans-serif;
+  max-width:120px;overflow:hidden;text-overflow:ellipsis;
+}
+.model-badge:hover{background:rgba(123,97,255,.15);border-color:rgba(123,97,255,.28)}
+.model-badge .badge-dot{
+  width:5px;height:5px;border-radius:50%;flex-shrink:0;
+  background:var(--purple);box-shadow:0 0 4px rgba(123,97,255,.5);
+}
 #sendBtn{
   width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;
   background:linear-gradient(135deg,#6B51EF,#8B6BFF);
@@ -3634,6 +3650,7 @@ body {
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
         <textarea id="chatInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
         <div class="input-right">
+          <span class="model-badge" id="modelBadge" title="Current model"><span class="badge-dot"></span><span id="modelBadgeLabel">Nova Auto</span></span>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
@@ -4613,10 +4630,18 @@ function syncModelCards() {
     c.classList.toggle('active', c.dataset.value === currentModel);
   });
   const activeNameEl = document.getElementById('modelsActiveName');
-  if (activeNameEl) {
-    const activeCard = document.querySelector('.model-card.active');
+  const activeCard = document.querySelector('.model-card.active');
+  if (activeNameEl && activeCard) {
+    activeNameEl.textContent = activeCard.querySelector('.model-card-name').textContent;
+  }
+  // Update model badge in input bar
+  const badgeLabel = document.getElementById('modelBadgeLabel');
+  if (badgeLabel) {
     if (activeCard) {
-      activeNameEl.textContent = activeCard.querySelector('.model-card-name').textContent;
+      badgeLabel.textContent = activeCard.querySelector('.model-card-name').textContent;
+    } else {
+      // Fallback: prettify the raw model id
+      badgeLabel.textContent = currentModel.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
   }
 }
