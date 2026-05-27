@@ -489,6 +489,18 @@ async def user_middleware(request: Request, call_next):
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
+    landing = _static_dir / "landing.html"
+    if landing.is_file():
+        return HTMLResponse(landing.read_text())
+    # Fallback to app if no landing page
+    index = _static_dir / "index.html"
+    if index.is_file():
+        return HTMLResponse(index.read_text())
+    return HTMLResponse("<h1>Nova Web</h1><p>static/landing.html not found.</p>")
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_page(request: Request):
     index = _static_dir / "index.html"
     if index.is_file():
         return HTMLResponse(index.read_text())
