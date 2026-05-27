@@ -137,6 +137,40 @@ nav.scrolled{background:rgba(2,3,10,.92)}
 .stat-value{font-size:28px;font-weight:700;color:var(--text)}
 .stat-label{font-size:13px;color:var(--text-dim);margin-top:4px}
 
+/* ═══ App preview mockup ═══ */
+.app-preview{
+  position:relative;z-index:1;
+  max-width:1000px;margin:-40px auto 0;padding:0 24px;
+  animation:fadeUp .8s ease .6s both;
+}
+.browser-frame{
+  border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(10,14,30,.8);
+  box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 120px rgba(123,60,255,.08);
+}
+.browser-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 16px;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.browser-dot{
+  width:12px;height:12px;border-radius:50%;
+}
+.browser-dot.red{background:#FF5F57}
+.browser-dot.yellow{background:#FFBD2E}
+.browser-dot.green{background:#28CA41}
+.browser-url{
+  flex:1;text-align:center;
+  font-size:12px;color:var(--text-dim);
+  background:rgba(255,255,255,.04);border-radius:6px;
+  padding:6px 12px;margin:0 48px;
+}
+.browser-frame img{
+  width:100%;display:block;
+}
+
 /* ═══ Sections shared ═══ */
 section{position:relative;z-index:1;padding:120px 24px}
 .section-inner{max-width:1100px;margin:0 auto}
@@ -336,6 +370,19 @@ footer{
     <div class="stat"><div class="stat-value">0</div><div class="stat-label">Sign-Ups Needed</div></div>
   </div>
 </section>
+
+<!-- App Preview -->
+<div class="app-preview">
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <span class="browser-dot red"></span>
+      <span class="browser-dot yellow"></span>
+      <span class="browser-dot green"></span>
+      <div class="browser-url">nov-assistant.com</div>
+    </div>
+    <img src="/static/img/nova-app-screenshot.png" alt="Nova AI Assistant Interface" loading="lazy">
+  </div>
+</div>
 
 <!-- Features -->
 <section id="features">
