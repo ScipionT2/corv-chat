@@ -1,5 +1,5 @@
 """
-Nova Web — Standalone FastAPI backend.
+Corv Workspace — Standalone FastAPI backend.
 
 Multi-provider LLM chat (OpenRouter + OpenAI) with streaming SSE,
 Google OAuth login, SQLite-based persistent storage for users/chats/agents,
@@ -52,6 +52,24 @@ DB_PATH: str = os.getenv("NOVA_DB_PATH", "nova.db")
 BOOT_TIME: float = time.time()
 
 # ---------------------------------------------------------------------------
+# Freemium rate limits
+# ---------------------------------------------------------------------------
+
+FREE_LIMITS = {
+    "messages_per_day": 25,
+    "images_per_day": 5,
+    "chats_max": 10,
+    "web_searches_per_day": 10,
+}
+
+PLUS_LIMITS = {
+    "messages_per_day": 999999,
+    "images_per_day": 999999,
+    "chats_max": 999999,
+    "web_searches_per_day": 999999,
+}
+
+# ---------------------------------------------------------------------------
 # Stripe
 # ---------------------------------------------------------------------------
 
@@ -80,7 +98,7 @@ COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
 # ---------------------------------------------------------------------------
 
 NOVA_DEFAULT_SYSTEM = (
-    "You are Nova — a smart, warm, and genuinely engaging AI assistant. "
+    "You are Corv, an AI-native browser workspace companion. Help organize projects, spaces, tabs, notes, research, and next actions. Be concise, project-aware, and focused on helping the user make progress. "
     "Talk like a real person, not a corporate chatbot. Be expressive — laugh at funny things, "
     "get excited about cool ideas, and be straight-up honest when something won't work. "
     "Use casual language, humor, and emojis when they fit naturally. "
@@ -174,7 +192,7 @@ async def init_db() -> None:
         CREATE TABLE IF NOT EXISTS chats (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL REFERENCES users(id),
-            agent_name TEXT NOT NULL DEFAULT 'Nova',
+            agent_name TEXT NOT NULL DEFAULT 'Corv',
             title TEXT NOT NULL DEFAULT 'New Chat',
             created_at REAL NOT NULL,
             updated_at REAL NOT NULL
@@ -187,6 +205,16 @@ async def init_db() -> None:
             content TEXT NOT NULL,
             created_at REAL NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS usage_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            created_at REAL NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_usage_user_action_time
+            ON usage_logs(user_id, action, created_at);
         """
     )
     await db.commit()
@@ -208,16 +236,16 @@ async def ensure_user(user_id: str, email: str, name: str, avatar: str | None = 
 
 
 async def ensure_default_agent(user_id: str) -> None:
-    """Create the default Nova agent for a user if it doesn't exist."""
+    """Create the default Corv agent for a user if it doesn't exist."""
     db = await get_db()
     row = await db.execute_fetchall(
-        "SELECT id FROM agents WHERE user_id=? AND name='Nova'", (user_id,)
+        "SELECT id FROM agents WHERE user_id=? AND name='Corv'", (user_id,)
     )
     if not row:
         now = time.time()
         await db.execute(
             "INSERT INTO agents (user_id, name, system_prompt, model, created_at) VALUES (?,?,?,?,?)",
-            (user_id, "Nova", CUSTOM_SYSTEM_PROMPT or NOVA_DEFAULT_SYSTEM, "", now),
+            (user_id, "Corv", CUSTOM_SYSTEM_PROMPT or NOVA_DEFAULT_SYSTEM, "", now),
         )
         await db.commit()
 
@@ -226,6 +254,82 @@ async def ensure_default_agent(user_id: str) -> None:
 # Auth helpers
 # ---------------------------------------------------------------------------
 
+
+
+# ---------------------------------------------------------------------------
+# Usage tracking & rate-limit helpers
+# ---------------------------------------------------------------------------
+
+async def _get_user_tier(uid: str) -> str:
+    """Return 'plus' or 'free' for a user."""
+    if not uid or uid.startswith("anon_"):
+        return "free"
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT email FROM users WHERE id=?", (uid,))
+    if not rows:
+        return "free"
+    user_email = rows[0]["email"]
+    plus_file = "/opt/nova-web/plus_users.json"
+    try:
+        with open(plus_file, "r") as f:
+            import json as _json
+            users = _json.load(f)
+        if user_email in users:
+            return "plus"
+    except Exception:
+        pass
+    return "free"
+
+
+async def _get_limits(uid: str) -> dict:
+    """Return the rate-limit dict for a user."""
+    tier = await _get_user_tier(uid)
+    return PLUS_LIMITS if tier == "plus" else FREE_LIMITS
+
+
+async def _count_usage(uid: str, action: str) -> int:
+    """Count usage for a user+action in the current UTC day."""
+    import calendar, datetime
+    now = datetime.datetime.utcnow()
+    start_of_day = calendar.timegm(now.replace(hour=0, minute=0, second=0, microsecond=0).timetuple())
+    db = await get_db()
+    rows = await db.execute_fetchall(
+        "SELECT COUNT(*) as cnt FROM usage_logs WHERE user_id=? AND action=? AND created_at>=?",
+        (uid, action, start_of_day),
+    )
+    return rows[0]["cnt"] if rows else 0
+
+
+async def _log_usage(uid: str, action: str) -> None:
+    """Log a usage event."""
+    db = await get_db()
+    await db.execute(
+        "INSERT INTO usage_logs (user_id, action, created_at) VALUES (?,?,?)",
+        (uid, action, time.time()),
+    )
+    await db.commit()
+
+
+async def _check_rate_limit(uid: str, action: str, limit_key: str) -> tuple[bool, int, int]:
+    """Check if user is within rate limits.
+    Returns (allowed, used, limit).
+    """
+    limits = await _get_limits(uid)
+    limit = limits.get(limit_key, 0)
+    used = await _count_usage(uid, action)
+    return used < limit, used, limit
+
+
+async def _check_chat_limit(uid: str) -> tuple[bool, int, int]:
+    """Check if user can create more chats."""
+    limits = await _get_limits(uid)
+    limit = limits["chats_max"]
+    db = await get_db()
+    rows = await db.execute_fetchall(
+        "SELECT COUNT(*) as cnt FROM chats WHERE user_id=?", (uid,)
+    )
+    count = rows[0]["cnt"] if rows else 0
+    return count < limit, count, limit
 
 def _sign_cookie(user_id: str) -> str:
     return _signer.dumps(user_id)
@@ -291,7 +395,7 @@ class AgentSwitchRequest(BaseModel):
 
 
 class ChatCreateRequest(BaseModel):
-    agent_name: str = "Nova"
+    agent_name: str = "Corv"
     title: str = "New Chat"
 
 
@@ -313,7 +417,7 @@ _active_agents: dict[str, str] = {}  # user_id -> active_agent_name
 # App
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Nova Web", version="2.0.0")
+app = FastAPI(title="Corv Workspace", version="2.0.0")
 
 # Session middleware (needed by authlib OAuth)
 app.add_middleware(SessionMiddleware, secret_key=APP_SECRET_KEY, https_only=True, same_site="lax")
@@ -496,7 +600,7 @@ async def root(request: Request):
     index = _static_dir / "index.html"
     if index.is_file():
         return HTMLResponse(index.read_text())
-    return HTMLResponse("<h1>Nova Web</h1><p>static/landing.html not found.</p>")
+    return HTMLResponse("<h1>Corv Workspace</h1><p>static/landing.html not found.</p>")
 
 
 @app.get("/app", response_class=HTMLResponse)
@@ -504,7 +608,7 @@ async def app_page(request: Request):
     index = _static_dir / "index.html"
     if index.is_file():
         return HTMLResponse(index.read_text())
-    return HTMLResponse("<h1>Nova Web</h1><p>static/index.html not found.</p>")
+    return HTMLResponse("<h1>Corv Workspace</h1><p>static/index.html not found.</p>")
 
 
 @app.get("/api/health")
@@ -585,6 +689,16 @@ async def list_chats(request: Request):
 
 @app.post("/api/chats")
 async def create_chat(request: Request, body: ChatCreateRequest):
+    # Chat count limit check
+    uid_check = request.state.user_id
+    allowed, count, limit = await _check_chat_limit(uid_check)
+    if not allowed:
+        return JSONResponse(
+            {"error": f"Chat limit reached ({limit}). Delete old chats or upgrade to Corv Pro.",
+             "limit_reached": True, "used": count, "limit": limit},
+            status_code=429,
+        )
+
     """Create a new chat."""
     uid = request.state.user_id
     db = await get_db()
@@ -663,7 +777,7 @@ async def list_agents(request: Request):
         "SELECT id, name, system_prompt, model, created_at FROM agents WHERE user_id=? ORDER BY created_at ASC",
         (uid,),
     )
-    active = _active_agents.get(uid, "Nova")
+    active = _active_agents.get(uid, "Corv")
     return {
         "agents": [
             {
@@ -712,8 +826,8 @@ async def create_agent(request: Request, body: AgentCreateRequest):
 async def delete_agent(request: Request, name: str):
     """Delete an agent from DB."""
     uid = request.state.user_id
-    if name == "Nova":
-        return JSONResponse({"error": "Cannot delete the default Nova agent"}, 400)
+    if name == "Corv":
+        return JSONResponse({"error": "Cannot delete the default Corv agent"}, 400)
 
     db = await get_db()
     rows = await db.execute_fetchall(
@@ -726,9 +840,9 @@ async def delete_agent(request: Request, name: str):
     await db.commit()
 
     if _active_agents.get(uid) == name:
-        _active_agents[uid] = "Nova"
+        _active_agents[uid] = "Corv"
 
-    return {"deleted": True, "name": name, "active": _active_agents.get(uid, "Nova")}
+    return {"deleted": True, "name": name, "active": _active_agents.get(uid, "Corv")}
 
 
 @app.post("/api/agents/switch")
@@ -757,6 +871,16 @@ async def switch_agent(request: Request, body: AgentSwitchRequest):
 async def chat(request: Request, body: ChatRequest):
     """Stream a chat response via SSE. Persists messages to DB."""
     uid = request.state.user_id
+
+    # Rate limit check
+    allowed, used, limit = await _check_rate_limit(uid, "message", "messages_per_day")
+    if not allowed:
+        return JSONResponse(
+            {"error": f"Daily message limit reached ({limit}). Upgrade to Corv Pro for unlimited access.",
+             "limit_reached": True, "used": used, "limit": limit},
+            status_code=429,
+        )
+
     provider = _resolve_provider()
     if provider == "none":
         return JSONResponse(
@@ -765,7 +889,7 @@ async def chat(request: Request, body: ChatRequest):
 
     db = await get_db()
     chat_id = body.chat_id
-    active_agent = _active_agents.get(uid, "Nova")
+    active_agent = _active_agents.get(uid, "Corv")
 
     # Auto-create chat if no chat_id provided
     if not chat_id:
@@ -859,6 +983,9 @@ async def chat(request: Request, body: ChatRequest):
             )
             await save_db.commit()
 
+            # Log usage
+            await _log_usage(uid, "message")
+
             yield {
                 "event": "done",
                 "data": json.dumps({
@@ -933,8 +1060,8 @@ async def create_checkout_session(request: Request):
                 'quantity': 1,
             }],
             mode='subscription',
-            success_url='https://nov-assistant.com/payment/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://nov-assistant.com/payment/cancel',
+            success_url='https://corv-chat.com/payment/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://corv-chat.com/payment/cancel',
             customer_email=user_email,
             metadata={
                 'plan': plan,
@@ -981,6 +1108,35 @@ async def stripe_webhook(request: Request):
     return {"status": "ok"}
 
 
+@app.get("/api/user/usage")
+async def get_user_usage(request: Request):
+    """Return current usage counts and limits for the user."""
+    uid = request.state.user_id
+    tier = await _get_user_tier(uid)
+    limits = PLUS_LIMITS if tier == "plus" else FREE_LIMITS
+
+    messages_used = await _count_usage(uid, "message")
+    images_used = await _count_usage(uid, "image")
+    searches_used = await _count_usage(uid, "web_search")
+
+    db = await get_db()
+    chat_rows = await db.execute_fetchall(
+        "SELECT COUNT(*) as cnt FROM chats WHERE user_id=?", (uid,)
+    )
+    chats_count = chat_rows[0]["cnt"] if chat_rows else 0
+
+    return {
+        "tier": tier,
+        "usage": {
+            "messages": {"used": messages_used, "limit": limits["messages_per_day"], "period": "day"},
+            "images": {"used": images_used, "limit": limits["images_per_day"], "period": "day"},
+            "chats": {"used": chats_count, "limit": limits["chats_max"], "period": "total"},
+            "web_searches": {"used": searches_used, "limit": limits["web_searches_per_day"], "period": "day"},
+        },
+        "resets_at": "midnight UTC",
+    }
+
+
 @app.get("/api/user/tier")
 async def get_user_tier(request: Request):
     uid = await _get_user_id(request)
@@ -1008,7 +1164,7 @@ async def payment_success(request: Request):
     <html><head><meta http-equiv="refresh" content="3;url=/"></head>
     <body style="background:#050816;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:Inter,sans-serif">
     <div style="text-align:center">
-        <h1>\U0001f389 Welcome to Nova Plus!</h1>
+        <h1>\U0001f389 Welcome to Corv Pro!</h1>
         <p>Your subscription is active. Redirecting...</p>
     </div></body></html>
     """)
@@ -1108,6 +1264,17 @@ async def get_image_models():
 async def generate_image(request: Request, body: ImageGenRequest):
     import urllib.parse
 
+    uid = request.state.user_id
+
+    # Rate limit check
+    allowed, used, limit = await _check_rate_limit(uid, "image", "images_per_day")
+    if not allowed:
+        return JSONResponse(
+            {"error": f"Daily image limit reached ({limit}). Upgrade to Corv Pro for unlimited access.",
+             "limit_reached": True, "used": used, "limit": limit},
+            status_code=429,
+        )
+
     if body.model in ("dall-e-3", "gpt-image-2"):
         return JSONResponse({"error": "Premium image models require an API key (coming soon)."}, 400)
 
@@ -1130,6 +1297,7 @@ async def generate_image(request: Request, body: ImageGenRequest):
     except Exception as e:
         return JSONResponse({"error": f"Image service error: {str(e)[:100]}"}, 500)
 
+    await _log_usage(uid, "image")
     return {"image_url": image_url, "model": body.model, "prompt": body.prompt}
 
 
@@ -1155,7 +1323,7 @@ V2_MODELS = {
     # ── FREE: each model has fallbacks across providers ─────────────
     # provider = primary provider, fallbacks = list of (provider, model_id, api_key_env)
     "nova-auto": {
-        "provider": "openrouter-free", "name": "Nova Auto (Best Available)",
+        "provider": "openrouter-free", "name": "Corv Auto (Best Available)",
         "model_id": "openrouter/free", "free": True,
         "fallbacks": [
             ("groq", "llama-3.3-70b-versatile", "GROQ_API_KEY"),
@@ -1366,8 +1534,8 @@ async def _stream_openrouter_free(messages, model_id, api_key):
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://nov-assistant.com",
-        "X-Title": "Nova AI",
+        "HTTP-Referer": "https://corv-chat.com",
+        "X-Title": "Corv",
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
         async with client.stream("POST", url, headers=headers, json=payload) as resp:
@@ -1440,6 +1608,17 @@ async def v2_chat(request: Request, body: ChatV2Request):
     Free models use server-side keys. BYOK models require api_key in body.
     API keys are NEVER stored — used for this request only, then discarded.
     """
+    uid = request.state.user_id
+
+    # Rate limit check
+    allowed, used, limit = await _check_rate_limit(uid, "message", "messages_per_day")
+    if not allowed:
+        return JSONResponse(
+            {"error": f"Daily message limit reached ({limit}). Upgrade to Corv Pro for unlimited access.",
+             "limit_reached": True, "used": used, "limit": limit},
+            status_code=429,
+        )
+
     model_key = body.model
     if model_key not in V2_MODELS:
         return JSONResponse({"error": f"Unknown model: {model_key}"}, 400)
@@ -1473,7 +1652,7 @@ async def v2_chat(request: Request, body: ChatV2Request):
     now = time.time()
 
     chat_id = body.chat_id
-    agent_name = body.agent or _active_agents.get(uid, "Nova")
+    agent_name = body.agent or _active_agents.get(uid, "Corv")
 
     if not chat_id:
         title = body.message[:50].strip() or "New Chat"
@@ -1584,6 +1763,7 @@ async def v2_chat(request: Request, body: ChatV2Request):
         )
         await save_db.commit()
 
+        await _log_usage(uid, "message")
         yield {"event": "done", "data": json.dumps({"content": full, "model": model_key, "provider": used_provider, "chat_id": chat_id})}
 
     return EventSourceResponse(_stream())
@@ -1642,7 +1822,7 @@ async def v2_chat_offline(request: Request, body: OfflineChatRequest):
         title = body.message[:50].strip() or "New Chat"
         cursor = await db.execute(
             "INSERT INTO chats (user_id, agent_name, title, created_at, updated_at) VALUES (?,?,?,?,?)",
-            (uid, "Nova (Offline)", title, now, now),
+            (uid, "Corv (Offline)", title, now, now),
         )
         await db.commit()
         chat_id = cursor.lastrowid

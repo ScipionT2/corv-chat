@@ -1,0 +1,20 @@
+<svg width="980" height="300" viewBox="0 0 980 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="body" x1="55" y1="45" x2="281" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#21DFFF"/><stop offset=".48" stop-color="#1478FF"/><stop offset="1" stop-color="#7B2CFF"/></linearGradient>
+    <linearGradient id="top" x1="34" y1="39" x2="290" y2="104" gradientUnits="userSpaceOnUse"><stop stop-color="#38E8FF"/><stop offset="1" stop-color="#0084FF"/></linearGradient>
+    <filter id="glow" x="-20%" y="-30%" width="140%" height="160%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#007BFF" flood-opacity=".22"/></filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path d="M34 58c70 24 128-2 184-6 33-3 63 15 91 42-43-7-78 2-105 24-53 41-123 36-170-60Z" fill="url(#top)"/>
+    <path d="M34 58c23 65 75 99 133 94 49-4 84-31 142-58-19 0-35 3-49 7-33 12-67 24-105 22-47-2-88-21-121-65Z" fill="#06101F" opacity=".58"/>
+    <path d="M53 142c66 28 121 12 174-16-29 50-67 86-117 106-27-16-47-45-57-90Z" fill="url(#body)"/>
+    <path d="M71 200c49 19 92 9 132-14-25 39-59 66-101 82-19-14-29-34-31-68Z" fill="#762BFF"/>
+    <path d="M52 142c52 24 103 16 153-17" stroke="#030814" stroke-width="12" stroke-linecap="round" opacity=".78"/>
+    <path d="M69 200c40 18 83 11 130-17" stroke="#030814" stroke-width="12" stroke-linecap="round" opacity=".78"/>
+    <path d="M217 52c34 3 67 19 101 45-48-1-85 7-110 25l-13-27c-4-10 7-44 22-43Z" fill="#0C8DFF"/>
+    <path d="M256 91c20 1 40 3 62 6-25 7-45 14-63 24l-30-13c8-10 18-16 31-17Z" fill="#081020"/>
+    <circle cx="196" cy="85" r="10" fill="#020712"/>
+  </g>
+  <text x="365" y="205" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="178" font-weight="900" letter-spacing="-12" fill="#071C3A">corv</text>
+  <text x="365" y="205" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="178" font-weight="900" letter-spacing="-12" fill="#0B2B59" opacity=".65">corv</text>
+</svg>

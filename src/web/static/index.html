@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nova AI</title>
+<title>Corv</title>
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<!-- Open Graph --><meta property="og:type" content="website"><meta property="og:url" content="https://corv-chat.com"><meta property="og:title" content="Corv — AI-Native Browser Workspace"><meta property="og:description" content="30+ AI models in one interface. No sign-up, no tracking, no cost. Your AI, your rules."><meta property="og:image" content="https://corv-chat.com/static/img/corv-mark.svg"><meta property="og:site_name" content="Corv"><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Corv"><meta name="twitter:description" content="30+ AI models. One interface. Zero cost. No sign-up."><meta name="twitter:image" content="https://corv-chat.com/static/img/corv-mark.svg">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════ RESET & BASE ═══════════════ */
@@ -1169,7 +1172,7 @@ body::after{
 
 /* ============================================================
    DESI-A  ·  Atmosphere + Environmental Glow
-   Nova AI Interface — Cinematic Environmental Lighting
+   Corv Interface — Cinematic Environmental Lighting
    ============================================================
    Replaces the base star-field and nebula layers with rich,
    Interstellar-grade indirect lighting.  Soft. Luxurious.
@@ -1357,7 +1360,7 @@ body::after {
 }
 /* ============================================================
    desi-B-panels.css — PANELS · BORDERS · CARDS · GLASS DEPTH
-   Nova AI Interface  ·  Cinematic glassmorphism layer
+   Corv Interface  ·  Cinematic glassmorphism layer
    ============================================================ */
 
 /* ----------------------------------------------------------
@@ -1550,7 +1553,7 @@ body::after {
 }
 /* ============================================================
    desi-C-details.css
-   Icons · Input Bar · Send Button · Motion · Nova Core
+   Icons · Input Bar · Send Button · Motion · Corv Core
    Premium cinematic layer — slow, expensive, minimal.
    ============================================================ */
 
@@ -3424,6 +3427,34 @@ body {
   .apps-featured-right{min-height:120px}
 }
 
+
+/* ═══════════════ USAGE BAR ═══════════════ */
+.sidebar-usage{padding:10px 14px;margin:6px 8px;border-radius:10px;background:rgba(123,97,255,.06);border:1px solid rgba(123,97,255,.12)}
+.sidebar-usage-title{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.sidebar-usage-title .tier-badge{font-size:10px;padding:2px 7px;border-radius:6px;background:rgba(123,97,255,.15);color:#A78BFA;letter-spacing:0;text-transform:none;font-weight:600}
+.sidebar-usage-title .tier-badge.plus{background:rgba(52,211,153,.15);color:#34D399}
+.usage-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.usage-row:last-child{margin-bottom:0}
+.usage-label{font-size:11px;color:var(--text-dim);width:58px;flex-shrink:0}
+.usage-bar-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.usage-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7B61FF,#5EEBFF);transition:width .3s ease}
+.usage-bar-fill.warn{background:linear-gradient(90deg,#FBBF24,#F59E0B)}
+.usage-bar-fill.full{background:linear-gradient(90deg,#EF4444,#DC2626)}
+.usage-count{font-size:10px;color:var(--text-dim);min-width:38px;text-align:right}
+.usage-upgrade-btn{display:block;width:100%;margin-top:8px;padding:6px;border-radius:8px;border:none;background:linear-gradient(135deg,#6B51EF,#8B6BFF);color:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:transform .15s}
+.usage-upgrade-btn:hover{transform:scale(1.03)}
+.limit-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.limit-modal-overlay.show{opacity:1;pointer-events:auto}
+.limit-modal{background:#0F1225;border:1px solid rgba(123,97,255,.2);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center}
+.limit-modal h2{font-size:20px;margin-bottom:8px;color:#fff}
+.limit-modal p{font-size:14px;color:var(--text-mid);margin-bottom:20px;line-height:1.5}
+.limit-modal .limit-icon{font-size:48px;margin-bottom:16px}
+.limit-modal-actions{display:flex;gap:10px;justify-content:center}
+.limit-modal-actions button{padding:10px 24px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s}
+.limit-modal-actions button:hover{transform:scale(1.05)}
+.limit-modal-actions .btn-upgrade{background:linear-gradient(135deg,#6B51EF,#8B6BFF);color:#fff}
+.limit-modal-actions .btn-close-limit{background:rgba(255,255,255,.08);color:var(--text-mid)}
+
 </style>
 </head>
 <body>
@@ -3431,7 +3462,7 @@ body {
 <!-- ═══════════ LEFT SIDEBAR ═══════════ -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <img src="/static/img/nova-icon.png" alt="Nova" />
+    <img src="/static/img/corv-mark.svg" alt="Corv" />
     <span>NOVA</span>
     <button class="sidebar-logo-action" onclick="startNewChat()" title="New chat">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
@@ -3484,6 +3515,30 @@ body {
     <div class="sidebar-history-list" id="sidebarHistoryList">
       <!-- populated by JS -->
     </div>
+  </div>
+
+  
+  <!-- Usage limits widget -->
+  <div class="sidebar-usage" id="sidebarUsage">
+    <div class="sidebar-usage-title">
+      Usage <span class="tier-badge" id="usageTierBadge">Free</span>
+    </div>
+    <div class="usage-row">
+      <span class="usage-label">Messages</span>
+      <div class="usage-bar-track"><div class="usage-bar-fill" id="usageBarMessages"></div></div>
+      <span class="usage-count" id="usageCountMessages">0/25</span>
+    </div>
+    <div class="usage-row">
+      <span class="usage-label">Images</span>
+      <div class="usage-bar-track"><div class="usage-bar-fill" id="usageBarImages"></div></div>
+      <span class="usage-count" id="usageCountImages">0/5</span>
+    </div>
+    <div class="usage-row">
+      <span class="usage-label">Chats</span>
+      <div class="usage-bar-track"><div class="usage-bar-fill" id="usageBarChats"></div></div>
+      <span class="usage-count" id="usageCountChats">0/10</span>
+    </div>
+    <button class="usage-upgrade-btn" onclick="window.location.href='/site/pricing.html'">&#9889; Upgrade to Corv Pro</button>
   </div>
 
   <div class=sidebar-site-links>
@@ -3564,14 +3619,14 @@ body {
   <div class="main-top-bar">
     <div class="tier-selector" id="tierSelector">
       <button class="tier-selector-btn" onclick="toggleTierDropdown(event)">
-        <span class="tier-selector-label" id="tierSelectorLabel">Nova</span>
+        <span class="tier-selector-label" id="tierSelectorLabel">Corv</span>
         <svg class="tier-selector-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="tier-dropdown" id="tierDropdown">
         <div class="tier-dropdown-item active" id="tierOptFree" onclick="selectTier('free')">
           <div class="tier-dropdown-icon free-icon">⚛</div>
           <div class="tier-dropdown-info">
-            <div class="tier-dropdown-name">Nova</div>
+            <div class="tier-dropdown-name">Corv</div>
             <div class="tier-dropdown-desc">Great for everyday tasks</div>
           </div>
           <span class="tier-dropdown-check" id="tierFreeCheck">✓</span>
@@ -3579,7 +3634,7 @@ body {
         <div class="tier-dropdown-item plus-item" id="tierOptPlus" onclick="selectTier('plus')">
           <div class="tier-dropdown-icon plus-icon">✨</div>
           <div class="tier-dropdown-info">
-            <div class="tier-dropdown-name">Nova Plus</div>
+            <div class="tier-dropdown-name">Corv Pro</div>
             <div class="tier-dropdown-desc">Unlock more power and advanced features.</div>
           </div>
           <span class="tier-dropdown-action" id="tierPlusAction">Upgrade</span>
@@ -3591,20 +3646,20 @@ body {
   <div class="chat-panel empty-state" id="chatPanel">
     <!-- Welcome (shown in empty state) -->
     <div class="welcome-screen" id="welcomeScreen">
-      <h1 style="font-family:'Orbitron','Inter',sans-serif;font-size:36px;letter-spacing:1px;font-weight:600;color:var(--text)">Hello, I'm <span style="color:var(--purple)">Nova.</span></h1>
+      <h1 style="font-family:'Orbitron','Inter',sans-serif;font-size:36px;letter-spacing:1px;font-weight:600;color:var(--text)">Welcome back to <span style="color:var(--purple)">Corv.</span></h1>
     </div>
     <div id="chatMessages">
       <!-- Welcome message -->
       <div class="message assistant">
-        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+        <div class="msg-avatar"><img src="/static/img/corv-mark.svg" alt="N"></div>
         <div style="flex:1;min-width:0">
           <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
-          <div class="msg-meta"><span id="welcomeMsgTime">9:41 AM • Nova</span></div>
+          <div class="msg-meta"><span id="welcomeMsgTime">9:41 AM • Corv</span></div>
         </div>
       </div>
       <!-- Thinking bubble (hidden) -->
       <div id="thinkingBubble" class="message assistant">
-        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+        <div class="msg-avatar"><img src="/static/img/corv-mark.svg" alt="N"></div>
         <div class="thinking-dots"><span></span><span></span><span></span></div>
       </div>
     </div>
@@ -3650,7 +3705,7 @@ body {
         <div id="attachPreview" class="attach-preview" style="display:none"></div>
         <textarea id="chatInput" rows="1" placeholder="Ask anything" autocomplete="off"></textarea>
         <div class="input-right">
-          <span class="model-badge" id="modelBadge" title="Current model"><span class="badge-dot"></span><span id="modelBadgeLabel">Nova Auto</span></span>
+          <span class="model-badge" id="modelBadge" title="Current model"><span class="badge-dot"></span><span id="modelBadgeLabel">Corv Auto</span></span>
           <button class="input-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
@@ -3700,11 +3755,11 @@ body {
   <!-- EXPLORE -->
   <div class="panel-view" id="panel-explore">
     <h2>Explore</h2>
-    <p style="margin-bottom:24px">Discover what Nova can do.</p>
+    <p style="margin-bottom:24px">Discover what Corv can organize.</p>
     <div class="panel-cards">
       <div class="panel-card" onclick="switchPanel('chat');prefillChat('Explain quantum computing simply')">
         <div class="panel-card-icon">💡</div>
-        <div><strong>Learn Something New</strong><br><span class="text-dim">Ask Nova to explain any topic</span></div>
+        <div><strong>Learn Something New</strong><br><span class="text-dim">Ask Corv to explain any topic</span></div>
       </div>
       <div class="panel-card" onclick="switchPanel('chat');prefillChat('Help me write a professional email')">
         <div class="panel-card-icon">✍️</div>
@@ -3749,7 +3804,7 @@ body {
     <div class="panel-empty">
       <div class="panel-empty-icon">📋</div>
       <div>No active tasks yet.</div>
-      <div class="text-dim" style="font-size:13px;margin-top:4px">Tasks will appear here as Nova works on them.</div>
+      <div class="text-dim" style="font-size:13px;margin-top:4px">Tasks will appear here as Corv works on them.</div>
     </div>
   </div>
 
@@ -3760,7 +3815,7 @@ body {
     <div class="panel-empty">
       <div class="panel-empty-icon">📚</div>
       <div>No documents uploaded yet.</div>
-      <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Nova to reference in conversations.</div>
+      <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Corv to reference in conversations.</div>
     </div>
   </div>
 
@@ -3770,14 +3825,14 @@ body {
     <p style="margin-bottom:16px">Choose a model for your conversation.</p>
     <div class="models-upgrade-banner" id="modelsUpgradeBanner">
       <span>✨</span>
-      <span>Upgrade to <strong>Nova Plus</strong> to unlock all premium models</span>
+      <span>Upgrade to <strong>Corv Pro</strong> to unlock all premium models</span>
       <button onclick="showUpgradeModal()">Upgrade</button>
     </div>
 
     <!-- Currently Active -->
     <div class="models-active-bar" id="modelsActiveBar">
       <span class="models-active-label">Active:</span>
-      <span class="models-active-name" id="modelsActiveName">Nova Auto</span>
+      <span class="models-active-name" id="modelsActiveName">Corv Auto</span>
     </div>
 
     <!-- Free Models -->
@@ -3785,8 +3840,8 @@ body {
       <div class="models-section-title"><span class="dot green"></span> NOVA — FREE MODELS</div>
       <div class="models-grid">
         <div class="model-card" data-value="nova-auto" data-icon="nova" onclick="selectModelCard(this)">
-          <img src="/static/img/nova-icon.png" alt="" class="model-card-icon" onerror="this.style.display='none'">
-          <div class="model-card-name">Nova Auto</div>
+          <img src="/static/img/corv-mark.svg" alt="" class="model-card-icon" onerror="this.style.display='none'">
+          <div class="model-card-name">Corv Auto</div>
           <div class="model-card-provider">Best available · Recommended</div>
         </div>
         <div class="model-card" data-value="deepseek-v4-flash" data-icon="deepseek" onclick="selectModelCard(this)">
@@ -3920,12 +3975,12 @@ body {
   <!-- AGENTS -->
   <div class="panel-view" id="panel-agents">
     <h2>Agents</h2>
-    <p style="margin-bottom:24px">Meet the Nova agent ecosystem. Switch between specialized AI agents.</p>
+    <p style="margin-bottom:24px">Meet the Corv agent ecosystem. Switch between specialized AI agents.</p>
 
     <!-- Currently Active -->
     <div class="agents-active-bar" id="agentsActiveBar">
       <span class="agents-active-label">Active Agent:</span>
-      <span class="agents-active-name" id="agentsActiveName">Nova</span>
+      <span class="agents-active-name" id="agentsActiveName">Corv</span>
     </div>
 
     <!-- Core Agents -->
@@ -3934,9 +3989,9 @@ body {
       <div class="agents-grid">
         <div class="agent-card active" data-agent="nova" style="--agent-glow:#7B61FF" onclick="selectAgent('nova')">
           <div class="agent-avatar" style="background:linear-gradient(135deg,#6B51EF,#8B6BFF)">N</div>
-          <div class="agent-card-name">Nova</div>
-          <div class="agent-card-role">General AI Assistant</div>
-          <div class="agent-card-desc">Your primary AI companion</div>
+          <div class="agent-card-name">Corv</div>
+          <div class="agent-card-role">Project Workspace Agent</div>
+          <div class="agent-card-desc">Your project-aware workspace companion</div>
         </div>
         <div class="agent-card" data-agent="desi" style="--agent-glow:#EC4899" onclick="selectAgent('desi')">
           <div class="agent-avatar" style="background:linear-gradient(135deg,#DB2777,#EC4899)">D</div>
@@ -4056,7 +4111,7 @@ body {
 <!-- SKILLS -->
   <div class="panel-view" id="panel-skills">
     <h2>Skills</h2>
-    <p style="margin-bottom:24px">Tools and abilities Nova can use.</p>
+    <p style="margin-bottom:24px">Workspace actions Corv can use.</p>
     <div class="panel-cards">
       <div class="panel-card">
         <div class="panel-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
@@ -4083,13 +4138,13 @@ body {
         <div><strong>Weather</strong><br><span class="text-dim">Current conditions and forecasts</span></div>
       </div>
     </div>
-    <p style="margin-top:24px;font-size:13px;color:var(--text-dim)">💡 Skills are available in the <strong>desktop app</strong>. <a href="/site/download.html" style="color:var(--purple)">Download Nova</a> to use them with agents.</p>
+    <p style="margin-top:24px;font-size:13px;color:var(--text-dim)">💡 Skills are available in the <strong>desktop app</strong>. <a href="/site/download.html" style="color:var(--purple)">Download Corv</a> to use them with agents.</p>
   </div>
 
   <!-- SCHEDULE -->
   <div class="panel-view" id="panel-schedule">
     <h2>Schedule</h2>
-    <p style="margin-bottom:24px">Automate recurring tasks with Nova agents.</p>
+    <p style="margin-bottom:24px">Automate recurring workspace tasks with Corv agents.</p>
     <div class="panel-cards">
       <div class="panel-card">
         <div class="panel-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
@@ -4108,13 +4163,13 @@ body {
         <div><strong>Code Agent</strong><br><span class="text-dim">Automated code review and testing on a schedule</span></div>
       </div>
     </div>
-    <p style="margin-top:24px;font-size:13px;color:var(--text-dim)">💡 Scheduling is available in the <strong>desktop app</strong>. <a href="/site/download.html" style="color:var(--purple)">Download Nova</a> to create scheduled jobs.</p>
+    <p style="margin-top:24px;font-size:13px;color:var(--text-dim)">💡 Scheduling is available in the <strong>desktop app</strong>. <a href="/site/download.html" style="color:var(--purple)">Download Corv</a> to create scheduled jobs.</p>
   </div>
 
   <!-- SETTINGS -->
   <div class="panel-view" id="panel-settings">
     <h2>Settings</h2>
-    <p style="margin-bottom:24px">Configure Nova to your preferences.</p>
+    <p style="margin-bottom:24px">Configure Corv around your work.</p>
 
     <!-- Account Section -->
     <div class="settings-section">
@@ -4131,7 +4186,7 @@ body {
         <label class="settings-label">Default Chat Model</label>
         <select id="settingsDefaultModel" class="settings-select">
           <optgroup label="Free — No Key Needed">
-            <option value="nova-auto">Nova Auto (Recommended)</option>
+            <option value="nova-auto">Corv Auto (Recommended)</option>
             <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
             <option value="gpt-oss-120b">GPT-OSS 120B</option>
             <option value="llama-3.3-70b">Llama 3.3 70B</option>
@@ -4254,7 +4309,7 @@ body {
     <div class="apps-header">
       <div>
         <h2 class="apps-title">Apps</h2>
-        <p class="apps-subtitle">Chat with your favorite apps in Nova</p>
+        <p class="apps-subtitle">Connect your favorite apps to your Corv workspace</p>
       </div>
       <div class="apps-search-wrap">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -4269,7 +4324,7 @@ body {
           <div class="apps-featured-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <h3 class="apps-featured-title">Search the web with Nova</h3>
+          <h3 class="apps-featured-title">Search, command, and organize with Corv</h3>
           <p class="apps-featured-desc">Find anything — news, research, answers</p>
           <button class="apps-featured-btn" onclick="switchPanel('chat');prefillChat('@Web search for...')">View</button>
         </div>
@@ -4307,7 +4362,7 @@ body {
       <span><span class="status-dot"></span> <span class="online-text">Online</span></span>
     </div>
     <div class="planet-container">
-      <img src="/static/img/nova-icon.png" alt="Nova AI" />
+      <img src="/static/img/corv-mark.svg" alt="Corv" />
     </div>
   </div>
 
@@ -4424,7 +4479,7 @@ function appendChat(role, content, opts = {}) {
       <div class="thinking-container">
         <div class="thinking-toggle" onclick="this.classList.toggle('open');document.getElementById('${id}').classList.toggle('open')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          Nova's Thinking
+          Corv Thinking
         </div>
         <div class="thinking-content" id="${id}">${formatMessage(thinkingText)}</div>
       </div>`;
@@ -4432,12 +4487,12 @@ function appendChat(role, content, opts = {}) {
   // Get user initial for avatar
   const userInitial = (window._userName || 'Y').charAt(0).toUpperCase();
   div.innerHTML = `
-    <div class="msg-avatar">${isUser ? userInitial : '<img src="/static/img/nova-icon.png" alt="N">'}</div>
+    <div class="msg-avatar">${isUser ? userInitial : '<img src="/static/img/corv-mark.svg" alt="N">'}</div>
     <div style="flex:1;min-width:0">
       ${thinkingHtml}
       <div class="msg-bubble${streaming ? ' streaming-cursor' : ''}">${formatMessage(content)}</div>
       <div class="msg-meta">
-        <span>${time}${!isUser ? ' \u2022 Nova' : ''}</span>
+        <span>${time}${!isUser ? ' \u2022 Corv' : ''}</span>
         ${!isUser ? `<span class="msg-model-tag">${model}</span>` : ''}
       </div>
       ${!isUser && !streaming ? '<div class="msg-token-stats" data-tokens></div>' : ''}
@@ -4661,7 +4716,7 @@ document.addEventListener('DOMContentLoaded', () => setTimeout(syncModelCards, 1
 /* ─── Agents ─── */
 let currentAgent = 'nova';
 const agentNames = {
-  nova: 'Nova', desi: 'DESI', lesi: 'LESI', redi: 'REDI',
+  nova: 'Corv', desi: 'DESI', lesi: 'LESI', redi: 'REDI',
   vexi: 'VEXI', astri: 'ASTRI', lumi: 'LUMI', kyro: 'KYRO'
 };
 
@@ -5077,7 +5132,7 @@ setInterval(updateClock, 30000);
 // Set welcome message timestamp
 (function(){
   const wt = document.getElementById('welcomeMsgTime');
-  if (wt) wt.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' \u2022 Nova';
+  if (wt) wt.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' \u2022 Corv';
 })();
 
 /* ═══════════════════════════════════════════════════
@@ -5219,7 +5274,7 @@ function renderGalaxy() {
   const newest = chats[0]?.updated_at || now;
   const range = Math.max(newest - oldest, 1);
 
-  // ── Galaxy core (glowing Nova center) ──
+  // ── Galaxy core (glowing Corv center) ──
   const core = document.createElement('div');
   core.className = 'galaxy-core';
   core.style.cssText = `left:${cx}px;top:${cy}px;transform:translate(-50%,-50%)`;
@@ -5291,7 +5346,7 @@ function renderGalaxy() {
     dot.style.cssText = `left:${n.x}px;top:${n.y}px;width:${n.size}px;height:${n.size}px;background:${color};box-shadow:0 0 ${4 + n.t * 8}px ${color};animation-delay:${(Math.random() * 4).toFixed(1)}s;`;
     dot.addEventListener('mouseenter', e => {
       const date = n.c.updated_at ? new Date(n.c.updated_at * 1000).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      tooltip.innerHTML = `${escapeHtml(n.c.title || 'Chat')}<div class="tooltip-meta">${n.c.agent_name || 'Nova'} · ${date}</div>`;
+      tooltip.innerHTML = `${escapeHtml(n.c.title || 'Chat')}<div class="tooltip-meta">${n.c.agent_name || 'Corv'} · ${date}</div>`;
       tooltip.style.left = (e.clientX + 14) + 'px';
       tooltip.style.top = (e.clientY - 10) + 'px';
       tooltip.classList.add('visible');
@@ -5361,7 +5416,7 @@ function renderMemoryList() {
           ${preview ? '<div class="ml-preview">' + preview + '</div>' : ''}
         </div>
         <div class="ml-right">
-          <span class="ml-time">${c.agent_name || 'Nova'} · ${date}</span>
+          <span class="ml-time">${c.agent_name || 'Corv'} · ${date}</span>
           <button class="ml-delete" onclick="event.stopPropagation();deleteChat(${c.id})" title="Delete">✕</button>
         </div>
       </div>`;
@@ -5575,7 +5630,7 @@ function updateVersionUI() {
     // Show current model short name
     const model = window.currentModel || 'nova-auto';
     const SHORT_NAMES = {
-      'nova-auto': 'Nova Auto', 'deepseek-v4-flash': 'Flash', 'gpt-oss-120b': 'GPT-OSS',
+      'nova-auto': 'Corv Auto', 'deepseek-v4-flash': 'Flash', 'gpt-oss-120b': 'GPT-OSS',
       'llama-3.3-70b': 'Llama 70B', 'qwen3-coder': 'Qwen Coder', 'qwen3-next-80b': 'Qwen 80B',
       'nemotron-3-super': 'Nemotron', 'gemma-4-31b': 'Gemma 4', 'minimax-m2.5': 'MiniMax',
       'hermes-3-405b': 'Hermes 405B', 'gpt-5.5-pro': 'GPT-5.5 Pro', 'gpt-4.1': 'GPT-4.1',
@@ -5602,7 +5657,7 @@ function updateChatModelBadge() {
   if (!badge) return;
   const model = window.currentModel || 'nova-auto';
   const SHORT = {
-    'nova-auto': 'Nova Auto', 'deepseek-v4-flash': 'DeepSeek Flash',
+    'nova-auto': 'Corv Auto', 'deepseek-v4-flash': 'DeepSeek Flash',
     'gpt-oss-120b': 'GPT-OSS 120B', 'llama-3.3-70b': 'Llama 3.3 70B',
     'qwen3-coder': 'Qwen3 Coder', 'qwen3-next-80b': 'Qwen3 80B',
     'nemotron-3-super': 'Nemotron Super', 'nemotron-3-nano': 'Nemotron Nano',
@@ -5864,7 +5919,7 @@ try {
     </div>
     <div class="key-security-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span>Your keys are encrypted and stored in your browser's local storage. They are sent directly to the AI provider — Nova never stores them server-side.</span>
+      <span>Your keys are encrypted and stored in your browser's local storage. They are sent directly to the AI provider — Corv never stores them server-side.</span>
     </div>
     <div class="key-modal-actions">
       <button class="key-btn-cancel" onclick="closeKeyModal()">Cancel</button>
@@ -5877,7 +5932,7 @@ try {
      ═══════════════════════════════════════════════════════════════ -->
 <!-- ═══════════════════════════════════════════════════════════════════════
      PHASE 2: OFFLINE FOUNDATION + MODEL MANAGER + HYBRID ROUTING UI
-     Nova AI — Additive layer for index.html.
+     Corv — Additive layer for index.html.
      ═══════════════════════════════════════════════════════════════════════ -->
 
 <!-- PHASE 2: CSS -->
@@ -6404,7 +6459,7 @@ try {
   // Maps model data-value → { provider, speed, context, providerLabel }
   const MODEL_META = {
     // ── Free models (via OpenRouter / SambaNova / Groq) ──
-    'nova-auto':       { provider: 'nova',       speed: 'fast',   context: 'Auto',  providerLabel: 'Nova AI' },
+    'nova-auto':       { provider: 'nova',       speed: 'fast',   context: 'Auto',  providerLabel: 'Corv' },
     'deepseek-v4-flash':{ provider: 'openrouter', speed: 'fast',   context: '1M',    providerLabel: 'OpenRouter' },
     'gpt-oss-120b':    { provider: 'openrouter', speed: 'medium', context: '128K',  providerLabel: 'OpenRouter' },
     'llama-3.3-70b':   { provider: 'groq',       speed: 'fast',   context: '128K',  providerLabel: 'Groq' },
@@ -6438,7 +6493,7 @@ try {
   };
 
   const PROVIDER_LABELS = {
-    nova:       'Nova AI',
+    nova:       'Corv',
     groq:       'Groq',
     sambanova:  'SambaNova',
     openrouter: 'OpenRouter',
@@ -6471,7 +6526,7 @@ try {
       statusDot.className = 'model-status-dot';
       card.appendChild(statusDot);
 
-      // ── Recommended badge for Nova Auto ──
+      // ── Recommended badge for Corv Auto ──
       if (modelId === 'nova-auto') {
         const recBadge = document.createElement('div');
         recBadge.className = 'model-recommended-badge';
@@ -6955,7 +7010,7 @@ try {
       if (typeof autoResize === 'function') autoResize();
       if (typeof appendChat === 'function') {
         appendChat('user', text);
-        appendChat('assistant', '📤 Message queued. Nova will respond when you\'re back online.', {
+        appendChat('assistant', '📤 Message queued. Corv will respond when you\'re back online.', {
           provider: 'local',
         });
       }
@@ -7073,7 +7128,7 @@ try {
       checkOllamaConnection();
     }
 
-    console.log('[Nova Phase 2] Offline Foundation + Model Manager + Hybrid Routing loaded');
+    console.log('[Corv Phase 2] Offline Foundation + Model Manager + Hybrid Routing loaded');
   }
 
   // Also hook into the settings panel load
@@ -7814,7 +7869,7 @@ try {
   // ─────────────────────────────────────────────────
 
   const CORE_AGENTS = {
-    nova:  { name: 'Nova',  role: 'General AI Assistant',  color: '#7B61FF', desc: 'Your primary AI companion', personality: 'Versatile, thoughtful, and always ready to help. Nova adapts to any task — coding, writing, analysis, brainstorming. The generalist that does it all.' },
+    nova:  { name: 'Corv',  role: 'Project Workspace Agent',  color: '#7B61FF', desc: 'Your project-aware workspace companion', personality: 'Project-aware, organized, and built to help you make progress across spaces, tabs, notes, and research.' },
     desi:  { name: 'DESI',  role: 'Visual Intelligence',   color: '#FF6B9D', desc: 'UI design, branding, visual creation', personality: 'Creative and aesthetically driven. DESI thinks in color palettes, layouts, and visual harmony. Expert at making things beautiful and functional.' },
     lesi:  { name: 'LESI',  role: 'Design Verification',   color: '#34D399', desc: 'Consistency analysis, design QA', personality: 'Detail-oriented perfectionist. LESI catches inconsistencies, misalignments, and edge cases. The quality gatekeeper for all visual work.' },
     redi:  { name: 'REDI',  role: 'Quality Control',       color: '#FF8C42', desc: 'Polish evaluation, refinement', personality: 'Obsessed with polish and refinement. REDI evaluates outputs against high standards and pushes everything to premium quality.' },
@@ -8432,7 +8487,7 @@ try {
         <div class="panel-empty" style="padding:24px 0">
           <div class="panel-empty-icon">📚</div>
           <div>No documents yet.</div>
-          <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Nova to reference in conversations.</div>
+          <div class="text-dim" style="font-size:13px;margin-top:4px">Upload documents for Corv to reference in conversations.</div>
         </div>
       `;
     } else {
@@ -8614,7 +8669,7 @@ try {
      ═══════════════════════════════════════════════════════════════ -->
 <!-- ═══════════════════════════════════════════════════════════════════
      PHASE 4: FULL BUG AUDIT + POLISH + VOICE/PRESENCE + PLUGIN SCAFFOLD
-     Nova AI — Bug Fixes, Motion Polish, Voice UI, Plugin System
+     Corv — Bug Fixes, Motion Polish, Voice UI, Plugin System
      Generated: 2025-05-24
      ═══════════════════════════════════════════════════════════════════ -->
 
@@ -8924,7 +8979,7 @@ try {
   }
 }
 
-/* ─── "Nova is thinking..." Cinematic Animation ─── */
+/* ─── "Corv is thinking..." Cinematic Animation ─── */
 .nova-thinking-cinematic {
   display: flex;
   align-items: center;
@@ -9544,10 +9599,10 @@ try {
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'message assistant';
         welcomeDiv.innerHTML = `
-          <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+          <div class="msg-avatar"><img src="/static/img/corv-mark.svg" alt="N"></div>
           <div style="flex:1;min-width:0">
             <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
-            <div class="msg-meta"><span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Nova</span></div>
+            <div class="msg-meta"><span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Corv</span></div>
           </div>`;
         chatMsgs.insertBefore(welcomeDiv, thinkBubble);
       }
@@ -9698,7 +9753,7 @@ try {
     console.log('[Phase4] Feature: Message appear animations');
 
     // ═══════════════════════════════════════════════
-    // FEATURE 3: Cinematic "Nova is thinking..." Animation
+    // FEATURE 3: Cinematic "Corv is thinking..." Animation
     // Replace the plain dots with a premium thinking indicator
     // ═══════════════════════════════════════════════
     const thinkingBubble = document.getElementById('thinkingBubble');
@@ -9711,7 +9766,7 @@ try {
         cinematic.className = 'nova-thinking-cinematic';
         cinematic.innerHTML = `
           <div class="nova-thinking-orb"></div>
-          <div class="nova-thinking-text"><span>Nova is thinking...</span></div>
+          <div class="nova-thinking-text"><span>Corv is thinking...</span></div>
         `;
         dotsContainer.replaceWith(cinematic);
         console.log('[Phase4] Feature: Cinematic thinking animation');
@@ -9797,7 +9852,7 @@ try {
       pluginSection.id = 'pluginsSection';
       pluginSection.innerHTML = `
         <div class="settings-section-title">PLUGINS</div>
-        <p class="text-dim" style="font-size:12px;margin-bottom:16px">Extend Nova's capabilities with plugins. Enable or disable as needed.</p>
+        <p class="text-dim" style="font-size:12px;margin-bottom:16px">Extend Corv's capabilities with plugins. Enable or disable as needed.</p>
         <div class="plugins-grid" id="pluginsGrid">
           <div class="plugin-item" data-plugin="web-search">
             <div class="plugin-icon" style="background:rgba(94,235,255,.1);border-color:rgba(94,235,255,.15)">🌐</div>
@@ -9839,7 +9894,7 @@ try {
             <div class="plugin-icon" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.12)">📁</div>
             <div class="plugin-info">
               <div class="plugin-name">File Manager <span class="plugin-badge coming-soon">Coming Soon</span></div>
-              <div class="plugin-desc">Browse, upload, and manage files within your Nova workspace.</div>
+              <div class="plugin-desc">Browse, upload, and manage files within your Corv workspace.</div>
             </div>
             <label class="plugin-toggle">
               <input type="checkbox" data-plugin-id="file-manager" disabled onchange="togglePlugin(this)">
@@ -9982,7 +10037,7 @@ try {
      ═══════════════════════════════════════════════════════════════════ -->
 <!-- ═══════════════════════════════════════════════════════════════════════
      PHASE 5: CONVERSATION ENGINE — Streaming, Chat Restore, Rendering, Input
-     Nova AI — Complete conversation experience overhaul
+     Corv — Complete conversation experience overhaul
      Generated: 2025-05-24
      
      Features:
@@ -10758,6 +10813,18 @@ try {
 
         if (!res.ok) {
           _removeStopButton();
+          if (res.status === 429) {
+            try {
+              const errData = await res.json();
+              showLimitModal(errData.error || 'Daily limit reached. Upgrade to Corv Pro for unlimited access.');
+              appendChat('assistant', errData.error || 'Daily limit reached.');
+            } catch(e) {
+              showLimitModal('Daily limit reached. Upgrade to Corv Pro for unlimited access.');
+              appendChat('assistant', 'Daily limit reached.');
+            }
+            refreshUsageWidget();
+            return;
+          }
           appendChat('assistant', 'Sorry, something went wrong. (HTTP ' + res.status + ')');
           return;
         }
@@ -10913,6 +10980,7 @@ try {
           appendChat('assistant', '(No response)');
         }
         loadRecentConversations();
+        refreshUsageWidget();
 
       } catch (err) {
         thinkingBubble.style.display = 'none';
@@ -11131,11 +11199,11 @@ try {
       const welcomeDiv = document.createElement('div');
       welcomeDiv.className = 'message assistant';
       welcomeDiv.innerHTML = `
-        <div class="msg-avatar"><img src="/static/img/nova-icon.png" alt="N"></div>
+        <div class="msg-avatar"><img src="/static/img/corv-mark.svg" alt="N"></div>
         <div style="flex:1;min-width:0">
           <div class="msg-bubble">Welcome back! What would you like to explore or create today?</div>
           <div class="msg-meta">
-            <span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Nova</span>
+            <span>${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} \u2022 Corv</span>
           </div>
         </div>`;
       chatMessages.insertBefore(welcomeDiv, thinkingBubble);
@@ -11519,7 +11587,7 @@ const NOVA_APPS = [
   // Productivity
   { name: 'Adobe Photoshop', desc: 'Edit & transform your images', icon: 'Ps', color: '#31A8FF', category: ['productivity'] },
   { name: 'Adobe Acrobat', desc: 'Edit and organize PDFs easily', icon: 'Ac', color: '#EC1C24', category: ['productivity'] },
-  { name: 'Airtable', desc: 'Add structured data to Nova', icon: '📊', color: '#4C6EF5', category: ['productivity'] },
+  { name: 'Airtable', desc: 'Add structured data to Corv', icon: '📊', color: '#4C6EF5', category: ['productivity'] },
   { name: 'Outlook Email', desc: 'Search and reference your email', icon: '📧', color: '#0078D4', category: ['productivity'] },
   { name: 'SharePoint', desc: 'Search and pull from shared sites', icon: 'S', color: '#038387', category: ['productivity'] },
   { name: 'Teams', desc: 'Look up chats and messages', icon: '💬', color: '#6264A7', category: ['productivity'] },
@@ -11598,7 +11666,7 @@ function updateTierUI() {
   const freeOpt = document.getElementById('tierOptFree');
   const plusAction = document.getElementById('tierPlusAction');
   if (label) {
-    label.textContent = tier === 'plus' ? 'Nova Plus' : 'Nova';
+    label.textContent = tier === 'plus' ? 'Corv Pro' : 'Corv';
   }
   if (plusOpt && freeOpt) {
     if (tier === 'plus') {
@@ -11663,9 +11731,9 @@ function selectPlan(plan) {
   event.currentTarget.classList.add('selected');
   const btn = document.getElementById('upgradeBtn');
   if (plan === 'yearly') {
-    btn.textContent = 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)';
+    btn.textContent = 'Upgrade to Corv Pro \u2014 $16/mo (billed yearly)';
   } else {
-    btn.textContent = 'Upgrade to Nova Plus \u2014 $20/mo';
+    btn.textContent = 'Upgrade to Corv Pro \u2014 $20/mo';
   }
 }
 async function handleUpgrade() {
@@ -11683,12 +11751,12 @@ async function handleUpgrade() {
       window.location.href = data.checkout_url;
     } else {
       alert(data.error || 'Payment setup coming soon!');
-      btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)' : 'Upgrade to Nova Plus \u2014 $20/mo';
+      btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Corv Pro \u2014 $16/mo (billed yearly)' : 'Upgrade to Corv Pro \u2014 $20/mo';
       btn.disabled = false;
     }
   } catch (e) {
     alert('Payment setup coming soon!');
-    btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Nova Plus \u2014 $16/mo (billed yearly)' : 'Upgrade to Nova Plus \u2014 $20/mo';
+    btn.textContent = selectedPlan === 'yearly' ? 'Upgrade to Corv Pro \u2014 $16/mo (billed yearly)' : 'Upgrade to Corv Pro \u2014 $20/mo';
     btn.disabled = false;
   }
 }
@@ -11729,6 +11797,74 @@ async function checkServerTier() {
 // Init tier on load
 setTimeout(updateTierUI, 200);
 setTimeout(checkServerTier, 1000);
+
+
+// ═══════════════ USAGE TRACKING ═══════════════
+
+async function refreshUsageWidget() {
+  try {
+    const res = await fetch('/api/user/usage');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const badge = document.getElementById('usageTierBadge');
+    if (badge) {
+      badge.textContent = data.tier === 'plus' ? 'Corv Pro' : 'Free';
+      badge.className = 'tier-badge' + (data.tier === 'plus' ? ' plus' : '');
+    }
+
+    const upgradeBtn = document.querySelector('.usage-upgrade-btn');
+    if (upgradeBtn) upgradeBtn.style.display = data.tier === 'plus' ? 'none' : 'block';
+
+    const items = [
+      { key: 'messages', barId: 'usageBarMessages', countId: 'usageCountMessages' },
+      { key: 'images', barId: 'usageBarImages', countId: 'usageCountImages' },
+      { key: 'chats', barId: 'usageBarChats', countId: 'usageCountChats' },
+    ];
+
+    for (const item of items) {
+      const usage = data.usage[item.key];
+      if (!usage) continue;
+      const pct = Math.min(100, (usage.used / usage.limit) * 100);
+      const bar = document.getElementById(item.barId);
+      const count = document.getElementById(item.countId);
+      if (bar) {
+        bar.style.width = pct + '%';
+        bar.className = 'usage-bar-fill' + (pct >= 100 ? ' full' : pct >= 80 ? ' warn' : '');
+      }
+      if (count) {
+        const limitStr = usage.limit >= 999999 ? '\u221e' : usage.limit;
+        count.textContent = usage.used + '/' + limitStr;
+      }
+    }
+  } catch (e) {
+    console.warn('Usage widget error:', e);
+  }
+}
+
+function showLimitModal(message) {
+  const overlay = document.getElementById('limitModal');
+  const text = document.getElementById('limitModalText');
+  if (text) text.textContent = message || "You've reached your daily limit. Upgrade to Corv Pro for unlimited access.";
+  if (overlay) overlay.classList.add('show');
+}
+
+function closeLimitModal() {
+  const overlay = document.getElementById('limitModal');
+  if (overlay) overlay.classList.remove('show');
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'limitModal') closeLimitModal();
+});
+
+// Refresh usage on load + periodically
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(refreshUsageWidget, 500);
+  setInterval(refreshUsageWidget, 60000);
+});
+
+
 </script>
 
 
@@ -11762,7 +11898,7 @@ setTimeout(checkServerTier, 1000);
 <div class="upgrade-overlay" id="upgradeOverlay" onclick="closeUpgradeModal(event)">
   <div class="upgrade-modal" onclick="event.stopPropagation()" style="position:relative">
     <button class="upgrade-close" onclick="closeUpgradeModal()">&times;</button>
-    <h2>Upgrade to <span style="background:linear-gradient(135deg,#7B61FF,#5EEBFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Nova Plus</span></h2>
+    <h2>Upgrade to <span style="background:linear-gradient(135deg,#7B61FF,#5EEBFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Corv Pro</span></h2>
     <p class="upgrade-subtitle">Unlock premium models, faster responses, and more.</p>
     <div class="upgrade-plans">
       <div class="upgrade-plan selected" onclick="selectPlan('monthly')">
@@ -11788,7 +11924,7 @@ setTimeout(checkServerTier, 1000);
         </ul>
       </div>
     </div>
-    <button class="upgrade-btn" id="upgradeBtn" onclick="handleUpgrade()">Upgrade to Nova Plus — $20/mo</button>
+    <button class="upgrade-btn" id="upgradeBtn" onclick="handleUpgrade()">Upgrade to Corv Pro — $20/mo</button>
     <p style="font-size:11px;color:var(--text-dim);margin-top:12px">Cancel anytime. No commitment.</p>
   </div>
 </div>
@@ -11804,5 +11940,19 @@ setTimeout(checkServerTier, 1000);
     Deep research
   </button>
 </div>
+
+<!-- Rate limit modal -->
+<div class="limit-modal-overlay" id="limitModal">
+  <div class="limit-modal">
+    <div class="limit-icon">&#9889;</div>
+    <h2 id="limitModalTitle">Daily Limit Reached</h2>
+    <p id="limitModalText">You've used all your free messages for today. Upgrade to Corv Pro for unlimited access, or come back tomorrow.</p>
+    <div class="limit-modal-actions">
+      <button class="btn-close-limit" onclick="closeLimitModal()">Maybe Later</button>
+      <button class="btn-upgrade" onclick="window.location.href='/site/pricing.html'">Upgrade to Corv Pro</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
